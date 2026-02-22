@@ -74,6 +74,19 @@ struct HomeView: View {
                             }
                             .padding(.horizontal)
                             
+                            // 蓝图码管理卡片
+                            NavigationLink(destination: BlueprintSetView()) {
+                                EndFieldFeatureCard(
+                                    icon: "doc.text.fill",
+                                    title: "蓝图码管理系统",
+                                    description: "BLUEPRINT MANAGER",
+                                    subtitle: "蓝图码存储与分享",
+                                    color: Color(red: 0.2, green: 0.6, blue: 0.9),
+                                    status: "ONLINE"
+                                )
+                            }
+                            .padding(.horizontal)
+                            
                             // 配方查询卡片
                             NavigationLink(destination: SearchView()) {
                                 EndFieldFeatureCard(
@@ -109,20 +122,6 @@ struct HomeView: View {
                                     description: "PRODUCTION OPTIMIZER",
                                     subtitle: "效率与布局优化",
                                     color: Color(red: 0.9, green: 0.5, blue: 0.2),
-                                    status: "DEVELOPING"
-                                )
-                            }
-                            .opacity(0.5)
-                            .padding(.horizontal)
-                            
-                            // 蓝图码管理卡片
-                            NavigationLink(destination: BlueprintView()) {
-                                EndFieldFeatureCard(
-                                    icon: "doc.text.fill",
-                                    title: "蓝图码管理系统",
-                                    description: "BLUEPRINT MANAGER",
-                                    subtitle: "蓝图码存储与分享",
-                                    color: Color(red: 0.2, green: 0.6, blue: 0.9),
                                     status: "DEVELOPING"
                                 )
                             }

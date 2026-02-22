@@ -1,17 +1,16 @@
 //
-//  BlueprintView.swift
+//  BlueprintSetView.swift
 //  EndfiledPlanner
 //
-//  Created by Jinjia Ou on 2/14/26.
+//  Created by Jinjia Ou on 2/21/26.
 //
 
 import SwiftUI
 
-struct BlueprintView: View {
+struct BlueprintSetView: View {
     
-    @StateObject private var viewModel = BlueprintViewModel()
-    @State private var selectedBlueprint: Blueprint?
-    @State private var showFilters = false
+    @StateObject private var viewModel = BlueprintSetViewModel()
+    @State private var selectedSet: BlueprintSet?
     
     var body: some View {
         NavigationStack {
@@ -43,24 +42,23 @@ struct BlueprintView: View {
                 VStack(spacing: 0) {
                     
                     // 页面横幅
-                    BlueprintBanner()
+                    BlueprintSetBanner()
                         .padding(.horizontal)
                         .padding(.top, 10)
                     
-                    // 搜索和筛选栏
-                    SearchAndFilterBar(
-                        searchText: $viewModel.searchText,
+                    // 筛选栏
+                    BlueprintSetFilterBar(
+                        authorSearch: $viewModel.authorSearch,
                         selectedRegion: $viewModel.selectedRegion,
-                        showFilters: $showFilters,
                         availableRegions: viewModel.availableRegions
                     )
                     .padding(.horizontal)
                     .padding(.top, 16)
                     
                     // 结果统计
-                    if !viewModel.isLoading && !viewModel.filteredBlueprints.isEmpty {
+                    if !viewModel.isLoading && !viewModel.filteredSets.isEmpty {
                         HStack {
-                            Text("找到 \(viewModel.filteredBlueprints.count) 个蓝图")
+                            Text("找到 \(viewModel.filteredSets.count) 个蓝图集")
                                 .font(.system(size: 12, weight: .medium, design: .monospaced))
                                 .foregroundColor(.white.opacity(0.6))
                             
@@ -72,17 +70,17 @@ struct BlueprintView: View {
                     
                     // 内容区域
                     if viewModel.isLoading {
-                        LoadingView()
+                        BlueprintSetLoadingView()
                     } else if let error = viewModel.errorMessage {
-                        ErrorView(message: error) {
-                            viewModel.loadBlueprints()
+                        BlueprintSetErrorView(message: error) {
+                            viewModel.loadBlueprintSets()
                         }
-                    } else if viewModel.filteredBlueprints.isEmpty {
-                        EmptyStateView(hasBlueprints: !viewModel.blueprints.isEmpty)
+                    } else if viewModel.filteredSets.isEmpty {
+                        BlueprintSetEmptyView(hasSets: !viewModel.blueprintSets.isEmpty)
                     } else {
-                        BlueprintListView(
-                            blueprints: viewModel.filteredBlueprints,
-                            selectedBlueprint: $selectedBlueprint
+                        BlueprintSetListView(
+                            sets: viewModel.filteredSets,
+                            selectedSet: $selectedSet
                         )
                     }
                 }
@@ -102,7 +100,7 @@ struct BlueprintView: View {
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
-                        viewModel.refreshBlueprints()
+                        viewModel.refreshBlueprintSets()
                     } label: {
                         Image(systemName: "arrow.clockwise")
                             .foregroundColor(Color(red: 0.2, green: 0.6, blue: 0.9))
@@ -111,12 +109,12 @@ struct BlueprintView: View {
             }
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbarBackground(Color(red: 0.08, green: 0.09, blue: 0.12), for: .navigationBar)
-            .sheet(item: $selectedBlueprint) { blueprint in
-                BlueprintDetailView(blueprint: blueprint)
+            .sheet(item: $selectedSet) { set in
+                BlueprintSetDetailView(blueprintSet: set)
             }
             .onAppear {
-                if viewModel.blueprints.isEmpty {
-                    viewModel.loadBlueprints()
+                if viewModel.blueprintSets.isEmpty {
+                    viewModel.loadBlueprintSets()
                 }
             }
         }
@@ -125,7 +123,7 @@ struct BlueprintView: View {
 
 // MARK: - 子视图组件
 
-struct BlueprintBanner: View {
+struct BlueprintSetBanner: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 4) {
@@ -194,39 +192,29 @@ struct BlueprintBanner: View {
     }
 }
 
-struct SearchAndFilterBar: View {
-    @Binding var searchText: String
+struct BlueprintSetFilterBar: View {
+    @Binding var authorSearch: String
     @Binding var selectedRegion: String?
-    @Binding var showFilters: Bool
     
     let availableRegions: [String]
     
     var body: some View {
         VStack(spacing: 12) {
-            // 搜索框
+            // 作者搜索框
             HStack {
-                Image(systemName: "magnifyingglass")
+                Image(systemName: "person.circle")
                     .foregroundColor(Color(red: 0.2, green: 0.6, blue: 0.9))
                 
-                TextField("搜索蓝图...", text: $searchText)
+                TextField("搜索作者...", text: $authorSearch)
                     .foregroundColor(.white)
                 
-                if !searchText.isEmpty {
+                if !authorSearch.isEmpty {
                     Button {
-                        searchText = ""
+                        authorSearch = ""
                     } label: {
                         Image(systemName: "xmark.circle.fill")
                             .foregroundColor(.white.opacity(0.4))
                     }
-                }
-                
-                Button {
-                    withAnimation {
-                        showFilters.toggle()
-                    }
-                } label: {
-                    Image(systemName: showFilters ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
-                        .foregroundColor(Color(red: 0.2, green: 0.6, blue: 0.9))
                 }
             }
             .padding()
@@ -239,21 +227,16 @@ struct SearchAndFilterBar: View {
                 }
             )
             
-            // 筛选器
-            if showFilters {
-                FilterMenu(
-                    title: "地区",
-                    selection: $selectedRegion,
-                    options: availableRegions
-                )
-                .transition(.move(edge: .top).combined(with: .opacity))
-            }
+            // 地图筛选器
+            BlueprintSetRegionMenu(
+                selection: $selectedRegion,
+                options: availableRegions
+            )
         }
     }
 }
 
-struct FilterMenu: View {
-    let title: String
+struct BlueprintSetRegionMenu: View {
     @Binding var selection: String?
     let options: [String]
     
@@ -266,18 +249,20 @@ struct FilterMenu: View {
             }
         } label: {
             HStack {
-                Text(selection ?? title)
-                    .font(.system(size: 13))
+                Image(systemName: "map")
+                    .foregroundColor(Color(red: 0.2, green: 0.6, blue: 0.9))
+                
+                Text(selection ?? "选择地图")
+                    .font(.system(size: 14))
                     .foregroundColor(selection == nil ? .white.opacity(0.6) : .white)
                 
                 Spacer()
                 
                 Image(systemName: "chevron.down")
-                    .font(.system(size: 10))
+                    .font(.system(size: 11))
                     .foregroundColor(Color(red: 0.2, green: 0.6, blue: 0.9))
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .padding()
             .background(
                 ZStack {
                     Rectangle()
@@ -290,14 +275,14 @@ struct FilterMenu: View {
     }
 }
 
-struct LoadingView: View {
+struct BlueprintSetLoadingView: View {
     var body: some View {
         VStack(spacing: 20) {
             ProgressView()
                 .scaleEffect(1.5)
                 .tint(Color(red: 0.2, green: 0.6, blue: 0.9))
             
-            Text("LOADING BLUEPRINTS...")
+            Text("LOADING BLUEPRINT SETS...")
                 .font(.system(size: 14, weight: .bold, design: .monospaced))
                 .foregroundColor(Color(red: 0.2, green: 0.6, blue: 0.9))
         }
@@ -305,7 +290,7 @@ struct LoadingView: View {
     }
 }
 
-struct ErrorView: View {
+struct BlueprintSetErrorView: View {
     let message: String
     let retry: () -> Void
     
@@ -347,20 +332,20 @@ struct ErrorView: View {
     }
 }
 
-struct EmptyStateView: View {
-    let hasBlueprints: Bool
+struct BlueprintSetEmptyView: View {
+    let hasSets: Bool
     
     var body: some View {
         VStack(spacing: 20) {
-            Image(systemName: hasBlueprints ? "magnifyingglass" : "doc.text")
+            Image(systemName: hasSets ? "magnifyingglass" : "doc.text")
                 .font(.system(size: 60))
                 .foregroundColor(Color(red: 0.2, green: 0.6, blue: 0.9).opacity(0.5))
             
-            Text(hasBlueprints ? "NO RESULTS" : "NO BLUEPRINTS")
+            Text(hasSets ? "NO RESULTS" : "NO BLUEPRINT SETS")
                 .font(.system(size: 16, weight: .bold, design: .monospaced))
                 .foregroundColor(Color(red: 0.2, green: 0.6, blue: 0.9))
             
-            Text(hasBlueprints ? "未找到匹配的蓝图" : "暂无蓝图数据")
+            Text(hasSets ? "未找到匹配的蓝图集" : "暂无蓝图集数据")
                 .font(.system(size: 14))
                 .foregroundColor(.white.opacity(0.6))
         }
@@ -368,17 +353,17 @@ struct EmptyStateView: View {
     }
 }
 
-struct BlueprintListView: View {
-    let blueprints: [Blueprint]
-    @Binding var selectedBlueprint: Blueprint?
+struct BlueprintSetListView: View {
+    let sets: [BlueprintSet]
+    @Binding var selectedSet: BlueprintSet?
     
     var body: some View {
         ScrollView {
             LazyVStack(spacing: 12) {
-                ForEach(blueprints) { blueprint in
-                    BlueprintCard(blueprint: blueprint)
+                ForEach(sets) { set in
+                    BlueprintSetCard(blueprintSet: set)
                         .onTapGesture {
-                            selectedBlueprint = blueprint
+                            selectedSet = set
                         }
                 }
             }
@@ -390,5 +375,5 @@ struct BlueprintListView: View {
 }
 
 #Preview {
-    BlueprintView()
+    BlueprintSetView()
 }

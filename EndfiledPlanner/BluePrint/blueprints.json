@@ -1,22 +1,137 @@
 {
   "version": "1.0.0",
   "lastUpdated": "2026-02-21",
-  "blueprints": [
+  "blueprintSets": [
     {
-      "id": "001",
-      "name": "示例蓝图 - 基础矿物生产线",
-      "author": "系统示例",
-      "region": "谷地",
-      "code": "ENDF-EXAMPLE-BASIC-MINERAL-001",
-      "notes": "这是一个示例蓝图，展示基础的矿物采集和精炼流程。包含矿机、精炼炉的基础配置。"
+      "id": "set_001",
+      "name": "不用手拿植物——一键毕业省钱版",
+      "author": "示例UP主",
+      "region": "四号谷地",
+      "location": "枢纽区",
+      "description": "完整的自动化生产线系列，从分基地到主基地的完整规划",
+      "blueprints": [
+        {
+          "id": "bp_001",
+          "order": 1,
+          "name": "分基地全发电",
+          "code": "EF01081OupAE8706t79",
+          "notes": "一矿分基地+一基段"
+        },
+        {
+          "id": "bp_002",
+          "order": 2,
+          "name": "分基地半发电",
+          "code": "EF010i5uiE49e55rruDeO",
+          "notes": "高级电池4.5，6480发电"
+        },
+        {
+          "id": "bp_003",
+          "order": 3,
+          "name": "分基地全回收电池",
+          "code": "EF012UCBn7G6uJu82oe5Oo",
+          "notes": "高级电池6，8640发电"
+        },
+        {
+          "id": "bp_004",
+          "order": 4,
+          "name": "6口紫级装",
+          "code": "EF01i43A000d49A25E0t",
+          "notes": "药品6，8640发电"
+        },
+        {
+          "id": "bp_005",
+          "order": 5,
+          "name": "6口紫级装（2）",
+          "code": "EF016u20o3e4u7auQ83a",
+          "notes": "药品4.5，6480发电"
+        },
+        {
+          "id": "bp_006",
+          "order": 6,
+          "name": "8口紫级装（3）",
+          "code": "EF01Ube310u5uoOUE71a8",
+          "notes": "药品6，8640发电"
+        },
+        {
+          "id": "bp_007",
+          "order": 7,
+          "name": "零件模块",
+          "code": "EF015QI27A3au79e8oe",
+          "notes": "每种零件10，14400*4发电"
+        },
+        {
+          "id": "bp_008",
+          "order": 8,
+          "name": "爆炸物模块",
+          "code": "EF01eaA0912841loAi8",
+          "notes": "爆炸物6，8640发电"
+        }
+      ]
     },
     {
-      "id": "002",
-      "name": "示例蓝图 - 高效电池生产",
+      "id": "single_001",
+      "name": "高效源石精炼布局",
+      "author": "玩家A",
+      "region": "四号谷地",
+      "location": "源石研究园",
+      "description": "针对源石研究园地形优化的精炼产线布局",
+      "blueprints": [
+        {
+          "id": "bp_s001",
+          "order": 1,
+          "name": "高效源石精炼布局",
+          "code": "ENDF-STONE-REFINE-001",
+          "notes": "适合前期快速发展，占地紧凑"
+        }
+      ]
+    },
+    {
+      "id": "single_002",
+      "name": "电池回收优化方案",
+      "author": "玩家B",
+      "region": "武陵",
+      "location": "据点一",
+      "description": "极致优化的电池回收布局",
+      "blueprints": [
+        {
+          "id": "bp_s002",
+          "order": 1,
+          "name": "电池回收优化方案",
+          "code": "ENDF-BATTERY-RECYCLE-001",
+          "notes": "中后期使用，需要高级研究"
+        }
+      ]
+    },
+    {
+      "id": "set_002",
+      "name": "武陵完整产线系列",
       "author": "系统示例",
       "region": "武陵",
-      "code": "ENDF-EXAMPLE-BATTERY-PRODUCTION-002",
-      "notes": "优化的电池生产线，包含完整的原材料处理和封装流程。适合中后期使用。"
+      "location": "据点一",
+      "description": "武陵地区从初期到后期的完整发展路线",
+      "blueprints": [
+        {
+          "id": "bp_101",
+          "order": 1,
+          "name": "初期电池产线",
+          "code": "ENDF-WL-BATTERY-001",
+          "notes": "低容武陵电池，适合开荒"
+        },
+        {
+          "id": "bp_102",
+          "order": 2,
+          "name": "中期电池升级",
+          "code": "ENDF-WL-BATTERY-002",
+          "notes": "中容武陵电池，过渡使用"
+        },
+        {
+          "id": "bp_103",
+          "order": 3,
+          "name": "后期完整产线",
+          "code": "ENDF-WL-BATTERY-003",
+          "notes": "高容武陵电池+装备原件"
+        }
+      ]
     }
   ]
 }

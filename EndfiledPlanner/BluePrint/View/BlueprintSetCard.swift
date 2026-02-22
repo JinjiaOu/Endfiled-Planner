@@ -1,5 +1,5 @@
 //
-//  BlueprintCard.swift
+//  BlueprintSetCard.swift
 //  EndfiledPlanner
 //
 //  Created by Jinjia Ou on 2/21/26.
@@ -7,8 +7,8 @@
 
 import SwiftUI
 
-struct BlueprintCard: View {
-    let blueprint: Blueprint
+struct BlueprintSetCard: View {
+    let blueprintSet: BlueprintSet
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -16,22 +16,40 @@ struct BlueprintCard: View {
             // 顶部信息栏
             HStack {
                 // 地区标签
-                Text(blueprint.region)
-                    .font(.system(size: 10, weight: .bold, design: .monospaced))
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(
-                        Capsule()
-                            .fill(Color(red: 0.2, green: 0.6, blue: 0.9).opacity(0.3))
-                    )
+                HStack(spacing: 4) {
+                    Text(blueprintSet.region)
+                        .font(.system(size: 10, weight: .bold, design: .monospaced))
+                    
+                    Text("·")
+                        .foregroundColor(.white.opacity(0.4))
+                    
+                    Text(blueprintSet.location)
+                        .font(.system(size: 10, weight: .medium, design: .monospaced))
+                }
+                .foregroundColor(.white)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(
+                    Capsule()
+                        .fill(Color(red: 0.2, green: 0.6, blue: 0.9).opacity(0.3))
+                )
                 
                 Spacer()
                 
-                // ID 标识
-                Text("ID: \(blueprint.id)")
-                    .font(.system(size: 9, weight: .medium, design: .monospaced))
-                    .foregroundColor(.white.opacity(0.4))
+                // 蓝图数量
+                HStack(spacing: 4) {
+                    Image(systemName: "doc.on.doc")
+                        .font(.system(size: 9))
+                    Text("\(blueprintSet.blueprints.count)")
+                        .font(.system(size: 10, weight: .bold, design: .monospaced))
+                }
+                .foregroundColor(Color(red: 0.4, green: 0.8, blue: 0.2))
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(
+                    Capsule()
+                        .fill(Color(red: 0.4, green: 0.8, blue: 0.2).opacity(0.2))
+                )
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
@@ -40,8 +58,8 @@ struct BlueprintCard: View {
             // 主内容区
             VStack(alignment: .leading, spacing: 12) {
                 
-                // 蓝图名称
-                Text(blueprint.name)
+                // 蓝图集名称
+                Text(blueprintSet.name)
                     .font(.system(size: 18, weight: .bold))
                     .foregroundColor(.white)
                     .lineLimit(2)
@@ -52,14 +70,14 @@ struct BlueprintCard: View {
                         .font(.system(size: 12))
                         .foregroundColor(Color(red: 0.2, green: 0.6, blue: 0.9))
                     
-                    Text(blueprint.author)
+                    Text(blueprintSet.author)
                         .font(.system(size: 13))
                         .foregroundColor(.white.opacity(0.7))
                 }
                 
-                // 备注
-                if !blueprint.notes.isEmpty {
-                    Text(blueprint.notes)
+                // 描述
+                if !blueprintSet.description.isEmpty {
+                    Text(blueprintSet.description)
                         .font(.system(size: 13))
                         .foregroundColor(.white.opacity(0.6))
                         .lineLimit(2)
@@ -68,16 +86,15 @@ struct BlueprintCard: View {
                 Divider()
                     .overlay(Color.white.opacity(0.1))
                 
-                // 蓝图码预览
+                // 蓝图预览
                 HStack(spacing: 6) {
-                    Image(systemName: "barcode")
+                    Image(systemName: "list.bullet.rectangle")
                         .font(.system(size: 11))
-                        .foregroundColor(Color(red: 0.4, green: 0.8, blue: 0.2))
+                        .foregroundColor(Color(red: 0.2, green: 0.6, blue: 0.9))
                     
-                    Text(blueprint.code)
-                        .font(.system(size: 11, design: .monospaced))
-                        .foregroundColor(Color(red: 0.4, green: 0.8, blue: 0.2))
-                        .lineLimit(1)
+                    Text("包含 \(blueprintSet.blueprints.count) 个蓝图")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(Color(red: 0.2, green: 0.6, blue: 0.9))
                     
                     Spacer()
                     
