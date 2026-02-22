@@ -34,12 +34,17 @@ class BlueprintSetViewModel: ObservableObject {
             
             do {
                 let loadedSets = try await BlueprintSetService.shared.loadBlueprintSets()
-                self.blueprintSets = loadedSets
-                self.filteredSets = loadedSets
-                print("📦 加载了 \(loadedSets.count) 个蓝图集")
+                
+                //  关键改动：随机打乱蓝图集顺序
+                // 这样可以确保每次启动App时，不同作者的蓝图都有机会显示在前面
+                // 实现公平展示，避免固定顺序导致排在前面的作者获得更多曝光
+                self.blueprintSets = loadedSets.shuffled()
+                self.filteredSets = loadedSets.shuffled()
+                
+                print(" 加载了 \(loadedSets.count) 个蓝图集（已随机排序）")
             } catch {
                 self.errorMessage = "加载失败: \(error.localizedDescription)"
-                print("❌ 加载蓝图集失败: \(error)")
+                print(" 加载蓝图集失败: \(error)")
             }
             
             isLoading = false

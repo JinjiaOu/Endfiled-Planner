@@ -74,19 +74,6 @@ struct HomeView: View {
                             }
                             .padding(.horizontal)
                             
-                            // 蓝图码管理卡片
-                            NavigationLink(destination: BlueprintSetView()) {
-                                EndFieldFeatureCard(
-                                    icon: "doc.text.fill",
-                                    title: "蓝图码管理系统",
-                                    description: "BLUEPRINT MANAGER",
-                                    subtitle: "蓝图码存储与分享",
-                                    color: Color(red: 0.2, green: 0.6, blue: 0.9),
-                                    status: "ONLINE"
-                                )
-                            }
-                            .padding(.horizontal)
-                            
                             // 配方查询卡片
                             NavigationLink(destination: SearchView()) {
                                 EndFieldFeatureCard(
@@ -100,6 +87,18 @@ struct HomeView: View {
                             }
                             .padding(.horizontal)
                             
+                            // 蓝图码管理卡片
+                            NavigationLink(destination: BlueprintSetView()) {
+                                EndFieldFeatureCard(
+                                    icon: "doc.text.fill",
+                                    title: "蓝图码管理系统",
+                                    description: "BLUEPRINT MANAGER",
+                                    subtitle: "蓝图码存储与分享",
+                                    color: Color(red: 0.2, green: 0.6, blue: 0.9),
+                                    status: "ONLINE"
+                                )
+                            }
+                            .padding(.horizontal)
                             // 资源计算卡片
                             NavigationLink(destination: ResourceCalculatorView()) {
                                 EndFieldFeatureCard(

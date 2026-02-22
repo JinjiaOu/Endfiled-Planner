@@ -30,33 +30,33 @@ class BlueprintSetService {
         
         // 1. 缓存
         if let cached = loadFromCache() {
-            print("✅ 从缓存加载蓝图集")
+            print(" 从缓存加载蓝图集")
             return cached
         }
         
         // 2. Gitee
         do {
             let sets = try await fetchFromURL(giteeURL)
-            print("✅ 从 Gitee 加载蓝图集")
+            print(" 从 Gitee 加载蓝图集")
             saveToCache(sets)
             return sets
         } catch {
-            print("⚠️ Gitee 加载失败: \(error.localizedDescription)")
+            print(" Gitee 加载失败: \(error.localizedDescription)")
         }
         
         // 3. GitHub
         do {
             let sets = try await fetchFromURL(githubURL)
-            print("✅ 从 GitHub 加载蓝图集")
+            print(" 从 GitHub 加载蓝图集")
             saveToCache(sets)
             return sets
         } catch {
-            print("❌ GitHub 加载失败: \(error.localizedDescription)")
+            print(" GitHub 加载失败: \(error.localizedDescription)")
         }
         
         // 4. Bundle
         if let bundled = loadFromBundle() {
-            print("✅ 从本地 Bundle 加载蓝图集")
+            print(" 从本地 Bundle 加载蓝图集")
             return bundled
         }
         
@@ -88,7 +88,7 @@ class BlueprintSetService {
     private func loadFromCache() -> [BlueprintSet]? {
         if let timestamp = UserDefaults.standard.object(forKey: cacheTimestampKey) as? Date {
             if Date().timeIntervalSince(timestamp) > cacheValidDuration {
-                print("⚠️ 缓存已过期")
+                print(" 缓存已过期")
                 return nil
             }
         } else {
@@ -108,14 +108,14 @@ class BlueprintSetService {
         if let data = try? encoder.encode(sets) {
             UserDefaults.standard.set(data, forKey: cacheKey)
             UserDefaults.standard.set(Date(), forKey: cacheTimestampKey)
-            print("💾 蓝图集已缓存")
+            print(" 蓝图集已缓存")
         }
     }
     
     func clearCache() {
         UserDefaults.standard.removeObject(forKey: cacheKey)
         UserDefaults.standard.removeObject(forKey: cacheTimestampKey)
-        print("🗑️ 缓存已清除")
+        print(" 缓存已清除")
     }
     
     // MARK: - Bundle
