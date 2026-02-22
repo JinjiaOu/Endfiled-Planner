@@ -1,2 +1,22 @@
-#  <#Title#>
-
+{
+  "version": "1.0.0",
+  "lastUpdated": "2026-02-21",
+  "blueprints": [
+    {
+      "id": "001",
+      "name": "示例蓝图 - 基础矿物生产线",
+      "author": "系统示例",
+      "region": "谷地",
+      "code": "ENDF-EXAMPLE-BASIC-MINERAL-001",
+      "notes": "这是一个示例蓝图，展示基础的矿物采集和精炼流程。包含矿机、精炼炉的基础配置。"
+    },
+    {
+      "id": "002",
+      "name": "示例蓝图 - 高效电池生产",
+      "author": "系统示例",
+      "region": "武陵",
+      "code": "ENDF-EXAMPLE-BATTERY-PRODUCTION-002",
+      "notes": "优化的电池生产线，包含完整的原材料处理和封装流程。适合中后期使用。"
+    }
+  ]
+}
