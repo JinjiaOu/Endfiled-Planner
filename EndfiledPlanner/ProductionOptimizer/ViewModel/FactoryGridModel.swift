@@ -83,30 +83,40 @@ class FactoryGridModel {
         let buildingNames: [String]
     }
 
-    static func analyze(layout: FactoryLayout) -> ProductionStats {
+    /// - Parameter machineRecipes: 按机器名分组去重的配方表（RecipeViewModel.recipesByMachine()），
+    ///   selectedRecipeIndex 就是这个表里对应机器那份列表的下标
+    static func analyze(layout: FactoryLayout, machineRecipes: [String: [Recipe]]) -> ProductionStats {
         var totalPower = 0.0
         var categoryBreakdown: [BuildingCategory: Int] = [:]
-        var outputRates: [String: (rate: Double, buildings: [String])] = [:]
-        var minEfficiency = Double.infinity
-        var bottleneck: String? = nil
+
+        // V1：按"建筑类型 + 已选配方"分组，算每组的理论产出速率。
+        // 不做传送带连通性分析，也不做瓶颈检测（瓶颈需要匹配下游消耗速率，工作量较大，先留空）。
+        struct GroupKey: Hashable { let defID: String; let recipeIndex: Int }
+        var groups: [GroupKey: Int] = [:]   // 每组建筑数量
 
         for placed in layout.buildings where placed.isActive {
             guard let def = BuildingDefinition.find(placed.definitionID) else { continue }
-
             totalPower += def.powerUsage
             categoryBreakdown[def.category, default: 0] += 1
 
-            if let output = def.output, def.productionRate > 0 {
-                var entry = outputRates[output] ?? (rate: 0, buildings: [])
-                entry.rate += def.productionRate
-                entry.buildings.append(def.name)
-                outputRates[output] = entry
+            guard let idx = placed.selectedRecipeIndex else { continue }
+            groups[GroupKey(defID: placed.definitionID, recipeIndex: idx), default: 0] += 1
+        }
 
-                // 简单瓶颈检测：找产率最低的非零建筑
-                if def.productionRate < minEfficiency {
-                    minEfficiency = def.productionRate
-                    bottleneck = def.name
-                }
+        var outputRates: [String: (rate: Double, buildings: [String])] = [:]
+        for (key, count) in groups {
+            guard let def = BuildingDefinition.find(key.defID),
+                  let recipeList = machineRecipes[def.name],
+                  key.recipeIndex >= 0, key.recipeIndex < recipeList.count
+            else { continue }
+            let recipe = recipeList[key.recipeIndex]
+            // 挖矿类设备的耗时不计入生产链瓶颈判断，但产出速率本身仍然按配方算
+            for output in recipe.outputs {
+                let rate = (Double(output.count) / Double(recipe.time)) * 60 * Double(count)
+                var entry = outputRates[output.name] ?? (rate: 0, buildings: [])
+                entry.rate += rate
+                entry.buildings.append("\(def.name) ×\(count)")
+                outputRates[output.name] = entry
             }
         }
 
@@ -118,7 +128,7 @@ class FactoryGridModel {
             totalPower: totalPower,
             buildingCount: layout.buildings.count,
             categoryBreakdown: categoryBreakdown,
-            bottleneck: layout.buildings.count > 1 ? bottleneck : nil,
+            bottleneck: nil,
             productionLines: lines
         )
     }

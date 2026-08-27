@@ -28,6 +28,7 @@ struct FactoryGridView: View {
             buildingsLayer
             dragPreview
             beltStartMarker
+            portSnapHighlight
             gestureOverlay
         }
         .frame(width: CGFloat(cols) * cellSize, height: CGFloat(rows) * cellSize)
@@ -74,16 +75,28 @@ struct FactoryGridView: View {
         .frame(width: CGFloat(cols) * cellSize, height: CGFloat(rows) * cellSize)
     }
 
-    // 橙色传送带主色
+    // 橙色传送带主色 / 蓝色管道主色
     private let beltColor      = Color(red: 1.0, green: 0.55, blue: 0.1)
+    private let pipeColor      = Color(red: 0.3, green: 0.7, blue: 1.0)
     private let beltBlockedColor = Color.red
     private let beltArrowColor = Color.white     // 方向箭头用白色，对比度高
 
-    // MARK: - 传送带层
+    /// 同一格、同一轴上如果传送带和管道都经过（平行走线），左右/上下分显，各占半格宽度
+    private func sharedAxisKeys(_ segs: [BeltSegment]) -> Set<String> {
+        var typesByCellAxis: [String: Set<LineType>] = [:]
+        for seg in segs {
+            let key = "\(seg.cell.col),\(seg.cell.row),\(seg.axis.rawValue)"
+            typesByCellAxis[key, default: []].insert(seg.lineType)
+        }
+        return Set(typesByCellAxis.filter { $0.value.count > 1 }.keys)
+    }
+
+    // MARK: - 传送带/管道层
     private var beltsLayer: some View {
         Canvas { context, size in
             let occupied = vm.occupiedBuildingCellKeys()
             let allSegs = vm.layout.beltNetwork.allSegments
+            let sharedKeys = sharedAxisKeys(allSegs + vm.beltPreviewSegments)
 
             // 每条带独立画（保证 chain 分析正确，衔接带圆角，穿插带不混）
             for belt in vm.layout.beltNetwork.belts {
@@ -91,6 +104,8 @@ struct FactoryGridView: View {
                     .filter { occupied.contains("\($0.cell.col),\($0.cell.row)") }
                     .map { "\($0.cell.col),\($0.cell.row)" })
                 drawBeltPath(segments: belt.segments,
+                             lineType: belt.lineType,
+                             sharedKeys: sharedKeys,
                              blockedSet: blockedSet,
                              isPreview: false, context: &context)
             }
@@ -98,17 +113,19 @@ struct FactoryGridView: View {
             // 拖拽预览
             if !vm.beltPreviewSegments.isEmpty {
                 let existingDirKeys = Set(allSegs.map {
-                    "\($0.cell.col),\($0.cell.row),\($0.axis.rawValue),\($0.toDir.col),\($0.toDir.row)"
+                    "\($0.cell.col),\($0.cell.row),\($0.axis.rawValue),\($0.toDir.col),\($0.toDir.row),\($0.lineType.rawValue)"
                 })
                 var previewBlockedSet = Set<String>()
                 for seg in vm.beltPreviewSegments {
                     let cellKey = "\(seg.cell.col),\(seg.cell.row)"
-                    let dirKey  = "\(cellKey),\(seg.axis.rawValue),\(seg.toDir.col),\(seg.toDir.row)"
+                    let dirKey  = "\(cellKey),\(seg.axis.rawValue),\(seg.toDir.col),\(seg.toDir.row),\(seg.lineType.rawValue)"
                     if occupied.contains(cellKey) || existingDirKeys.contains(dirKey) {
                         previewBlockedSet.insert(cellKey)
                     }
                 }
                 drawBeltPath(segments: vm.beltPreviewSegments,
+                             lineType: vm.activeLineType,
+                             sharedKeys: sharedKeys,
                              blockedSet: previewBlockedSet,
                              isPreview: true, context: &context)
             }
@@ -128,43 +145,69 @@ struct FactoryGridView: View {
         .frame(width: CGFloat(cols) * cellSize, height: CGFloat(rows) * cellSize)
     }
 
-    /// 传送带渲染：Belt.segments 本身已有序，直接画圆角折线，不需要重新串链
+    private func canonicalPerp(for axis: BeltAxis) -> GridPoint {
+        axis == .horizontal ? GridPoint(col: 0, row: 1) : GridPoint(col: 1, row: 0)
+    }
+
+    private func axisOf(_ dir: GridPoint) -> BeltAxis {
+        dir.col != 0 ? .horizontal : .vertical
+    }
+
+    /// 传送带/管道渲染：Belt.segments 本身已有序，直接画圆角折线，不需要重新串链
     private func drawBeltPath(segments: [BeltSegment],
+                              lineType: LineType,
+                              sharedKeys: Set<String>,
                               blockedSet: Set<String>,
                               isPreview: Bool,
                               context: inout GraphicsContext) {
         guard !segments.isEmpty else { return }
 
-        // 线宽 = 格子宽度（填满格子）
-        let lineW  = cellSize
-        let radius = cellSize * 0.38
+        // 整条带只要有任意一格和另一类型共占同一格同一轴，就整条按半宽偏移绘制，
+        // 避免遮挡（相邻两格局部共存、局部不共存的情况很少见，不做逐格变宽度处理）
+        let isShared = segments.contains {
+            sharedKeys.contains("\($0.cell.col),\($0.cell.row),\($0.axis.rawValue)")
+        }
+        let widthScale: CGFloat = isShared ? 0.5 : 1.0
+        let offsetSign: CGFloat = lineType == .belt ? -1 : 1
+        let shift = isShared ? cellSize * 0.25 * offsetSign : 0
+
+        let baseColor = lineType == .belt ? beltColor : pipeColor
+
+        // 线宽 = 格子宽度（填满格子），共存时减半
+        let lineW  = cellSize * widthScale
+        let radius = cellSize * 0.38 * widthScale
         let alpha: Double = isPreview ? 0.45 : 1.0
-        // butt cap：端点精确对齐，不额外延伸，起止点设在格子外边缘即可覆盖整格
-        let style = StrokeStyle(lineWidth: lineW, lineCap: .butt, lineJoin: .miter,
-                                dash: isPreview ? [cellSize * 0.7, cellSize * 0.3] : [],
-                                dashPhase: isPreview ? 0 : beltAnimPhase * cellSize * 0.05)
+        let dashPattern: [CGFloat] = isPreview ? [cellSize * 0.7, cellSize * 0.3] : []
 
-        // 背景层：暗橙色
+        // 背景层：暗色
         let bgStyle = StrokeStyle(lineWidth: lineW, lineCap: .butt, lineJoin: .miter)
-        drawChain(segments, color: beltColor.opacity(alpha * 0.55),
+        drawChain(segments, color: baseColor.opacity(alpha * 0.55),
                   blockedColor: beltBlockedColor.opacity(alpha * 0.55),
-                  blockedSet: blockedSet, style: bgStyle, context: &context)
+                  blockedSet: blockedSet, style: bgStyle, radius: radius,
+                  shift: shift, context: &context)
 
-        // 前景层：稍窄亮橙色
+        // 前景层：稍窄亮色
         let fgStyle = StrokeStyle(lineWidth: lineW * 0.55, lineCap: .butt, lineJoin: .miter,
-                                  dash: isPreview ? [cellSize * 0.7, cellSize * 0.3] : [],
+                                  dash: dashPattern,
                                   dashPhase: isPreview ? 0 : beltAnimPhase * cellSize * 0.05)
-        drawChain(segments, color: beltColor.opacity(alpha),
+        drawChain(segments, color: baseColor.opacity(alpha),
                   blockedColor: beltBlockedColor.opacity(alpha),
-                  blockedSet: blockedSet, style: fgStyle, context: &context)
+                  blockedSet: blockedSet, style: fgStyle, radius: radius,
+                  shift: shift, context: &context)
 
         // 方向箭头：每格中央画白色实心三角，明显
         for seg in segments {
-            let c = cellCenter(seg.cell)
+            var c = cellCenter(seg.cell)
             let cellKey = "\(seg.cell.col),\(seg.cell.row)"
+            let segShared = sharedKeys.contains("\(seg.cell.col),\(seg.cell.row),\(seg.axis.rawValue)")
+            if segShared {
+                let perp = canonicalPerp(for: seg.axis)
+                let s = cellSize * 0.25 * offsetSign
+                c = CGPoint(x: c.x + CGFloat(perp.col) * s, y: c.y + CGFloat(perp.row) * s)
+            }
             let isBlocked = blockedSet.contains(cellKey)
-            // 箭头大小约为格子的 30%
-            let arrowSize = cellSize * 0.30
+            // 箭头大小约为格子的 30%，共存时缩小到半宽的箭头
+            let arrowSize = cellSize * 0.30 * (segShared ? 0.6 : 1.0)
             drawArrow(at: c, dir: seg.toDir, size: arrowSize,
                       color: isBlocked ? Color.white.opacity(0.5) : Color.white.opacity(alpha * 0.9),
                       context: &context)
@@ -190,10 +233,18 @@ struct FactoryGridView: View {
                            blockedColor: Color,
                            blockedSet: Set<String>,
                            style: StrokeStyle,
+                           radius: CGFloat,
+                           shift: CGFloat,
                            context: inout GraphicsContext) {
         guard !chain.isEmpty else { return }
 
-        let radius = cellSize * 0.38
+        // 共存时垂直于每一段自身走向的偏移量（正交方向已经用 canonicalPerp 固定，
+        // 保证同一类型不管朝哪个方向走都稳定偏到同一侧，不会因为流动方向不同而两条线叠在一起）
+        func offset(for dir: GridPoint) -> CGPoint {
+            guard shift != 0 else { return .zero }
+            let perp = canonicalPerp(for: axisOf(dir))
+            return CGPoint(x: CGFloat(perp.col) * shift, y: CGFloat(perp.row) * shift)
+        }
 
         // 合并同格拐角段为关键点
         struct KP { var center: CGPoint; var inDir: GridPoint; var outDir: GridPoint; var blocked: Bool }
@@ -220,9 +271,10 @@ struct FactoryGridView: View {
         // 中间各格：只保留真正拐角格的中心点作为折点，直线段不需要中间点
         let first = kps[0]; let last = kps[kps.count - 1]
         var pts: [CGPoint] = []
+        let startOffset = offset(for: first.inDir)
         pts.append(CGPoint(
-            x: first.center.x - CGFloat(first.inDir.col) * cellSize * 0.5,
-            y: first.center.y - CGFloat(first.inDir.row) * cellSize * 0.5))
+            x: first.center.x - CGFloat(first.inDir.col) * cellSize * 0.5 + startOffset.x,
+            y: first.center.y - CGFloat(first.inDir.row) * cellSize * 0.5 + startOffset.y))
         // 只加拐角格的中心（直线段的中间格不需要，连起来就是直线）
         for idx in 0..<kps.count {
             let kp = kps[idx]
@@ -230,13 +282,17 @@ struct FactoryGridView: View {
             let isLast  = idx == kps.count - 1
             let prevDir = isFirst ? kp.inDir  : kps[idx - 1].outDir
             let nextDir = isLast  ? kp.outDir : kps[idx + 1].inDir
-            // 方向变了才是拐角，需要保留中心点
+            // 方向变了才是拐角，需要保留中心点（偏移用出方向所在的轴，和相邻直线段衔接一致）
             let turning = (prevDir.col != nextDir.col) || (prevDir.row != nextDir.row)
-            if turning { pts.append(kp.center) }
+            if turning {
+                let o = offset(for: kp.outDir)
+                pts.append(CGPoint(x: kp.center.x + o.x, y: kp.center.y + o.y))
+            }
         }
+        let endOffset = offset(for: last.outDir)
         pts.append(CGPoint(
-            x: last.center.x + CGFloat(last.outDir.col) * cellSize * 0.5,
-            y: last.center.y + CGFloat(last.outDir.row) * cellSize * 0.5))
+            x: last.center.x + CGFloat(last.outDir.col) * cellSize * 0.5 + endOffset.x,
+            y: last.center.y + CGFloat(last.outDir.row) * cellSize * 0.5 + endOffset.y))
 
         // 构建圆角路径
         var path = Path()
@@ -328,11 +384,6 @@ struct FactoryGridView: View {
                 Text(def.name)
                     .font(.system(size: min(w, h) * 0.16, weight: .bold, design: .monospaced))
                     .foregroundColor(.white).lineLimit(1)
-                if def.productionRate > 0 {
-                    Text("\(Int(def.productionRate))/min")
-                        .font(.system(size: min(w, h) * 0.13, design: .monospaced))
-                        .foregroundColor(def.category.color.opacity(0.8))
-                }
                 Text(placed.rotation.symbol)
                     .font(.system(size: min(w, h) * 0.18))
                     .foregroundColor(.white.opacity(0.5))
@@ -398,6 +449,25 @@ struct FactoryGridView: View {
         }
     }
 
+    // MARK: - 端口吸附高亮
+    // 绿色 = 类型匹配且空闲，可以吸附；红色 = 类型不匹配或端口已被占用，拒绝吸附
+    @ViewBuilder
+    private var portSnapHighlight: some View {
+        if let snap = vm.activeSnap {
+            let isValid = snap.isKindMatch && !snap.isOccupied
+            let color: Color = isValid ? Color(red: 0.4, green: 0.9, blue: 0.4) : Color.red
+            let x = CGFloat(snap.externalCell.col) * cellSize
+            let y = CGFloat(snap.externalCell.row) * cellSize
+            ZStack {
+                Rectangle().fill(color.opacity(0.3))
+                Rectangle().stroke(color, lineWidth: 3)
+            }
+            .frame(width: cellSize, height: cellSize)
+            .offset(x: x, y: y)
+            .allowsHitTesting(false)
+        }
+    }
+
     // MARK: - 手势覆盖层
     // belt 模式：整个覆盖层激活，拦截拖拽
     // select/erase：只用 onTapGesture，完全不干扰 ScrollView 单指滚动
@@ -405,8 +475,8 @@ struct FactoryGridView: View {
     @ViewBuilder
     private var gestureOverlay: some View {
         GeometryReader { geo in
-            if vm.editMode == .belt {
-                // Belt 专用：拦截单指拖拽，双指捏合由父层 simultaneousGesture 处理
+            if vm.editMode == .belt || vm.editMode == .pipe {
+                // Belt/Pipe 专用：拦截单指拖拽，双指捏合由父层 simultaneousGesture 处理
                 Color.clear
                     .contentShape(Rectangle())
                     .gesture(

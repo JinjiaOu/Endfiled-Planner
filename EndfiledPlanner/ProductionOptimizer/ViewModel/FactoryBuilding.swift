@@ -70,20 +70,78 @@ enum BuildingCategory: String, Codable, CaseIterable {
     }
 }
 
+// MARK: - 端口类型
+enum PortKind: String, Codable {
+    case item   // 普通物流口
+    case pipe   // 管道口
+}
+
+enum PortIODirection: String, Codable {
+    case input
+    case output
+}
+
+/// 建筑端口定义
+/// - edge：这个口未旋转时所在的边（up/right/down/left），已经把"输入口的朝向其实是流入方向而非所在边"
+///   这层换算做完了——parser 里是用旋转角反推出来的，这里存的已经是纯几何意义上的边
+/// - indexOnEdge：口在这条边上的原始网格偏移量（不是序号！同一边内可能跳格，比如反应池的两个输入口在
+///   x=1、x=3，不是 0、1），左→右 / 上→下递增，可以直接当偏移量用来算实际格子
+struct BuildingPort: Codable, Hashable {
+    let kind: PortKind
+    let ioDirection: PortIODirection
+    let edge: BuildingRotation
+    let indexOnEdge: Int
+}
+
 // MARK: - 建筑定义（模板）
 struct BuildingDefinition: Identifiable, Hashable {
     let id: String
     let name: String
     let category: BuildingCategory
-    let size: GridSize          // 占格尺寸
-    let productionRate: Double  // 每分钟产出数量
+    let size: GridSize          // 占格尺寸（未旋转）
     let powerUsage: Double      // 功率（MW）
-    let inputs: [String]        // 输入物品
-    let output: String?         // 输出物品
-    let description: String
+    let ports: [BuildingPort]
 
     func hash(into hasher: inout Hasher) { hasher.combine(id) }
     static func == (lhs: BuildingDefinition, rhs: BuildingDefinition) -> Bool { lhs.id == rhs.id }
+}
+
+// MARK: - 端口坐标换算
+extension BuildingRotation {
+    /// 把建筑未旋转时局部坐标系里的一个点，按建筑当前旋转换算成旋转后局部坐标系里的点
+    /// （旋转规则与 PlacedBuilding.effectiveSize 的宽高互换保持一致）
+    static func rotate(_ point: GridPoint, in size: GridSize, by rotation: BuildingRotation) -> GridPoint {
+        let w = size.width, h = size.height
+        switch rotation {
+        case .up:    return point
+        case .right: return GridPoint(col: h - 1 - point.row, row: point.col)
+        case .down:  return GridPoint(col: w - 1 - point.col, row: h - 1 - point.row)
+        case .left:  return GridPoint(col: point.row, row: w - 1 - point.col)
+        }
+    }
+}
+
+extension BuildingPort {
+    /// 未旋转时，这个端口在建筑局部坐标系里的格子偏移
+    func localOffset(definitionSize size: GridSize) -> GridPoint {
+        switch edge {
+        case .up:    return GridPoint(col: indexOnEdge, row: 0)
+        case .down:  return GridPoint(col: indexOnEdge, row: size.height - 1)
+        case .left:  return GridPoint(col: 0, row: indexOnEdge)
+        case .right: return GridPoint(col: size.width - 1, row: indexOnEdge)
+        }
+    }
+
+    /// 给定建筑实例（origin + 当前旋转），换算出这个端口实际所在的网格坐标，以及旋转后的实际朝向
+    /// （朝向 = 端口的物流流动方向：输出口是"往外流"的方向，输入口是"往里流"的方向）
+    func resolvedPosition(placed: PlacedBuilding, definition: BuildingDefinition) -> (cell: GridPoint, facing: BuildingRotation) {
+        let local = localOffset(definitionSize: definition.size)
+        let rotatedLocal = BuildingRotation.rotate(local, in: definition.size, by: placed.rotation)
+        let cell = GridPoint(col: placed.origin.col + rotatedLocal.col,
+                              row: placed.origin.row + rotatedLocal.row)
+        let facing = BuildingRotation(rawValue: (edge.rawValue + placed.rotation.rawValue) % 4) ?? .up
+        return (cell, facing)
+    }
 }
 
 // MARK: - 网格坐标
@@ -109,6 +167,8 @@ struct PlacedBuilding: Identifiable, Codable {
     var origin: GridPoint       // 左上角坐标
     var rotation: BuildingRotation
     var isActive: Bool
+    /// 这台机器有多个配方时，用户选的是哪一个（下标对应 RecipeViewModel.recipesByMachine() 里该机器的配方列表）
+    var selectedRecipeIndex: Int? = nil
 
     init(definitionID: String, origin: GridPoint, rotation: BuildingRotation = .up) {
         self.id = UUID()
@@ -146,6 +206,19 @@ enum BeltAxis: String, Codable {
     case vertical     // 垂直段
 }
 
+// MARK: - 线路类型：传送带 or 管道
+enum LineType: String, Codable, CaseIterable {
+    case belt   // 橙色，普通物流
+    case pipe   // 蓝色，液体/气体
+
+    var displayName: String {
+        switch self {
+        case .belt: return "传送带"
+        case .pipe: return "管道"
+        }
+    }
+}
+
 // MARK: - 传送带段（单格）
 struct BeltSegment: Identifiable, Codable, Hashable {
     let id: UUID
@@ -153,26 +226,44 @@ struct BeltSegment: Identifiable, Codable, Hashable {
     var axis: BeltAxis
     var fromDir: GridPoint
     var toDir: GridPoint
+    var lineType: LineType
 
-    init(cell: GridPoint, axis: BeltAxis, fromDir: GridPoint, toDir: GridPoint) {
+    init(cell: GridPoint, axis: BeltAxis, fromDir: GridPoint, toDir: GridPoint, lineType: LineType = .belt) {
         self.id = UUID()
         self.cell = cell
         self.axis = axis
         self.fromDir = fromDir
         self.toDir = toDir
+        self.lineType = lineType
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case id, cell, axis, fromDir, toDir, lineType
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(UUID.self, forKey: .id)
+        cell = try c.decode(GridPoint.self, forKey: .cell)
+        axis = try c.decode(BeltAxis.self, forKey: .axis)
+        fromDir = try c.decode(GridPoint.self, forKey: .fromDir)
+        toDir = try c.decode(GridPoint.self, forKey: .toDir)
+        // 旧存档没有这个字段，缺省当传送带处理
+        lineType = try c.decodeIfPresent(LineType.self, forKey: .lineType) ?? .belt
     }
 
     func hash(into hasher: inout Hasher) {
         hasher.combine(cell.col)
         hasher.combine(cell.row)
         hasher.combine(axis.rawValue)
+        hasher.combine(lineType.rawValue)
     }
     static func == (lhs: BeltSegment, rhs: BeltSegment) -> Bool {
-        lhs.cell == rhs.cell && lhs.axis == rhs.axis
+        lhs.cell == rhs.cell && lhs.axis == rhs.axis && lhs.lineType == rhs.lineType
     }
 }
 
-// MARK: - 单条传送带（有序段列表）
+// MARK: - 单条传送带（有序段列表，同一条内 lineType 始终一致）
 struct Belt: Identifiable, Codable {
     let id: UUID
     var segments: [BeltSegment]   // 有序，首尾相连
@@ -183,6 +274,7 @@ struct Belt: Identifiable, Codable {
     }
 
     var isEmpty: Bool { segments.isEmpty }
+    var lineType: LineType { segments.first?.lineType ?? .belt }
 
     /// 终点格：最后一段本身所在的格
     var tailCell: GridPoint? { segments.last?.cell }
@@ -239,126 +331,9 @@ struct BeltNetwork: Codable {
     }
 }
 
-// MARK: - Mock 建筑库
+// MARK: - 建筑库（从 devices_generated.json 解析）
 extension BuildingDefinition {
-    static let all: [BuildingDefinition] = [
-        // 采矿
-        BuildingDefinition(
-            id: "miner",
-            name: "矿机",
-            category: .extraction,
-            size: GridSize(width: 2, height: 2),
-            productionRate: 20,
-            powerUsage: 0.3,
-            inputs: [],
-            output: "矿石",
-            description: "自动采集地表矿物资源"
-        ),
-        // 冶炼
-        BuildingDefinition(
-            id: "smelter",
-            name: "精炼炉",
-            category: .production,
-            size: GridSize(width: 2, height: 3),
-            productionRate: 30,
-            powerUsage: 1.2,
-            inputs: ["矿石"],
-            output: "精炼锭",
-            description: "将矿石精炼为可用材料"
-        ),
-        // 加工
-        BuildingDefinition(
-            id: "crusher",
-            name: "粉碎机",
-            category: .synthesis,
-            size: GridSize(width: 2, height: 2),
-            productionRate: 25,
-            powerUsage: 0.8,
-            inputs: ["矿石"],
-            output: "粉末",
-            description: "将固体物料研磨成粉末"
-        ),
-        BuildingDefinition(
-            id: "assembler",
-            name: "装备原件机",
-            category: .synthesis,
-            size: GridSize(width: 3, height: 3),
-            productionRate: 6,
-            powerUsage: 2.5,
-            inputs: ["精炼锭", "纤维"],
-            output: "装备原件",
-            description: "生产高级装备零件"
-        ),
-        BuildingDefinition(
-            id: "shaper",
-            name: "塑形机",
-            category: .synthesis,
-            size: GridSize(width: 2, height: 2),
-            productionRate: 30,
-            powerUsage: 0.9,
-            inputs: ["精炼锭"],
-            output: "瓶体",
-            description: "将金属锭塑造成容器形状"
-        ),
-        BuildingDefinition(
-            id: "grinder",
-            name: "研磨机",
-            category: .synthesis,
-            size: GridSize(width: 2, height: 2),
-            productionRate: 30,
-            powerUsage: 0.7,
-            inputs: ["粉末", "砂叶粉末"],
-            output: "致密粉末",
-            description: "高精度研磨，生产致密粉末材料"
-        ),
-        // 种植
-        BuildingDefinition(
-            id: "planter",
-            name: "种植机",
-            category: .synthesis,
-            size: GridSize(width: 2, height: 3),
-            productionRate: 30,
-            powerUsage: 0.5,
-            inputs: ["种子"],
-            output: "作物",
-            description: "自动化种植与收割作物"
-        ),
-        BuildingDefinition(
-            id: "seeder",
-            name: "采种机",
-            category: .synthesis,
-            size: GridSize(width: 2, height: 2),
-            productionRate: 30,
-            powerUsage: 0.4,
-            inputs: ["作物"],
-            output: "种子",
-            description: "从成熟植物中采集种子"
-        ),
-        // 物流
-        BuildingDefinition(
-            id: "pump",
-            name: "水泵",
-            category: .extraction,
-            size: GridSize(width: 1, height: 2),
-            productionRate: 60,
-            powerUsage: 0.2,
-            inputs: [],
-            output: "清水",
-            description: "从环境中抽取清水"
-        ),
-        // 仓储
-        BuildingDefinition(
-            id: "warehouse",
-            name: "仓库",
-            category: .storage,
-            size: GridSize(width: 2, height: 2),
-            productionRate: 0,
-            powerUsage: 0,
-            inputs: [],
-            output: nil,
-            description: "存储各类生产物资"
-        ),
-    ]
+    static let all: [BuildingDefinition] = BuildingParser.loadAll()
 
     static func find(_ id: String) -> BuildingDefinition? {
         all.first { $0.id == id }

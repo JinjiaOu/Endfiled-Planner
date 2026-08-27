@@ -121,6 +121,24 @@ class RecipeViewModel: ObservableObject {
         }
     }
     
+    /// 按机器名分组去重后的配方表，供生产优化模块给某台放置的建筑挑选配方用
+    /// 顺序按第一个产物名排序，保证同一份数据每次算出来的下标都一样
+    func recipesByMachine() -> [String: [Recipe]] {
+        var seen = Set<String>()
+        var result: [String: [Recipe]] = [:]
+        for list in recipes.values {
+            for r in list {
+                guard !seen.contains(r.signature) else { continue }
+                seen.insert(r.signature)
+                result[r.machine, default: []].append(r)
+            }
+        }
+        for key in result.keys {
+            result[key]?.sort { ($0.outputs.first?.name ?? "") < ($1.outputs.first?.name ?? "") }
+        }
+        return result
+    }
+
     static func isMiningMachine(_ machine: String) -> Bool {
         machine.contains("矿机") ||
         machine.contains("水驱矿机") ||

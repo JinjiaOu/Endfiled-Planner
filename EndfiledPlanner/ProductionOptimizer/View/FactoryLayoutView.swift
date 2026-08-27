@@ -151,17 +151,34 @@ struct FactoryLayoutView: View {
             } message: {
                 Text("此操作不可撤销。")
             }
-            // 删除传送带确认（单格 or 整条）
+            // 删除传送带/管道确认（单格 or 整条；同格共存/十字交叉时可能同时命中传送带和管道，
+            // 这种情况下拆开显示"只删传送带/只删管道/两者都删"，避免删一个把另一个也带走）
             .confirmationDialog(
-                "删除传送带",
+                "删除线路",
                 isPresented: Binding(
                     get: { vm.pendingEraseCell != nil },
                     set: { if !$0 { vm.cancelErase() } }
                 ),
                 titleVisibility: .visible
             ) {
-                Button("删除这一格", role: .destructive) { vm.confirmEraseCell() }
-                Button("删除整条传送带", role: .destructive) { vm.confirmEraseWholeBelt() }
+                let types = vm.pendingEraseLineTypes
+                if types.count > 1 {
+                    ForEach(types, id: \.self) { type in
+                        Button("只删\(type.displayName)（这一格）", role: .destructive) {
+                            vm.confirmEraseCell(lineType: type)
+                        }
+                    }
+                    Button("两者都删（这一格）", role: .destructive) { vm.confirmEraseCell() }
+                    ForEach(types, id: \.self) { type in
+                        Button("只删\(type.displayName)（整条）", role: .destructive) {
+                            vm.confirmEraseWholeBelt(lineType: type)
+                        }
+                    }
+                    Button("两者都删（整条）", role: .destructive) { vm.confirmEraseWholeBelt() }
+                } else {
+                    Button("删除这一格", role: .destructive) { vm.confirmEraseCell() }
+                    Button("删除整条线路", role: .destructive) { vm.confirmEraseWholeBelt() }
+                }
                 Button("取消", role: .cancel) { vm.cancelErase() }
             } message: {
                 Text("请选择删除范围")
@@ -245,8 +262,16 @@ struct FactoryLayoutView: View {
             Divider().overlay(Color.white.opacity(0.1))
             toolButton(icon: "arrow.left.and.right", label: "传送带",
                        isActive: vm.editMode == .belt,
-                       color: Color(red: 0.4, green: 0.7, blue: 0.9)) {
+                       color: Color(red: 1.0, green: 0.55, blue: 0.1)) {
                 vm.editMode = .belt
+                showBuildingPalette = false
+                vm.beltStart = nil
+            }
+            Divider().overlay(Color.white.opacity(0.1))
+            toolButton(icon: "water.waves", label: "管道",
+                       isActive: vm.editMode == .pipe,
+                       color: Color(red: 0.3, green: 0.7, blue: 1.0)) {
+                vm.editMode = .pipe
                 showBuildingPalette = false
                 vm.beltStart = nil
             }
@@ -479,17 +504,13 @@ struct FactoryLayoutView: View {
             VStack(alignment: .leading, spacing: 3) {
                 Text(def.name).font(.system(size: 14, weight: .bold)).foregroundColor(.white)
                 HStack(spacing: 10) {
-                    if def.productionRate > 0 {
-                        Label("\(Int(def.productionRate))/min", systemImage: "arrow.up.right")
-                            .font(.system(size: 10, design: .monospaced))
-                            .foregroundColor(Color(red: 0.4, green: 0.8, blue: 0.2))
-                    }
                     if def.powerUsage > 0 {
                         Label(String(format: "%.1fMW", def.powerUsage), systemImage: "bolt.fill")
                             .font(.system(size: 10, design: .monospaced))
                             .foregroundColor(Color(red: 0.9, green: 0.5, blue: 0.2))
                     }
                 }
+                recipePicker(for: def)
             }
             Spacer()
             VStack(spacing: 6) {
@@ -513,6 +534,32 @@ struct FactoryLayoutView: View {
         .padding(.horizontal, 14).padding(.vertical, 10)
         .background(Color(red: 0.10, green: 0.11, blue: 0.14))
         .overlay(Rectangle().stroke(def.category.color.opacity(0.3), lineWidth: 1), alignment: .top)
+    }
+
+    /// 配方选择：机器有真实配方数据才显示，选完立即重新计算产能统计
+    @ViewBuilder
+    private func recipePicker(for def: BuildingDefinition) -> some View {
+        let recipes = vm.availableRecipes(for: def)
+        if !recipes.isEmpty, let placedID = vm.selectedBuildingID {
+            let currentIndex = vm.selectedPlaced?.selectedRecipeIndex
+            Menu {
+                ForEach(Array(recipes.enumerated()), id: \.offset) { idx, recipe in
+                    Button {
+                        vm.selectRecipe(idx, for: placedID)
+                    } label: {
+                        let outputText = recipe.outputs.map { "\($0.name)×\($0.count)" }.joined(separator: "+")
+                        Text("\(outputText)（\(recipe.time)s）")
+                    }
+                }
+            } label: {
+                Label(
+                    currentIndex.flatMap { recipes.indices.contains($0) ? recipes[$0].outputs.first?.name : nil } ?? "选择配方",
+                    systemImage: "list.bullet.rectangle"
+                )
+                .font(.system(size: 10, design: .monospaced))
+                .foregroundColor(Color(red: 0.4, green: 0.8, blue: 0.2))
+            }
+        }
     }
 
     // MARK: - 保存 Toast
