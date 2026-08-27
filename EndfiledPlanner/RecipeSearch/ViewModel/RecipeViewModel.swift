@@ -22,7 +22,6 @@ class RecipeViewModel: ObservableObject {
             print("未找到 recipes.txt")
             return
         }
-        
         do {
             let content = try String(contentsOf: url)
             parseRecipes(content)
@@ -48,16 +47,16 @@ class RecipeViewModel: ObservableObject {
             guard lines.count > 1 else { continue }
             
             for line in lines.dropFirst() {
-                if let result = parseRecipeLine(line) {
-                    recipes[result.outputName, default: []].append(result.recipe)
+                if let recipe = parseRecipeLine(line) {
+                    for output in recipe.outputs {
+                        recipes[output.name, default: []].append(recipe)
+                    }
                 }
             }
         }
     }
     
-    private func parseRecipeLine(_ line: String)
-    -> (outputName: String, recipe: Recipe)? {
-        
+    private func parseRecipeLine(_ line: String) -> Recipe? {
         guard let pipeIndex = line.firstIndex(of: "|") else { return nil }
         
         let left = String(line[..<pipeIndex]).trimmingCharacters(in: .whitespaces)
@@ -77,58 +76,96 @@ class RecipeViewModel: ObservableObject {
         let inputPart = components[0].trimmingCharacters(in: .whitespaces)
         let outputPart = components[1].trimmingCharacters(in: .whitespaces)
         
-        var inputs: [(String, Int)] = []
-        
+        // 解析输入
+        var inputs: [(name: String, count: Int)] = []
         if !inputPart.isEmpty {
             for mat in inputPart.components(separatedBy: "+") {
                 let trimmed = mat.trimmingCharacters(in: .whitespaces)
                 if trimmed.isEmpty { continue }
-                
                 let parts = trimmed.components(separatedBy: "x")
                 let name = parts[0].trimmingCharacters(in: .whitespaces)
-                let count = parts.count > 1 ? Int(parts[1]) ?? 1 : 1
+                let count = parts.count > 1 ? Int(parts[1].trimmingCharacters(in: .whitespaces)) ?? 1 : 1
                 inputs.append((name, count))
             }
         }
         
-        let outputParts = outputPart.components(separatedBy: "x")
-        let outputName = outputParts[0].trimmingCharacters(in: .whitespaces)
-        let outputCount = outputParts.count > 1 ? Int(outputParts[1]) ?? 1 : 1
+        // 解析多输出
+        var outputs: [(name: String, count: Int)] = []
+        for out in outputPart.components(separatedBy: "+") {
+            let trimmed = out.trimmingCharacters(in: .whitespaces)
+            if trimmed.isEmpty { continue }
+            let parts = trimmed.components(separatedBy: "x")
+            let name = parts[0].trimmingCharacters(in: .whitespaces)
+            let count = parts.count > 1 ? Int(parts[1].trimmingCharacters(in: .whitespaces)) ?? 1 : 1
+            outputs.append((name, count))
+        }
         
-        let recipe = Recipe(
-            machine: machine,
-            time: time,
-            inputs: inputs,
-            outputCount: outputCount
-        )
+        guard !outputs.isEmpty else { return nil }
         
-        return (outputName, recipe)
+        return Recipe(machine: machine, time: time, inputs: inputs, outputs: outputs)
     }
     
     func buildTree(target: String, amount: Int = 1) {
-        rootNode = createNode(name: target,
-                              amount: amount,
-                              visited: [])
+        rootNode = createNode(name: target, amount: amount, visited: [])
         layoutTree()
+        if let root = rootNode {
+                print("根节点: \(root.name), positionX: \(root.positionX), level: \(root.level), children: \(root.children.count)")
+            }
     }
     
+    private func printTree(_ node: RecipeNode, indent: Int) {
+        let pad = String(repeating: "  ", count: indent)
+        print("\(pad)\(node.name) posX:\(node.positionX) level:\(node.level)")
+        for child in node.children {
+            printTree(child, indent: indent + 1)
+        }
+    }
+    
+    static func isMiningMachine(_ machine: String) -> Bool {
+        machine.contains("矿机") ||
+        machine.contains("水驱矿机") ||
+        machine.contains("水泵") ||
+        machine.contains("采种机") ||
+        machine.contains("种植机")
+    }
+    
+    /// 判断某条配方是否与自己的产物构成互相依赖的循环
+    /// （例如 息壤气 用息壤生产，而息壤又用息壤气生产）
+    private func isCyclic(_ recipe: Recipe, producing name: String) -> Bool {
+        recipe.inputs.contains { input in
+            recipes[input.name]?.contains { $0.inputs.contains { $0.name == name } } ?? false
+        }
+    }
+
+    /// 选出生产该物品最合适的配方：优先选不构成循环依赖的配方，
+    /// 都不构成循环或都构成循环时再按耗时取最短
+    private func pickRecipe(for name: String) -> Recipe? {
+        guard let candidates = recipes[name], !candidates.isEmpty else { return nil }
+        let nonCyclic = candidates.filter { !isCyclic($0, producing: name) }
+        let pool = nonCyclic.isEmpty ? candidates : nonCyclic
+        return pool.min(by: { $0.time < $1.time })
+    }
+
     private func createNode(
         name: String,
         amount: Int,
         visited: Set<String>
     ) -> RecipeNode {
-        
+
         if visited.contains(name) {
             return RecipeNode(name: name, amount: amount, recipe: nil)
         }
-        
-        guard let recipe = recipes[name]?.first else {
+
+        guard let recipe = pickRecipe(for: name) else {
             return RecipeNode(name: name, amount: amount, recipe: nil)
         }
         
         let node = RecipeNode(name: name, amount: amount, recipe: recipe)
         
-        let batches = Int(ceil(Double(amount) / Double(recipe.outputCount)))
+        // 找到目标输出的数量
+        let targetOutput = recipe.outputs.first { $0.name == name }
+        let outCount = targetOutput?.count ?? 1
+        let batches = Int(ceil(Double(amount) / Double(outCount)))
         node.batches = batches
         
         var newVisited = visited
@@ -144,13 +181,12 @@ class RecipeViewModel: ObservableObject {
             node.children.append(childNode)
         }
         
-        node.totalTime = recipe.time * batches +
-            (node.children.map { $0.totalTime }.max() ?? 0)
+        let selfTime = RecipeViewModel.isMiningMachine(recipe.machine) ? 0 : recipe.time * batches
+        node.totalTime = selfTime + (node.children.map { $0.totalTime }.max() ?? 0)
         
         return node
     }
     
-    // 垂直布局
     private func layoutTree() {
         guard let root = rootNode else { return }
         var xCounter: CGFloat = 0
@@ -169,11 +205,8 @@ class RecipeViewModel: ObservableObject {
             xCounter += 1
         } else {
             for child in node.children {
-                assignPosition(node: child,
-                               level: level + 1,
-                               xCounter: &xCounter)
+                assignPosition(node: child, level: level + 1, xCounter: &xCounter)
             }
-            
             let minX = node.children.map { $0.positionX }.min() ?? 0
             let maxX = node.children.map { $0.positionX }.max() ?? 0
             node.positionX = (minX + maxX) / 2

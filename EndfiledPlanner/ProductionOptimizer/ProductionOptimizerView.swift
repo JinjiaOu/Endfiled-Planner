@@ -128,10 +128,15 @@ struct ProductionOptimizerView: View {
                                 .foregroundColor(.white)
                             
                             VStack(alignment: .leading, spacing: 8) {
-                                FeatureItem(text: "工厂布局优化", color: Color(red: 0.9, green: 0.5, blue: 0.2))
-                                FeatureItem(text: "生产效率分析", color: Color(red: 0.9, green: 0.5, blue: 0.2))
-                                FeatureItem(text: "瓶颈检测", color: Color(red: 0.9, green: 0.5, blue: 0.2))
-                                FeatureItem(text: "自动化建议", color: Color(red: 0.9, green: 0.5, blue: 0.2))
+                                ForEach(["工厂布局优化", "生产效率分析", "瓶颈检测", "自动化建议"], id: \.self) { text in
+                                    HStack(spacing: 8) {
+                                        Image(systemName: "checkmark.circle")
+                                            .foregroundColor(Color(red: 0.9, green: 0.5, blue: 0.2).opacity(0.6))
+                                        Text(text)
+                                            .font(.system(size: 14))
+                                            .foregroundColor(.white.opacity(0.7))
+                                    }
+                                }
                             }
                             .padding(.top, 8)
                         }

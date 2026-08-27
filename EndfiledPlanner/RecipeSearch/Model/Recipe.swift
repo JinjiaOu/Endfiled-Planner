@@ -11,5 +11,8 @@ struct Recipe {
     let machine: String
     let time: Int
     let inputs: [(name: String, count: Int)]
-    let outputCount: Int
+    let outputs: [(name: String, count: Int)]
+    
+    var outputCount: Int { outputs.first?.count ?? 1 }
+    var outputName: String { outputs.first?.name ?? "" }
 }

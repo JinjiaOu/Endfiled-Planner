@@ -57,76 +57,7 @@ struct HomeView: View {
                             .padding(.horizontal)
                             .padding(.top, 20)
                         
-                        // 功能卡片区域
-                        VStack(spacing: 16) {
-                            
-                            HStack {
-                                Rectangle()
-                                    .fill(Color(red: 1.0, green: 0.8, blue: 0.0))
-                                    .frame(width: 3, height: 20)
-                                
-                                Text("系统功能")
-                                    .font(.system(size: 18, weight: .bold, design: .monospaced))
-                                    .foregroundColor(.white)
-                                    .textCase(.uppercase)
-                                
-                                Spacer()
-                            }
-                            .padding(.horizontal)
-                            
-                            // 配方查询卡片
-                            NavigationLink(destination: SearchView()) {
-                                EndFieldFeatureCard(
-                                    icon: "doc.text.magnifyingglass",
-                                    title: "配方分析系统",
-                                    description: "RECIPE ANALYSIS",
-                                    subtitle: "生产链可视化分析",
-                                    color: Color(red: 1.0, green: 0.8, blue: 0.0),
-                                    status: "ONLINE"
-                                )
-                            }
-                            .padding(.horizontal)
-                            
-                            // 蓝图码管理卡片
-                            NavigationLink(destination: BlueprintSetView()) {
-                                EndFieldFeatureCard(
-                                    icon: "doc.text.fill",
-                                    title: "蓝图码管理系统",
-                                    description: "BLUEPRINT MANAGER",
-                                    subtitle: "蓝图码存储与分享",
-                                    color: Color(red: 0.2, green: 0.6, blue: 0.9),
-                                    status: "ONLINE"
-                                )
-                            }
-                            .padding(.horizontal)
-                            // 资源计算卡片
-                            NavigationLink(destination: ResourceCalculatorView()) {
-                                EndFieldFeatureCard(
-                                    icon: "chart.bar.fill",
-                                    title: "资源计算引擎",
-                                    description: "RESOURCE CALCULATOR",
-                                    subtitle: "原材料需求统计",
-                                    color: Color(red: 0.4, green: 0.8, blue: 0.2),
-                                    status: "DEVELOPING"
-                                )
-                            }
-                            .opacity(0.5)
-                            .padding(.horizontal)
-                            
-                            // 生产优化卡片
-                            NavigationLink(destination: ProductionOptimizerView()) {
-                                EndFieldFeatureCard(
-                                    icon: "cpu.fill",
-                                    title: "生产优化模块",
-                                    description: "PRODUCTION OPTIMIZER",
-                                    subtitle: "效率与布局优化",
-                                    color: Color(red: 0.9, green: 0.5, blue: 0.2),
-                                    status: "DEVELOPING"
-                                )
-                            }
-                            .opacity(0.5)
-                            .padding(.horizontal)
-                        }
+                        featureGrid
                         
                         // 数据统计面板
                         EndFieldStatsView()
@@ -135,6 +66,8 @@ struct HomeView: View {
                         
                         Spacer(minLength: 20)
                     }
+                    .frame(maxWidth: 980)
+                    .frame(maxWidth: .infinity)
                 }
             }
             .navigationTitle("")
@@ -160,6 +93,64 @@ struct HomeView: View {
             }
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbarBackground(Color(red: 0.08, green: 0.09, blue: 0.12), for: .navigationBar)
+        }
+    }
+
+    private var featureGrid: some View {
+        VStack(spacing: 16) {
+            HStack {
+                Rectangle()
+                    .fill(Color(red: 1.0, green: 0.8, blue: 0.0))
+                    .frame(width: 3, height: 20)
+
+                Text("系统功能")
+                    .font(.system(size: 18, weight: .bold, design: .monospaced))
+                    .foregroundColor(.white)
+                    .textCase(.uppercase)
+
+                Spacer()
+            }
+            .padding(.horizontal)
+
+            LazyVGrid(
+                columns: [GridItem(.adaptive(minimum: 280), spacing: 16)],
+                spacing: 16
+            ) {
+                NavigationLink(destination: SearchView()) {
+                    EndFieldFeatureCard(
+                        icon: "doc.text.magnifyingglass",
+                        title: "配方查找系统",
+                        description: "RECIPE ANALYSIS",
+                        subtitle: "生产链可视化分析",
+                        color: Color(red: 1.0, green: 0.8, blue: 0.0),
+                        status: "ONLINE"
+                    )
+                }
+
+                NavigationLink(destination: BlueprintSetView()) {
+                    EndFieldFeatureCard(
+                        icon: "doc.text.fill",
+                        title: "蓝图码管理系统",
+                        description: "BLUEPRINT MANAGER",
+                        subtitle: "蓝图码存储与分享",
+                        color: Color(red: 0.2, green: 0.6, blue: 0.9),
+                        status: "ONLINE"
+                    )
+                }
+
+                NavigationLink(destination: FactoryLayoutView()) {
+                    EndFieldFeatureCard(
+                        icon: "cpu.fill",
+                        title: "生产优化模块",
+                        description: "PRODUCTION OPTIMIZER",
+                        subtitle: "效率与布局优化",
+                        color: Color(red: 0.9, green: 0.5, blue: 0.2),
+                        status: "DEVELOPING"
+                    )
+                }
+                .opacity(0.5)
+            }
+            .padding(.horizontal)
         }
     }
 }

@@ -1,0 +1,6029 @@
+{
+  "schemaVersion": 1,
+  "source": "EndfieldData/TableCfg",
+  "language": "zh-CN",
+  "categories": [
+    {
+      "id": "custom",
+      "name": "快捷建造",
+      "priority": 100
+    },
+    {
+      "id": "logistic",
+      "name": "物流",
+      "priority": 99
+    },
+    {
+      "id": "source_machine",
+      "name": "资源开采",
+      "priority": 98
+    },
+    {
+      "id": "storage",
+      "name": "仓储存取",
+      "priority": 97
+    },
+    {
+      "id": "basic_machine",
+      "name": "基础生产",
+      "priority": 96
+    },
+    {
+      "id": "assemble_machine",
+      "name": "合成制造",
+      "priority": 95
+    },
+    {
+      "id": "electric_machine",
+      "name": "电力供应",
+      "priority": 94
+    },
+    {
+      "id": "extra_machine",
+      "name": "功能设备",
+      "priority": 93
+    },
+    {
+      "id": "battle_machine",
+      "name": "战斗辅助",
+      "priority": 92
+    }
+  ],
+  "devices": [
+    {
+      "id": "mix_pool_1",
+      "name": "反应池",
+      "recordType": "building",
+      "categoryId": "assemble_machine",
+      "categoryName": "合成制造",
+      "buildingType": 27,
+      "size": {
+        "width": 5,
+        "depth": 5,
+        "height": 5,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 50,
+      "needPower": true,
+      "liquidEnabled": true,
+      "bandwidth": 2,
+      "modes": [
+        {
+          "id": "liquid",
+          "name": "液体模式",
+          "defaultUnlocked": true,
+          "isEnvMode": false,
+          "craftGroupId": "group_mix_pool_1_liquid"
+        }
+      ],
+      "activationRequirements": [],
+      "ports": [
+        {
+          "index": 0,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 1,
+            "y": 0,
+            "z": 4
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 1,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 3,
+            "y": 0,
+            "z": 4
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 2,
+          "direction": "input",
+          "kind": "pipe",
+          "position": {
+            "x": 0,
+            "y": 3,
+            "z": 1
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        },
+        {
+          "index": 3,
+          "direction": "input",
+          "kind": "pipe",
+          "position": {
+            "x": 0,
+            "y": 3,
+            "z": 3
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        },
+        {
+          "index": 0,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 1,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 1,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 3,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 2,
+          "direction": "output",
+          "kind": "pipe",
+          "position": {
+            "x": 4,
+            "y": 3,
+            "z": 1
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        },
+        {
+          "index": 3,
+          "direction": "output",
+          "kind": "pipe",
+          "position": {
+            "x": 4,
+            "y": 3,
+            "z": 3
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        }
+      ],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "transmuter_2",
+      "name": "固气转化机",
+      "recordType": "building",
+      "categoryId": "assemble_machine",
+      "categoryName": "合成制造",
+      "buildingType": 39,
+      "size": {
+        "width": 5,
+        "depth": 5,
+        "height": 5,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 50,
+      "needPower": true,
+      "liquidEnabled": true,
+      "bandwidth": 2,
+      "modes": [
+        {
+          "id": "gastrans",
+          "name": "气体产出",
+          "defaultUnlocked": true,
+          "isEnvMode": false,
+          "craftGroupId": "group_transmuter_2_gastrans"
+        },
+        {
+          "id": "solidtrans",
+          "name": "固体产出",
+          "defaultUnlocked": true,
+          "isEnvMode": false,
+          "craftGroupId": "group_transmuter_2_solidtrans"
+        }
+      ],
+      "activationRequirements": [
+        {
+          "type": "activator",
+          "consumeItemId": "item_gas_xiranite",
+          "consumeItemName": "息壤气",
+          "minimumRatePerMinute": 6,
+          "maximumEffectiveRatePerMinute": 30,
+          "activationPortIndex": 2
+        }
+      ],
+      "ports": [
+        {
+          "index": 0,
+          "direction": "input",
+          "kind": "pipe",
+          "position": {
+            "x": 0,
+            "y": 3,
+            "z": 1
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        },
+        {
+          "index": 1,
+          "direction": "input",
+          "kind": "pipe",
+          "position": {
+            "x": 0,
+            "y": 3,
+            "z": 3
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        },
+        {
+          "index": 2,
+          "direction": "input",
+          "kind": "pipe",
+          "position": {
+            "x": 2,
+            "y": 3,
+            "z": 4
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 3,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 1,
+            "y": 0,
+            "z": 4
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 4,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 3,
+            "y": 0,
+            "z": 4
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 0,
+          "direction": "output",
+          "kind": "pipe",
+          "position": {
+            "x": 4,
+            "y": 3,
+            "z": 1
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        },
+        {
+          "index": 1,
+          "direction": "output",
+          "kind": "pipe",
+          "position": {
+            "x": 4,
+            "y": 3,
+            "z": 3
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        },
+        {
+          "index": 2,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 1,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 3,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 3,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        }
+      ],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "xiranite_oven_1",
+      "name": "天有洪炉",
+      "recordType": "building",
+      "categoryId": "assemble_machine",
+      "categoryName": "合成制造",
+      "buildingType": 6,
+      "size": {
+        "width": 5,
+        "depth": 5,
+        "height": 5,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 50,
+      "needPower": true,
+      "liquidEnabled": true,
+      "bandwidth": 2,
+      "modes": [
+        {
+          "id": "liquid",
+          "name": "液体模式",
+          "defaultUnlocked": true,
+          "isEnvMode": false,
+          "craftGroupId": "group_xiranite_oven_liquid"
+        },
+        {
+          "id": "gasliquid",
+          "name": "气液模式",
+          "defaultUnlocked": false,
+          "isEnvMode": true,
+          "craftGroupId": "group_xiranite_oven_gasliquid"
+        }
+      ],
+      "activationRequirements": [],
+      "ports": [
+        {
+          "index": 0,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 4
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 1,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 1,
+            "y": 0,
+            "z": 4
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 2,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 2,
+            "y": 0,
+            "z": 4
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 3,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 3,
+            "y": 0,
+            "z": 4
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 4,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 4,
+            "y": 0,
+            "z": 4
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 5,
+          "direction": "input",
+          "kind": "pipe",
+          "position": {
+            "x": 0,
+            "y": 3,
+            "z": 2
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        },
+        {
+          "index": 0,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 1,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 1,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 2,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 2,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 3,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 3,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 4,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 4,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        }
+      ],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "tools_assebling_mc_1",
+      "name": "封装机",
+      "recordType": "building",
+      "categoryId": "assemble_machine",
+      "categoryName": "合成制造",
+      "buildingType": 6,
+      "size": {
+        "width": 6,
+        "depth": 4,
+        "height": 4,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 20,
+      "needPower": true,
+      "liquidEnabled": false,
+      "bandwidth": 2,
+      "modes": [
+        {
+          "id": "normal",
+          "name": "基础模式",
+          "defaultUnlocked": true,
+          "isEnvMode": false,
+          "craftGroupId": "group_tools_normal"
+        }
+      ],
+      "activationRequirements": [],
+      "ports": [
+        {
+          "index": 0,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 3
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 1,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 1,
+            "y": 0,
+            "z": 3
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 2,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 2,
+            "y": 0,
+            "z": 3
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 3,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 3,
+            "y": 0,
+            "z": 3
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 4,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 4,
+            "y": 0,
+            "z": 3
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 5,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 5,
+            "y": 0,
+            "z": 3
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 0,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 1,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 1,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 2,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 2,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 3,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 3,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 4,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 4,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 5,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 5,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        }
+      ],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "mix_pool_2",
+      "name": "扩容反应池",
+      "recordType": "building",
+      "categoryId": "assemble_machine",
+      "categoryName": "合成制造",
+      "buildingType": 27,
+      "size": {
+        "width": 6,
+        "depth": 5,
+        "height": 5,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 100,
+      "needPower": true,
+      "liquidEnabled": true,
+      "bandwidth": 2,
+      "modes": [
+        {
+          "id": "liquid",
+          "name": "液体模式",
+          "defaultUnlocked": true,
+          "isEnvMode": false,
+          "craftGroupId": "group_mix_pool_2_liquid"
+        }
+      ],
+      "activationRequirements": [],
+      "ports": [
+        {
+          "index": 0,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 1,
+            "y": 0,
+            "z": 4
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 1,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 2,
+            "y": 0,
+            "z": 4
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 2,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 3,
+            "y": 0,
+            "z": 4
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 3,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 4,
+            "y": 0,
+            "z": 4
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 4,
+          "direction": "input",
+          "kind": "pipe",
+          "position": {
+            "x": 0,
+            "y": 3,
+            "z": 1
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        },
+        {
+          "index": 5,
+          "direction": "input",
+          "kind": "pipe",
+          "position": {
+            "x": 0,
+            "y": 3,
+            "z": 3
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        },
+        {
+          "index": 0,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 1,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 1,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 2,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 2,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 3,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 3,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 4,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 4,
+          "direction": "output",
+          "kind": "pipe",
+          "position": {
+            "x": 5,
+            "y": 3,
+            "z": 1
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        },
+        {
+          "index": 5,
+          "direction": "output",
+          "kind": "pipe",
+          "position": {
+            "x": 5,
+            "y": 3,
+            "z": 3
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        }
+      ],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "dismantler_1",
+      "name": "拆解机",
+      "recordType": "building",
+      "categoryId": "assemble_machine",
+      "categoryName": "合成制造",
+      "buildingType": 6,
+      "size": {
+        "width": 6,
+        "depth": 4,
+        "height": 5,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 20,
+      "needPower": true,
+      "liquidEnabled": true,
+      "bandwidth": 2,
+      "modes": [
+        {
+          "id": "liquid",
+          "name": "液体模式",
+          "defaultUnlocked": true,
+          "isEnvMode": false,
+          "craftGroupId": "group_dismantler_liquid"
+        },
+        {
+          "id": "gasliquid",
+          "name": "气液模式",
+          "defaultUnlocked": false,
+          "isEnvMode": false,
+          "craftGroupId": "group_dismantler_gasliquid"
+        }
+      ],
+      "activationRequirements": [],
+      "ports": [
+        {
+          "index": 0,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 3
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 1,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 1,
+            "y": 0,
+            "z": 3
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 2,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 2,
+            "y": 0,
+            "z": 3
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 3,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 3,
+            "y": 0,
+            "z": 3
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 4,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 4,
+            "y": 0,
+            "z": 3
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 5,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 5,
+            "y": 0,
+            "z": 3
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 0,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 1,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 1,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 2,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 2,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 3,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 3,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 4,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 4,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 5,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 5,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 6,
+          "direction": "output",
+          "kind": "pipe",
+          "position": {
+            "x": 5,
+            "y": 3,
+            "z": 2
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        }
+      ],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "liquid_purifier_1",
+      "name": "提纯机",
+      "recordType": "building",
+      "categoryId": "assemble_machine",
+      "categoryName": "合成制造",
+      "buildingType": 6,
+      "size": {
+        "width": 5,
+        "depth": 5,
+        "height": 5,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 50,
+      "needPower": true,
+      "liquidEnabled": true,
+      "bandwidth": 2,
+      "modes": [
+        {
+          "id": "liquid",
+          "name": "液体模式",
+          "defaultUnlocked": true,
+          "isEnvMode": false,
+          "craftGroupId": "group_liquid_purifier_liquid"
+        },
+        {
+          "id": "gas",
+          "name": "气体模式",
+          "defaultUnlocked": false,
+          "isEnvMode": true,
+          "craftGroupId": "group_liquid_purifier_gas"
+        }
+      ],
+      "activationRequirements": [],
+      "ports": [
+        {
+          "index": 0,
+          "direction": "input",
+          "kind": "pipe",
+          "position": {
+            "x": 0,
+            "y": 3,
+            "z": 1
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        },
+        {
+          "index": 1,
+          "direction": "input",
+          "kind": "pipe",
+          "position": {
+            "x": 0,
+            "y": 3,
+            "z": 3
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        },
+        {
+          "index": 2,
+          "direction": "input",
+          "kind": "pipe",
+          "position": {
+            "x": 0,
+            "y": 3,
+            "z": 2
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        },
+        {
+          "index": 3,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 4
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 4,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 1,
+            "y": 0,
+            "z": 4
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 5,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 2,
+            "y": 0,
+            "z": 4
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 6,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 3,
+            "y": 0,
+            "z": 4
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 7,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 4,
+            "y": 0,
+            "z": 4
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 0,
+          "direction": "output",
+          "kind": "pipe",
+          "position": {
+            "x": 4,
+            "y": 3,
+            "z": 1
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        },
+        {
+          "index": 1,
+          "direction": "output",
+          "kind": "pipe",
+          "position": {
+            "x": 4,
+            "y": 3,
+            "z": 3
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        }
+      ],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "gas_reactor_1",
+      "name": "气体反应炉",
+      "recordType": "building",
+      "categoryId": "assemble_machine",
+      "categoryName": "合成制造",
+      "buildingType": 6,
+      "size": {
+        "width": 5,
+        "depth": 5,
+        "height": 5,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 50,
+      "needPower": true,
+      "liquidEnabled": true,
+      "bandwidth": 2,
+      "modes": [
+        {
+          "id": "gas",
+          "name": "气体模式",
+          "defaultUnlocked": true,
+          "isEnvMode": true,
+          "craftGroupId": "group_gas_reactor_gas"
+        }
+      ],
+      "activationRequirements": [],
+      "ports": [
+        {
+          "index": 0,
+          "direction": "input",
+          "kind": "pipe",
+          "position": {
+            "x": 0,
+            "y": 3,
+            "z": 1
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        },
+        {
+          "index": 1,
+          "direction": "input",
+          "kind": "pipe",
+          "position": {
+            "x": 0,
+            "y": 3,
+            "z": 3
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        },
+        {
+          "index": 0,
+          "direction": "output",
+          "kind": "pipe",
+          "position": {
+            "x": 4,
+            "y": 3,
+            "z": 1
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        },
+        {
+          "index": 1,
+          "direction": "output",
+          "kind": "pipe",
+          "position": {
+            "x": 4,
+            "y": 3,
+            "z": 3
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        }
+      ],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "vaporizer_1",
+      "name": "气体散布机",
+      "recordType": "building",
+      "categoryId": "assemble_machine",
+      "categoryName": "合成制造",
+      "buildingType": 40,
+      "size": {
+        "width": 3,
+        "depth": 3,
+        "height": 5,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 0,
+      "needPower": false,
+      "liquidEnabled": true,
+      "bandwidth": 2,
+      "modes": [
+        {
+          "id": "gas",
+          "name": "气体模式",
+          "defaultUnlocked": true,
+          "isEnvMode": false,
+          "craftGroupId": ""
+        }
+      ],
+      "activationRequirements": [
+        {
+          "type": "environmentGenerator",
+          "consumeItemId": "item_gas_inert",
+          "consumeItemName": "惰气",
+          "minimumRatePerMinute": 6,
+          "maximumEffectiveRatePerMinute": 30,
+          "activationPortIndex": 0,
+          "generatedEnvironmentId": 1,
+          "generatedEnvironmentName": "稳定环境",
+          "rangeExtend": {
+            "x": 5,
+            "y": 5,
+            "z": 5
+          }
+        },
+        {
+          "type": "environmentGenerator",
+          "consumeItemId": "item_gas_water",
+          "consumeItemName": "水蒸气",
+          "minimumRatePerMinute": 6,
+          "maximumEffectiveRatePerMinute": 30,
+          "activationPortIndex": 0,
+          "generatedEnvironmentId": 2,
+          "generatedEnvironmentName": "潮湿环境",
+          "rangeExtend": {
+            "x": 5,
+            "y": 5,
+            "z": 5
+          }
+        },
+        {
+          "type": "environmentGenerator",
+          "consumeItemId": "item_gas_acid",
+          "consumeItemName": "酸气",
+          "minimumRatePerMinute": 6,
+          "maximumEffectiveRatePerMinute": 30,
+          "activationPortIndex": 0,
+          "generatedEnvironmentId": 3,
+          "generatedEnvironmentName": "酸性环境",
+          "rangeExtend": {
+            "x": 5,
+            "y": 5,
+            "z": 5
+          }
+        },
+        {
+          "type": "environmentGenerator",
+          "consumeItemId": "item_gas_xiranite",
+          "consumeItemName": "息壤气",
+          "minimumRatePerMinute": 6,
+          "maximumEffectiveRatePerMinute": 30,
+          "activationPortIndex": 0,
+          "generatedEnvironmentId": 4,
+          "generatedEnvironmentName": "息壤环境",
+          "rangeExtend": {
+            "x": 5,
+            "y": 5,
+            "z": 5
+          }
+        }
+      ],
+      "ports": [
+        {
+          "index": 0,
+          "direction": "input",
+          "kind": "pipe",
+          "position": {
+            "x": 0,
+            "y": 3,
+            "z": 1
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        }
+      ],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "transmuter_1",
+      "name": "液气转化机",
+      "recordType": "building",
+      "categoryId": "assemble_machine",
+      "categoryName": "合成制造",
+      "buildingType": 39,
+      "size": {
+        "width": 5,
+        "depth": 5,
+        "height": 5,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 50,
+      "needPower": true,
+      "liquidEnabled": true,
+      "bandwidth": 2,
+      "modes": [
+        {
+          "id": "gastrans",
+          "name": "气体产出",
+          "defaultUnlocked": true,
+          "isEnvMode": false,
+          "craftGroupId": "group_transmuter_1_gastrans"
+        },
+        {
+          "id": "liquidtrans",
+          "name": "液体产出",
+          "defaultUnlocked": true,
+          "isEnvMode": false,
+          "craftGroupId": "group_transmuter_1_liquidtrans"
+        }
+      ],
+      "activationRequirements": [
+        {
+          "type": "activator",
+          "consumeItemId": "item_liquid_xiranite",
+          "consumeItemName": "液化息壤",
+          "minimumRatePerMinute": 6,
+          "maximumEffectiveRatePerMinute": 30,
+          "activationPortIndex": 2
+        }
+      ],
+      "ports": [
+        {
+          "index": 0,
+          "direction": "input",
+          "kind": "pipe",
+          "position": {
+            "x": 0,
+            "y": 3,
+            "z": 1
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        },
+        {
+          "index": 1,
+          "direction": "input",
+          "kind": "pipe",
+          "position": {
+            "x": 0,
+            "y": 3,
+            "z": 3
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        },
+        {
+          "index": 2,
+          "direction": "input",
+          "kind": "pipe",
+          "position": {
+            "x": 2,
+            "y": 3,
+            "z": 4
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 0,
+          "direction": "output",
+          "kind": "pipe",
+          "position": {
+            "x": 4,
+            "y": 3,
+            "z": 1
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        },
+        {
+          "index": 1,
+          "direction": "output",
+          "kind": "pipe",
+          "position": {
+            "x": 4,
+            "y": 3,
+            "z": 3
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        }
+      ],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "filling_powder_mc_1",
+      "name": "灌装机",
+      "recordType": "building",
+      "categoryId": "assemble_machine",
+      "categoryName": "合成制造",
+      "buildingType": 6,
+      "size": {
+        "width": 6,
+        "depth": 4,
+        "height": 4,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 20,
+      "needPower": true,
+      "liquidEnabled": false,
+      "bandwidth": 2,
+      "modes": [
+        {
+          "id": "normal",
+          "name": "基础模式",
+          "defaultUnlocked": true,
+          "isEnvMode": false,
+          "craftGroupId": "group_filling_normal"
+        },
+        {
+          "id": "liquid",
+          "name": "液体模式",
+          "defaultUnlocked": false,
+          "isEnvMode": false,
+          "craftGroupId": "group_filling_liquid"
+        },
+        {
+          "id": "gasliquid",
+          "name": "气液模式",
+          "defaultUnlocked": false,
+          "isEnvMode": false,
+          "craftGroupId": "group_filling_gasliquid"
+        }
+      ],
+      "activationRequirements": [],
+      "ports": [
+        {
+          "index": 0,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 3
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 1,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 1,
+            "y": 0,
+            "z": 3
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 2,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 2,
+            "y": 0,
+            "z": 3
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 3,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 3,
+            "y": 0,
+            "z": 3
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 4,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 4,
+            "y": 0,
+            "z": 3
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 5,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 5,
+            "y": 0,
+            "z": 3
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 6,
+          "direction": "input",
+          "kind": "pipe",
+          "position": {
+            "x": 0,
+            "y": 3,
+            "z": 2
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        },
+        {
+          "index": 0,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 1,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 1,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 2,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 2,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 3,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 3,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 4,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 4,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 5,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 5,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        }
+      ],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "thickener_1",
+      "name": "研磨机",
+      "recordType": "building",
+      "categoryId": "assemble_machine",
+      "categoryName": "合成制造",
+      "buildingType": 6,
+      "size": {
+        "width": 6,
+        "depth": 4,
+        "height": 5,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 50,
+      "needPower": true,
+      "liquidEnabled": false,
+      "bandwidth": 2,
+      "modes": [
+        {
+          "id": "normal",
+          "name": "基础模式",
+          "defaultUnlocked": true,
+          "isEnvMode": false,
+          "craftGroupId": "group_thickener_normal"
+        }
+      ],
+      "activationRequirements": [],
+      "ports": [
+        {
+          "index": 0,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 3
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 1,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 1,
+            "y": 0,
+            "z": 3
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 2,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 2,
+            "y": 0,
+            "z": 3
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 3,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 3,
+            "y": 0,
+            "z": 3
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 4,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 4,
+            "y": 0,
+            "z": 3
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 5,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 5,
+            "y": 0,
+            "z": 3
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 0,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 1,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 1,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 2,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 2,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 3,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 3,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 4,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 4,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 5,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 5,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        }
+      ],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "winder_1",
+      "name": "装备原件机",
+      "recordType": "building",
+      "categoryId": "assemble_machine",
+      "categoryName": "合成制造",
+      "buildingType": 6,
+      "size": {
+        "width": 6,
+        "depth": 4,
+        "height": 4,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 10,
+      "needPower": true,
+      "liquidEnabled": false,
+      "bandwidth": 2,
+      "modes": [
+        {
+          "id": "normal",
+          "name": "基础模式",
+          "defaultUnlocked": true,
+          "isEnvMode": false,
+          "craftGroupId": "group_winder_normal"
+        }
+      ],
+      "activationRequirements": [],
+      "ports": [
+        {
+          "index": 0,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 3
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 1,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 1,
+            "y": 0,
+            "z": 3
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 2,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 2,
+            "y": 0,
+            "z": 3
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 3,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 3,
+            "y": 0,
+            "z": 3
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 4,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 4,
+            "y": 0,
+            "z": 3
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 5,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 5,
+            "y": 0,
+            "z": 3
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 0,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 1,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 1,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 2,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 2,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 3,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 3,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 4,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 4,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 5,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 5,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        }
+      ],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "shaper_1",
+      "name": "塑形机",
+      "recordType": "building",
+      "categoryId": "basic_machine",
+      "categoryName": "基础生产",
+      "buildingType": 6,
+      "size": {
+        "width": 3,
+        "depth": 3,
+        "height": 4,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 10,
+      "needPower": true,
+      "liquidEnabled": true,
+      "bandwidth": 2,
+      "modes": [
+        {
+          "id": "normal",
+          "name": "基础模式",
+          "defaultUnlocked": true,
+          "isEnvMode": false,
+          "craftGroupId": "group_shaper_normal"
+        },
+        {
+          "id": "gas",
+          "name": "气体模式",
+          "defaultUnlocked": false,
+          "isEnvMode": false,
+          "craftGroupId": "group_shaper_gas"
+        }
+      ],
+      "activationRequirements": [],
+      "ports": [
+        {
+          "index": 0,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 2
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 1,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 1,
+            "y": 0,
+            "z": 2
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 2,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 2,
+            "y": 0,
+            "z": 2
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 3,
+          "direction": "input",
+          "kind": "pipe",
+          "position": {
+            "x": 0,
+            "y": 3,
+            "z": 1
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        },
+        {
+          "index": 0,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 1,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 1,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 2,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 2,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        }
+      ],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "liquid_cleaner_1",
+      "name": "废水处理机",
+      "recordType": "building",
+      "categoryId": "basic_machine",
+      "categoryName": "基础生产",
+      "buildingType": 28,
+      "size": {
+        "width": 3,
+        "depth": 3,
+        "height": 5,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 50,
+      "needPower": true,
+      "liquidEnabled": true,
+      "bandwidth": 2,
+      "modes": [
+        {
+          "id": "liquid",
+          "name": "液体模式",
+          "defaultUnlocked": true,
+          "isEnvMode": false,
+          "craftGroupId": ""
+        }
+      ],
+      "activationRequirements": [],
+      "ports": [
+        {
+          "index": 0,
+          "direction": "input",
+          "kind": "pipe",
+          "position": {
+            "x": 0,
+            "y": 3,
+            "z": 1
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        }
+      ],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "planter_1",
+      "name": "种植机",
+      "recordType": "building",
+      "categoryId": "basic_machine",
+      "categoryName": "基础生产",
+      "buildingType": 6,
+      "size": {
+        "width": 5,
+        "depth": 5,
+        "height": 4,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 20,
+      "needPower": true,
+      "liquidEnabled": false,
+      "bandwidth": 2,
+      "modes": [
+        {
+          "id": "normal",
+          "name": "基础模式",
+          "defaultUnlocked": true,
+          "isEnvMode": false,
+          "craftGroupId": "group_planter_normal"
+        },
+        {
+          "id": "liquid",
+          "name": "液体模式",
+          "defaultUnlocked": false,
+          "isEnvMode": false,
+          "craftGroupId": "group_planter_liquid"
+        }
+      ],
+      "activationRequirements": [],
+      "ports": [
+        {
+          "index": 0,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 4
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 1,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 1,
+            "y": 0,
+            "z": 4
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 2,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 2,
+            "y": 0,
+            "z": 4
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 3,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 3,
+            "y": 0,
+            "z": 4
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 4,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 4,
+            "y": 0,
+            "z": 4
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 5,
+          "direction": "input",
+          "kind": "pipe",
+          "position": {
+            "x": 0,
+            "y": 3,
+            "z": 2
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        },
+        {
+          "index": 0,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 1,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 1,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 2,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 2,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 3,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 3,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 4,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 4,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        }
+      ],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "grinder_1",
+      "name": "粉碎机",
+      "recordType": "building",
+      "categoryId": "basic_machine",
+      "categoryName": "基础生产",
+      "buildingType": 6,
+      "size": {
+        "width": 3,
+        "depth": 3,
+        "height": 4,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 5,
+      "needPower": true,
+      "liquidEnabled": false,
+      "bandwidth": 2,
+      "modes": [
+        {
+          "id": "normal",
+          "name": "基础模式",
+          "defaultUnlocked": true,
+          "isEnvMode": false,
+          "craftGroupId": "group_grinder_normal"
+        }
+      ],
+      "activationRequirements": [],
+      "ports": [
+        {
+          "index": 0,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 2
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 1,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 1,
+            "y": 0,
+            "z": 2
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 2,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 2,
+            "y": 0,
+            "z": 2
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 0,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 1,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 1,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 2,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 2,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        }
+      ],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "furnance_1",
+      "name": "精炼炉",
+      "recordType": "building",
+      "categoryId": "basic_machine",
+      "categoryName": "基础生产",
+      "buildingType": 6,
+      "size": {
+        "width": 3,
+        "depth": 3,
+        "height": 4,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 5,
+      "needPower": true,
+      "liquidEnabled": false,
+      "bandwidth": 2,
+      "modes": [
+        {
+          "id": "normal",
+          "name": "基础模式",
+          "defaultUnlocked": true,
+          "isEnvMode": false,
+          "craftGroupId": "group_furnance_normal"
+        },
+        {
+          "id": "liquid",
+          "name": "液体模式",
+          "defaultUnlocked": false,
+          "isEnvMode": false,
+          "craftGroupId": "group_furnance_liquid"
+        }
+      ],
+      "activationRequirements": [],
+      "ports": [
+        {
+          "index": 0,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 2
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 1,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 1,
+            "y": 0,
+            "z": 2
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 2,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 2,
+            "y": 0,
+            "z": 2
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 3,
+          "direction": "input",
+          "kind": "pipe",
+          "position": {
+            "x": 0,
+            "y": 3,
+            "z": 1
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        },
+        {
+          "index": 0,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 1,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 1,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 2,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 2,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 3,
+          "direction": "output",
+          "kind": "pipe",
+          "position": {
+            "x": 2,
+            "y": 3,
+            "z": 1
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        }
+      ],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "component_mc_1",
+      "name": "配件机",
+      "recordType": "building",
+      "categoryId": "basic_machine",
+      "categoryName": "基础生产",
+      "buildingType": 6,
+      "size": {
+        "width": 3,
+        "depth": 3,
+        "height": 4,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 20,
+      "needPower": true,
+      "liquidEnabled": false,
+      "bandwidth": 2,
+      "modes": [
+        {
+          "id": "normal",
+          "name": "基础模式",
+          "defaultUnlocked": true,
+          "isEnvMode": false,
+          "craftGroupId": "group_component_normal"
+        }
+      ],
+      "activationRequirements": [],
+      "ports": [
+        {
+          "index": 0,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 2
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 1,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 1,
+            "y": 0,
+            "z": 2
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 2,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 2,
+            "y": 0,
+            "z": 2
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 0,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 1,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 1,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 2,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 2,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        }
+      ],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "seedcollector_1",
+      "name": "采种机",
+      "recordType": "building",
+      "categoryId": "basic_machine",
+      "categoryName": "基础生产",
+      "buildingType": 6,
+      "size": {
+        "width": 5,
+        "depth": 5,
+        "height": 4,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 10,
+      "needPower": true,
+      "liquidEnabled": false,
+      "bandwidth": 2,
+      "modes": [
+        {
+          "id": "normal",
+          "name": "基础模式",
+          "defaultUnlocked": true,
+          "isEnvMode": false,
+          "craftGroupId": "group_seedcollector_normal"
+        }
+      ],
+      "activationRequirements": [],
+      "ports": [
+        {
+          "index": 0,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 4
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 1,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 1,
+            "y": 0,
+            "z": 4
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 2,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 2,
+            "y": 0,
+            "z": 4
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 3,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 3,
+            "y": 0,
+            "z": 4
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 4,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 4,
+            "y": 0,
+            "z": 4
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 0,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 1,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 1,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 2,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 2,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 3,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 3,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 4,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 4,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        }
+      ],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "battle_trap_1",
+      "name": "AF1“熔甲者”",
+      "recordType": "building",
+      "categoryId": "battle_machine",
+      "categoryName": "战斗辅助",
+      "buildingType": 21,
+      "size": {
+        "width": 2,
+        "depth": 2,
+        "height": 4,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 20,
+      "needPower": true,
+      "liquidEnabled": false,
+      "bandwidth": 2,
+      "modes": [],
+      "activationRequirements": [],
+      "ports": [],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "battle_turret_3",
+      "name": "“暴雨”铳械塔",
+      "recordType": "building",
+      "categoryId": "battle_machine",
+      "categoryName": "战斗辅助",
+      "buildingType": 21,
+      "size": {
+        "width": 2,
+        "depth": 2,
+        "height": 4,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 20,
+      "needPower": true,
+      "liquidEnabled": false,
+      "bandwidth": 2,
+      "modes": [],
+      "activationRequirements": [],
+      "ports": [],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "battle_fog_1",
+      "name": "“毒沼”MK-Ⅰ",
+      "recordType": "building",
+      "categoryId": "battle_machine",
+      "categoryName": "战斗辅助",
+      "buildingType": 21,
+      "size": {
+        "width": 2,
+        "depth": 2,
+        "height": 4,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 20,
+      "needPower": true,
+      "liquidEnabled": false,
+      "bandwidth": 2,
+      "modes": [],
+      "activationRequirements": [],
+      "ports": [],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "battle_debuff_1",
+      "name": "“酸洗”MK-Ⅰ",
+      "recordType": "building",
+      "categoryId": "battle_machine",
+      "categoryName": "战斗辅助",
+      "buildingType": 21,
+      "size": {
+        "width": 2,
+        "depth": 2,
+        "height": 4,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 20,
+      "needPower": true,
+      "liquidEnabled": false,
+      "bandwidth": 2,
+      "modes": [],
+      "activationRequirements": [],
+      "ports": [],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "battle_shockwave_1",
+      "name": "全向声波塔",
+      "recordType": "building",
+      "categoryId": "battle_machine",
+      "categoryName": "战斗辅助",
+      "buildingType": 21,
+      "size": {
+        "width": 2,
+        "depth": 2,
+        "height": 4,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 20,
+      "needPower": true,
+      "liquidEnabled": false,
+      "bandwidth": 2,
+      "modes": [],
+      "activationRequirements": [],
+      "ports": [],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "battle_medic_1",
+      "name": "医疗塔",
+      "recordType": "building",
+      "categoryId": "battle_machine",
+      "categoryName": "战斗辅助",
+      "buildingType": 21,
+      "size": {
+        "width": 3,
+        "depth": 3,
+        "height": 4,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 5,
+      "needPower": true,
+      "liquidEnabled": false,
+      "bandwidth": 2,
+      "modes": [],
+      "activationRequirements": [],
+      "ports": [],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "battle_sniper_1",
+      "name": "哨戒塔",
+      "recordType": "building",
+      "categoryId": "battle_machine",
+      "categoryName": "战斗辅助",
+      "buildingType": 21,
+      "size": {
+        "width": 2,
+        "depth": 2,
+        "height": 4,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 20,
+      "needPower": true,
+      "liquidEnabled": false,
+      "bandwidth": 2,
+      "modes": [],
+      "activationRequirements": [],
+      "ports": [],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "battle_laser_1",
+      "name": "射线塔",
+      "recordType": "building",
+      "categoryId": "battle_machine",
+      "categoryName": "战斗辅助",
+      "buildingType": 21,
+      "size": {
+        "width": 2,
+        "depth": 2,
+        "height": 6,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 10,
+      "needPower": true,
+      "liquidEnabled": false,
+      "bandwidth": 2,
+      "modes": [],
+      "activationRequirements": [],
+      "ports": [],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "battle_turret_2",
+      "name": "扩装铳械塔",
+      "recordType": "building",
+      "categoryId": "battle_machine",
+      "categoryName": "战斗辅助",
+      "buildingType": 21,
+      "size": {
+        "width": 2,
+        "depth": 2,
+        "height": 4,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 20,
+      "needPower": true,
+      "liquidEnabled": false,
+      "bandwidth": 2,
+      "modes": [],
+      "activationRequirements": [],
+      "ports": [],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "battle_cannon_1",
+      "name": "榴弹塔",
+      "recordType": "building",
+      "categoryId": "battle_machine",
+      "categoryName": "战斗辅助",
+      "buildingType": 21,
+      "size": {
+        "width": 2,
+        "depth": 2,
+        "height": 4,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 10,
+      "needPower": true,
+      "liquidEnabled": false,
+      "bandwidth": 2,
+      "modes": [],
+      "activationRequirements": [],
+      "ports": [],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "battle_frost_1",
+      "name": "液氮塔",
+      "recordType": "building",
+      "categoryId": "battle_machine",
+      "categoryName": "战斗辅助",
+      "buildingType": 21,
+      "size": {
+        "width": 2,
+        "depth": 2,
+        "height": 4,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 10,
+      "needPower": true,
+      "liquidEnabled": false,
+      "bandwidth": 2,
+      "modes": [],
+      "activationRequirements": [],
+      "ports": [],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "battle_jet_1",
+      "name": "激流塔",
+      "recordType": "building",
+      "categoryId": "battle_machine",
+      "categoryName": "战斗辅助",
+      "buildingType": 21,
+      "size": {
+        "width": 2,
+        "depth": 2,
+        "height": 4,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 20,
+      "needPower": true,
+      "liquidEnabled": false,
+      "bandwidth": 2,
+      "modes": [],
+      "activationRequirements": [],
+      "ports": [],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "battle_lightning_2",
+      "name": "甲二型“电荷”",
+      "recordType": "building",
+      "categoryId": "battle_machine",
+      "categoryName": "战斗辅助",
+      "buildingType": 21,
+      "size": {
+        "width": 2,
+        "depth": 2,
+        "height": 5,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 20,
+      "needPower": true,
+      "liquidEnabled": false,
+      "bandwidth": 2,
+      "modes": [],
+      "activationRequirements": [],
+      "ports": [],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "battle_lightning_1",
+      "name": "电涌塔",
+      "recordType": "building",
+      "categoryId": "battle_machine",
+      "categoryName": "战斗辅助",
+      "buildingType": 21,
+      "size": {
+        "width": 2,
+        "depth": 2,
+        "height": 5,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 20,
+      "needPower": true,
+      "liquidEnabled": false,
+      "bandwidth": 2,
+      "modes": [],
+      "activationRequirements": [],
+      "ports": [],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "battle_rocket_1",
+      "name": "重锤迫击炮",
+      "recordType": "building",
+      "categoryId": "battle_machine",
+      "categoryName": "战斗辅助",
+      "buildingType": 21,
+      "size": {
+        "width": 3,
+        "depth": 3,
+        "height": 6,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 20,
+      "needPower": true,
+      "liquidEnabled": false,
+      "bandwidth": 2,
+      "modes": [],
+      "activationRequirements": [],
+      "ports": [],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "battle_turret_1",
+      "name": "铳械塔",
+      "recordType": "building",
+      "categoryId": "battle_machine",
+      "categoryName": "战斗辅助",
+      "buildingType": 21,
+      "size": {
+        "width": 2,
+        "depth": 2,
+        "height": 4,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 5,
+      "needPower": true,
+      "liquidEnabled": false,
+      "bandwidth": 2,
+      "modes": [],
+      "activationRequirements": [],
+      "ports": [],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "battle_cannon_2",
+      "name": "高爆榴弹塔",
+      "recordType": "building",
+      "categoryId": "battle_machine",
+      "categoryName": "战斗辅助",
+      "buildingType": 21,
+      "size": {
+        "width": 2,
+        "depth": 2,
+        "height": 4,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 20,
+      "needPower": true,
+      "liquidEnabled": false,
+      "bandwidth": 2,
+      "modes": [],
+      "activationRequirements": [],
+      "ports": [],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "battle_laser_2",
+      "name": "高能射线塔",
+      "recordType": "building",
+      "categoryId": "battle_machine",
+      "categoryName": "战斗辅助",
+      "buildingType": 21,
+      "size": {
+        "width": 2,
+        "depth": 2,
+        "height": 6,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 20,
+      "needPower": true,
+      "liquidEnabled": false,
+      "bandwidth": 2,
+      "modes": [],
+      "activationRequirements": [],
+      "ports": [],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "power_pole_2",
+      "name": "中继器",
+      "recordType": "building",
+      "categoryId": "electric_machine",
+      "categoryName": "电力供应",
+      "buildingType": 2,
+      "size": {
+        "width": 3,
+        "depth": 3,
+        "height": 15,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 0,
+      "needPower": true,
+      "liquidEnabled": false,
+      "bandwidth": 1,
+      "modes": [],
+      "activationRequirements": [],
+      "ports": [],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "power_diffuser_1",
+      "name": "供电桩",
+      "recordType": "building",
+      "categoryId": "electric_machine",
+      "categoryName": "电力供应",
+      "buildingType": 23,
+      "size": {
+        "width": 2,
+        "depth": 2,
+        "height": 7,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 0,
+      "needPower": true,
+      "liquidEnabled": false,
+      "bandwidth": 1,
+      "modes": [],
+      "activationRequirements": [],
+      "ports": [],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "power_pole_3",
+      "name": "息壤中继器",
+      "recordType": "building",
+      "categoryId": "electric_machine",
+      "categoryName": "电力供应",
+      "buildingType": 2,
+      "size": {
+        "width": 3,
+        "depth": 3,
+        "height": 15,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 0,
+      "needPower": true,
+      "liquidEnabled": false,
+      "bandwidth": 1,
+      "modes": [],
+      "activationRequirements": [],
+      "ports": [],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "power_diffuser_2",
+      "name": "息壤供电桩",
+      "recordType": "building",
+      "categoryId": "electric_machine",
+      "categoryName": "电力供应",
+      "buildingType": 23,
+      "size": {
+        "width": 2,
+        "depth": 2,
+        "height": 7,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 0,
+      "needPower": true,
+      "liquidEnabled": false,
+      "bandwidth": 1,
+      "modes": [],
+      "activationRequirements": [],
+      "ports": [],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "power_station_1",
+      "name": "热能池",
+      "recordType": "building",
+      "categoryId": "electric_machine",
+      "categoryName": "电力供应",
+      "buildingType": 3,
+      "size": {
+        "width": 2,
+        "depth": 2,
+        "height": 4,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 0,
+      "needPower": true,
+      "liquidEnabled": false,
+      "bandwidth": 2,
+      "modes": [],
+      "activationRequirements": [],
+      "ports": [
+        {
+          "index": 0,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 1
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 1,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 1,
+            "y": 0,
+            "z": 1
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        }
+      ],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "carrier_1",
+      "name": "便捷存取站",
+      "recordType": "building",
+      "categoryId": "extra_machine",
+      "categoryName": "功能设备",
+      "buildingType": 36,
+      "size": {
+        "width": 3,
+        "depth": 3,
+        "height": 4,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 5,
+      "needPower": true,
+      "liquidEnabled": false,
+      "bandwidth": 2,
+      "modes": [],
+      "activationRequirements": [],
+      "ports": [],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "squirter_1",
+      "name": "洒水机",
+      "recordType": "building",
+      "categoryId": "extra_machine",
+      "categoryName": "功能设备",
+      "buildingType": 29,
+      "size": {
+        "width": 3,
+        "depth": 3,
+        "height": 4,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 10,
+      "needPower": true,
+      "liquidEnabled": true,
+      "bandwidth": 2,
+      "modes": [
+        {
+          "id": "liquid",
+          "name": "液体模式",
+          "defaultUnlocked": true,
+          "isEnvMode": false,
+          "craftGroupId": ""
+        }
+      ],
+      "activationRequirements": [],
+      "ports": [
+        {
+          "index": 0,
+          "direction": "input",
+          "kind": "pipe",
+          "position": {
+            "x": 0,
+            "y": 3,
+            "z": 1
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        }
+      ],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "travel_pole_1",
+      "name": "滑索架",
+      "recordType": "building",
+      "categoryId": "extra_machine",
+      "categoryName": "功能设备",
+      "buildingType": 16,
+      "size": {
+        "width": 3,
+        "depth": 3,
+        "height": 7,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 5,
+      "needPower": true,
+      "liquidEnabled": false,
+      "bandwidth": 3,
+      "modes": [],
+      "activationRequirements": [],
+      "ports": [],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "marker_1",
+      "name": "留言信标",
+      "recordType": "building",
+      "categoryId": "extra_machine",
+      "categoryName": "功能设备",
+      "buildingType": 35,
+      "size": {
+        "width": 1,
+        "depth": 1,
+        "height": 1,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 0,
+      "needPower": false,
+      "liquidEnabled": false,
+      "bandwidth": 0,
+      "modes": [],
+      "activationRequirements": [],
+      "ports": [],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "dumper_1",
+      "name": "给水器",
+      "recordType": "building",
+      "categoryId": "extra_machine",
+      "categoryName": "功能设备",
+      "buildingType": 26,
+      "size": {
+        "width": 3,
+        "depth": 3,
+        "height": 4,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 10,
+      "needPower": true,
+      "liquidEnabled": true,
+      "bandwidth": 2,
+      "modes": [
+        {
+          "id": "liquid",
+          "name": "液体模式",
+          "defaultUnlocked": true,
+          "isEnvMode": false,
+          "craftGroupId": ""
+        }
+      ],
+      "activationRequirements": [],
+      "ports": [
+        {
+          "index": 0,
+          "direction": "input",
+          "kind": "pipe",
+          "position": {
+            "x": 0,
+            "y": 3,
+            "z": 1
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        }
+      ],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "travel_pole_2",
+      "name": "长距滑索架",
+      "recordType": "building",
+      "categoryId": "extra_machine",
+      "categoryName": "功能设备",
+      "buildingType": 16,
+      "size": {
+        "width": 3,
+        "depth": 3,
+        "height": 7,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 5,
+      "needPower": true,
+      "liquidEnabled": false,
+      "bandwidth": 3,
+      "modes": [],
+      "activationRequirements": [],
+      "ports": [],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "grid_belt_01",
+      "name": "传送带",
+      "recordType": "logistic",
+      "logisticType": "item_belt",
+      "logisticTypeName": "普通物流线",
+      "categoryId": "logistic",
+      "categoryName": "物流",
+      "size": {
+        "width": 0,
+        "depth": 0,
+        "height": 0,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "itemId": "item_log_belt_01",
+      "speedSecondsPerRound": 2.0,
+      "volume": null,
+      "ports": [],
+      "sourceTable": "FactoryGridBeltTable.json",
+      "modes": [],
+      "activationRequirements": []
+    },
+    {
+      "id": "log_splitter",
+      "name": "分流器",
+      "recordType": "logistic",
+      "logisticType": "item_node",
+      "logisticTypeName": "普通物流节点",
+      "categoryId": "logistic",
+      "categoryName": "物流",
+      "size": {
+        "width": 1,
+        "depth": 1,
+        "height": 1,
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "itemId": "item_log_splitter",
+      "speedSecondsPerRound": 2.0,
+      "volume": null,
+      "ports": [
+        {
+          "index": 0,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 0,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        },
+        {
+          "index": 1,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 2,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 270,
+            "z": 0
+          }
+        }
+      ],
+      "sourceTable": "FactoryGridRouterTable.json",
+      "modes": [],
+      "activationRequirements": []
+    },
+    {
+      "id": "log_converger",
+      "name": "汇流器",
+      "recordType": "logistic",
+      "logisticType": "item_node",
+      "logisticTypeName": "普通物流节点",
+      "categoryId": "logistic",
+      "categoryName": "物流",
+      "size": {
+        "width": 1,
+        "depth": 1,
+        "height": 1,
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "itemId": "item_log_converger",
+      "speedSecondsPerRound": 2.0,
+      "volume": null,
+      "ports": [
+        {
+          "index": 0,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        },
+        {
+          "index": 1,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 2,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 270,
+            "z": 0
+          }
+        },
+        {
+          "index": 0,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        }
+      ],
+      "sourceTable": "FactoryGridRouterTable.json",
+      "modes": [],
+      "activationRequirements": []
+    },
+    {
+      "id": "log_conditioner",
+      "name": "物品准入口",
+      "recordType": "logistic",
+      "logisticType": "item_valve",
+      "logisticTypeName": "普通物流控流",
+      "categoryId": "logistic",
+      "categoryName": "物流",
+      "size": {
+        "width": 1,
+        "depth": 1,
+        "height": 1,
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "itemId": "item_log_conditioner",
+      "speedSecondsPerRound": 2.0,
+      "volume": null,
+      "ports": [
+        {
+          "index": 0,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 0,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        }
+      ],
+      "sourceTable": "FactoryBoxValveTable.json",
+      "modes": [],
+      "activationRequirements": []
+    },
+    {
+      "id": "log_connector",
+      "name": "物流桥",
+      "recordType": "logistic",
+      "logisticType": "item_node",
+      "logisticTypeName": "普通物流节点",
+      "categoryId": "logistic",
+      "categoryName": "物流",
+      "size": {
+        "width": 1,
+        "depth": 1,
+        "height": 1,
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "itemId": "item_log_connector",
+      "speedSecondsPerRound": 2.0,
+      "volume": null,
+      "ports": [
+        {
+          "index": 0,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 1,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        {
+          "index": 2,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        },
+        {
+          "index": 3,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 270,
+            "z": 0
+          }
+        },
+        {
+          "index": 0,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 1,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        {
+          "index": 2,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        },
+        {
+          "index": 3,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 270,
+            "z": 0
+          }
+        }
+      ],
+      "sourceTable": "FactoryGridConnecterTable.json",
+      "modes": [],
+      "activationRequirements": []
+    },
+    {
+      "id": "log_pipe_01",
+      "name": "管道",
+      "recordType": "logistic",
+      "logisticType": "pipe",
+      "logisticTypeName": "管道线",
+      "categoryId": "logistic",
+      "categoryName": "物流",
+      "size": {
+        "width": 0,
+        "depth": 0,
+        "height": 0,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "itemId": "item_log_pipe_01",
+      "speedSecondsPerRound": 0.5,
+      "volume": 1,
+      "ports": [],
+      "sourceTable": "FactoryLiquidPipeTable.json",
+      "modes": [],
+      "activationRequirements": []
+    },
+    {
+      "id": "log_pipe_conditioner",
+      "name": "管道准入口",
+      "recordType": "logistic",
+      "logisticType": "pipe_valve",
+      "logisticTypeName": "管道控流",
+      "categoryId": "logistic",
+      "categoryName": "物流",
+      "size": {
+        "width": 1,
+        "depth": 1,
+        "height": 1,
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "itemId": "item_log_pipe_conditioner",
+      "speedSecondsPerRound": 0.5,
+      "volume": 1,
+      "ports": [
+        {
+          "index": 0,
+          "direction": "input",
+          "kind": "pipe",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 0,
+          "direction": "output",
+          "kind": "pipe",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        }
+      ],
+      "sourceTable": "FactoryFluidValveTable.json",
+      "modes": [],
+      "activationRequirements": []
+    },
+    {
+      "id": "log_pipe_splitter",
+      "name": "管道分流器",
+      "recordType": "logistic",
+      "logisticType": "pipe_node",
+      "logisticTypeName": "管道节点",
+      "categoryId": "logistic",
+      "categoryName": "物流",
+      "size": {
+        "width": 1,
+        "depth": 1,
+        "height": 4,
+        "x": 1,
+        "y": 4,
+        "z": 1
+      },
+      "itemId": "item_log_pipe_splitter",
+      "speedSecondsPerRound": 0.5,
+      "volume": 1,
+      "ports": [
+        {
+          "index": 0,
+          "direction": "input",
+          "kind": "pipe",
+          "position": {
+            "x": 0,
+            "y": 3,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 0,
+          "direction": "output",
+          "kind": "pipe",
+          "position": {
+            "x": 0,
+            "y": 3,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        },
+        {
+          "index": 1,
+          "direction": "output",
+          "kind": "pipe",
+          "position": {
+            "x": 0,
+            "y": 3,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 2,
+          "direction": "output",
+          "kind": "pipe",
+          "position": {
+            "x": 0,
+            "y": 3,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 270,
+            "z": 0
+          }
+        }
+      ],
+      "sourceTable": "FactoryLiquidRouterTable.json",
+      "modes": [],
+      "activationRequirements": []
+    },
+    {
+      "id": "log_pipe_connector",
+      "name": "管道桥",
+      "recordType": "logistic",
+      "logisticType": "pipe_node",
+      "logisticTypeName": "管道节点",
+      "categoryId": "logistic",
+      "categoryName": "物流",
+      "size": {
+        "width": 1,
+        "depth": 1,
+        "height": 4,
+        "x": 1,
+        "y": 4,
+        "z": 1
+      },
+      "itemId": "item_log_pipe_connector",
+      "speedSecondsPerRound": 0.5,
+      "volume": 1,
+      "ports": [
+        {
+          "index": 0,
+          "direction": "input",
+          "kind": "pipe",
+          "position": {
+            "x": 0,
+            "y": 3,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 1,
+          "direction": "input",
+          "kind": "pipe",
+          "position": {
+            "x": 0,
+            "y": 3,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        {
+          "index": 2,
+          "direction": "input",
+          "kind": "pipe",
+          "position": {
+            "x": 0,
+            "y": 3,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        },
+        {
+          "index": 3,
+          "direction": "input",
+          "kind": "pipe",
+          "position": {
+            "x": 0,
+            "y": 3,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 270,
+            "z": 0
+          }
+        },
+        {
+          "index": 0,
+          "direction": "output",
+          "kind": "pipe",
+          "position": {
+            "x": 0,
+            "y": 3,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 1,
+          "direction": "output",
+          "kind": "pipe",
+          "position": {
+            "x": 0,
+            "y": 3,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        {
+          "index": 2,
+          "direction": "output",
+          "kind": "pipe",
+          "position": {
+            "x": 0,
+            "y": 3,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        },
+        {
+          "index": 3,
+          "direction": "output",
+          "kind": "pipe",
+          "position": {
+            "x": 0,
+            "y": 3,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 270,
+            "z": 0
+          }
+        }
+      ],
+      "sourceTable": "FactoryLiquidConnectorTable.json",
+      "modes": [],
+      "activationRequirements": []
+    },
+    {
+      "id": "log_pipe_converger",
+      "name": "管道汇流器",
+      "recordType": "logistic",
+      "logisticType": "pipe_node",
+      "logisticTypeName": "管道节点",
+      "categoryId": "logistic",
+      "categoryName": "物流",
+      "size": {
+        "width": 1,
+        "depth": 1,
+        "height": 4,
+        "x": 1,
+        "y": 4,
+        "z": 1
+      },
+      "itemId": "item_log_pipe_converger",
+      "speedSecondsPerRound": 0.5,
+      "volume": 1,
+      "ports": [
+        {
+          "index": 0,
+          "direction": "input",
+          "kind": "pipe",
+          "position": {
+            "x": 0,
+            "y": 3,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        },
+        {
+          "index": 1,
+          "direction": "input",
+          "kind": "pipe",
+          "position": {
+            "x": 0,
+            "y": 3,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 2,
+          "direction": "input",
+          "kind": "pipe",
+          "position": {
+            "x": 0,
+            "y": 3,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 270,
+            "z": 0
+          }
+        },
+        {
+          "index": 0,
+          "direction": "output",
+          "kind": "pipe",
+          "position": {
+            "x": 0,
+            "y": 3,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        }
+      ],
+      "sourceTable": "FactoryLiquidRouterTable.json",
+      "modes": [],
+      "activationRequirements": []
+    },
+    {
+      "id": "miner_3",
+      "name": "二型电驱矿机",
+      "recordType": "building",
+      "categoryId": "source_machine",
+      "categoryName": "资源开采",
+      "buildingType": 8,
+      "size": {
+        "width": 3,
+        "depth": 3,
+        "height": 5,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 10,
+      "needPower": true,
+      "liquidEnabled": false,
+      "bandwidth": 2,
+      "modes": [],
+      "activationRequirements": [],
+      "ports": [
+        {
+          "index": 0,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 1,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 1,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 2,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 2,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        }
+      ],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "pump_2",
+      "name": "二型耐酸水泵",
+      "recordType": "building",
+      "categoryId": "source_machine",
+      "categoryName": "资源开采",
+      "buildingType": 25,
+      "size": {
+        "width": 3,
+        "depth": 3,
+        "height": 5,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 20,
+      "needPower": true,
+      "liquidEnabled": true,
+      "bandwidth": 2,
+      "modes": [
+        {
+          "id": "liquid",
+          "name": "液体模式",
+          "defaultUnlocked": true,
+          "isEnvMode": false,
+          "craftGroupId": ""
+        }
+      ],
+      "activationRequirements": [],
+      "ports": [
+        {
+          "index": 0,
+          "direction": "output",
+          "kind": "pipe",
+          "position": {
+            "x": 2,
+            "y": 3,
+            "z": 1
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        }
+      ],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "miner_1",
+      "name": "便携源石矿机",
+      "recordType": "building",
+      "categoryId": "source_machine",
+      "categoryName": "资源开采",
+      "buildingType": 8,
+      "size": {
+        "width": 3,
+        "depth": 3,
+        "height": 3,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 0,
+      "needPower": false,
+      "liquidEnabled": false,
+      "bandwidth": 2,
+      "modes": [],
+      "activationRequirements": [],
+      "ports": [
+        {
+          "index": 0,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 1,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 1,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 2,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 2,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        }
+      ],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "gas_pump_1",
+      "name": "气体收集泵",
+      "recordType": "building",
+      "categoryId": "source_machine",
+      "categoryName": "资源开采",
+      "buildingType": 41,
+      "size": {
+        "width": 3,
+        "depth": 3,
+        "height": 6,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 0,
+      "needPower": false,
+      "liquidEnabled": true,
+      "bandwidth": 2,
+      "modes": [
+        {
+          "id": "gas",
+          "name": "气体模式",
+          "defaultUnlocked": true,
+          "isEnvMode": false,
+          "craftGroupId": ""
+        }
+      ],
+      "activationRequirements": [],
+      "ports": [
+        {
+          "index": 0,
+          "direction": "output",
+          "kind": "pipe",
+          "position": {
+            "x": 2,
+            "y": 3,
+            "z": 1
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        }
+      ],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "pump_1",
+      "name": "水泵",
+      "recordType": "building",
+      "categoryId": "source_machine",
+      "categoryName": "资源开采",
+      "buildingType": 25,
+      "size": {
+        "width": 3,
+        "depth": 3,
+        "height": 5,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 10,
+      "needPower": true,
+      "liquidEnabled": true,
+      "bandwidth": 2,
+      "modes": [
+        {
+          "id": "liquid",
+          "name": "液体模式",
+          "defaultUnlocked": true,
+          "isEnvMode": false,
+          "craftGroupId": ""
+        }
+      ],
+      "activationRequirements": [],
+      "ports": [
+        {
+          "index": 0,
+          "direction": "output",
+          "kind": "pipe",
+          "position": {
+            "x": 2,
+            "y": 3,
+            "z": 1
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        }
+      ],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "miner_4",
+      "name": "水驱矿机",
+      "recordType": "building",
+      "categoryId": "source_machine",
+      "categoryName": "资源开采",
+      "buildingType": 8,
+      "size": {
+        "width": 3,
+        "depth": 3,
+        "height": 5,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 0,
+      "needPower": false,
+      "liquidEnabled": true,
+      "bandwidth": 2,
+      "modes": [
+        {
+          "id": "liquid",
+          "name": "液体模式",
+          "defaultUnlocked": true,
+          "isEnvMode": false,
+          "craftGroupId": ""
+        }
+      ],
+      "activationRequirements": [],
+      "ports": [
+        {
+          "index": 0,
+          "direction": "input",
+          "kind": "pipe",
+          "position": {
+            "x": 0,
+            "y": 3,
+            "z": 1
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        },
+        {
+          "index": 0,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 1,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 1,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 2,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 2,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        }
+      ],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "miner_2",
+      "name": "电驱矿机",
+      "recordType": "building",
+      "categoryId": "source_machine",
+      "categoryName": "资源开采",
+      "buildingType": 8,
+      "size": {
+        "width": 3,
+        "depth": 3,
+        "height": 5,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 5,
+      "needPower": true,
+      "liquidEnabled": false,
+      "bandwidth": 2,
+      "modes": [],
+      "activationRequirements": [],
+      "ports": [
+        {
+          "index": 0,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 1,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 1,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 2,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 2,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        }
+      ],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "unloader_1",
+      "name": "仓库取货口",
+      "recordType": "building",
+      "categoryId": "storage",
+      "categoryName": "仓储存取",
+      "buildingType": 11,
+      "size": {
+        "width": 3,
+        "depth": 1,
+        "height": 3,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 0,
+      "needPower": false,
+      "liquidEnabled": false,
+      "bandwidth": 1,
+      "modes": [],
+      "activationRequirements": [],
+      "ports": [
+        {
+          "index": 0,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 1,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        }
+      ],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "log_hongs_bus",
+      "name": "仓库存取线基段",
+      "recordType": "building",
+      "categoryId": "storage",
+      "categoryName": "仓储存取",
+      "buildingType": 32,
+      "size": {
+        "width": 4,
+        "depth": 8,
+        "height": 2,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 0,
+      "needPower": false,
+      "liquidEnabled": false,
+      "bandwidth": 0,
+      "modes": [],
+      "activationRequirements": [],
+      "ports": [],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "log_hongs_bus_source",
+      "name": "仓库存取线源桩",
+      "recordType": "building",
+      "categoryId": "storage",
+      "categoryName": "仓储存取",
+      "buildingType": 31,
+      "size": {
+        "width": 4,
+        "depth": 4,
+        "height": 2,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 0,
+      "needPower": false,
+      "liquidEnabled": false,
+      "bandwidth": 0,
+      "modes": [],
+      "activationRequirements": [],
+      "ports": [],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "loader_1",
+      "name": "仓库存货口",
+      "recordType": "building",
+      "categoryId": "storage",
+      "categoryName": "仓储存取",
+      "buildingType": 10,
+      "size": {
+        "width": 3,
+        "depth": 1,
+        "height": 3,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 0,
+      "needPower": false,
+      "liquidEnabled": false,
+      "bandwidth": 1,
+      "modes": [],
+      "activationRequirements": [],
+      "ports": [
+        {
+          "index": 0,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 1,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        }
+      ],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "gas_storager_1",
+      "name": "储气罐",
+      "recordType": "building",
+      "categoryId": "storage",
+      "categoryName": "仓储存取",
+      "buildingType": 24,
+      "size": {
+        "width": 3,
+        "depth": 3,
+        "height": 4,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 0,
+      "needPower": false,
+      "liquidEnabled": true,
+      "bandwidth": 2,
+      "modes": [
+        {
+          "id": "gas",
+          "name": "气体模式",
+          "defaultUnlocked": true,
+          "isEnvMode": false,
+          "craftGroupId": ""
+        }
+      ],
+      "activationRequirements": [],
+      "ports": [
+        {
+          "index": 0,
+          "direction": "input",
+          "kind": "pipe",
+          "position": {
+            "x": 0,
+            "y": 3,
+            "z": 1
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        },
+        {
+          "index": 0,
+          "direction": "output",
+          "kind": "pipe",
+          "position": {
+            "x": 2,
+            "y": 3,
+            "z": 1
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        }
+      ],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "liquid_storager_1",
+      "name": "储液罐",
+      "recordType": "building",
+      "categoryId": "storage",
+      "categoryName": "仓储存取",
+      "buildingType": 24,
+      "size": {
+        "width": 3,
+        "depth": 3,
+        "height": 4,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 0,
+      "needPower": false,
+      "liquidEnabled": true,
+      "bandwidth": 2,
+      "modes": [
+        {
+          "id": "liquid",
+          "name": "液体模式",
+          "defaultUnlocked": true,
+          "isEnvMode": false,
+          "craftGroupId": ""
+        }
+      ],
+      "activationRequirements": [],
+      "ports": [
+        {
+          "index": 0,
+          "direction": "input",
+          "kind": "pipe",
+          "position": {
+            "x": 0,
+            "y": 3,
+            "z": 1
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        },
+        {
+          "index": 0,
+          "direction": "output",
+          "kind": "pipe",
+          "position": {
+            "x": 2,
+            "y": 3,
+            "z": 1
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        }
+      ],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "storager_1",
+      "name": "协议储存箱",
+      "recordType": "building",
+      "categoryId": "storage",
+      "categoryName": "仓储存取",
+      "buildingType": 4,
+      "size": {
+        "width": 3,
+        "depth": 3,
+        "height": 4,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 5,
+      "needPower": true,
+      "liquidEnabled": false,
+      "bandwidth": 2,
+      "modes": [],
+      "activationRequirements": [],
+      "ports": [
+        {
+          "index": 0,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 2
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 1,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 1,
+            "y": 0,
+            "z": 2
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 2,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 2,
+            "y": 0,
+            "z": 2
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 0,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 1,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 1,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 2,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 2,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        }
+      ],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "udpipe_loader_2",
+      "name": "多口暗管入口",
+      "recordType": "building",
+      "categoryId": "storage",
+      "categoryName": "仓储存取",
+      "buildingType": 33,
+      "size": {
+        "width": 3,
+        "depth": 5,
+        "height": 5,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 0,
+      "needPower": false,
+      "liquidEnabled": true,
+      "bandwidth": 1,
+      "modes": [
+        {
+          "id": "liquid",
+          "name": "液体模式",
+          "defaultUnlocked": true,
+          "isEnvMode": false,
+          "craftGroupId": ""
+        }
+      ],
+      "activationRequirements": [],
+      "ports": [
+        {
+          "index": 0,
+          "direction": "input",
+          "kind": "pipe",
+          "position": {
+            "x": 0,
+            "y": 3,
+            "z": 1
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        },
+        {
+          "index": 1,
+          "direction": "input",
+          "kind": "pipe",
+          "position": {
+            "x": 0,
+            "y": 3,
+            "z": 3
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        }
+      ],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "udpipe_unloader_2",
+      "name": "多口暗管出口",
+      "recordType": "building",
+      "categoryId": "storage",
+      "categoryName": "仓储存取",
+      "buildingType": 34,
+      "size": {
+        "width": 3,
+        "depth": 5,
+        "height": 5,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 0,
+      "needPower": false,
+      "liquidEnabled": true,
+      "bandwidth": 1,
+      "modes": [
+        {
+          "id": "liquid",
+          "name": "液体模式",
+          "defaultUnlocked": true,
+          "isEnvMode": false,
+          "craftGroupId": ""
+        }
+      ],
+      "activationRequirements": [],
+      "ports": [
+        {
+          "index": 0,
+          "direction": "output",
+          "kind": "pipe",
+          "position": {
+            "x": 2,
+            "y": 3,
+            "z": 1
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        },
+        {
+          "index": 1,
+          "direction": "output",
+          "kind": "pipe",
+          "position": {
+            "x": 2,
+            "y": 3,
+            "z": 3
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        }
+      ],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "udpipe_loader_1",
+      "name": "暗管入口",
+      "recordType": "building",
+      "categoryId": "storage",
+      "categoryName": "仓储存取",
+      "buildingType": 33,
+      "size": {
+        "width": 3,
+        "depth": 3,
+        "height": 5,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 0,
+      "needPower": false,
+      "liquidEnabled": true,
+      "bandwidth": 1,
+      "modes": [
+        {
+          "id": "liquid",
+          "name": "液体模式",
+          "defaultUnlocked": true,
+          "isEnvMode": false,
+          "craftGroupId": ""
+        }
+      ],
+      "activationRequirements": [],
+      "ports": [
+        {
+          "index": 0,
+          "direction": "input",
+          "kind": "pipe",
+          "position": {
+            "x": 0,
+            "y": 3,
+            "z": 1
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        }
+      ],
+      "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "udpipe_unloader_1",
+      "name": "暗管出口",
+      "recordType": "building",
+      "categoryId": "storage",
+      "categoryName": "仓储存取",
+      "buildingType": 34,
+      "size": {
+        "width": 3,
+        "depth": 3,
+        "height": 5,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 0,
+      "needPower": false,
+      "liquidEnabled": true,
+      "bandwidth": 1,
+      "modes": [
+        {
+          "id": "liquid",
+          "name": "液体模式",
+          "defaultUnlocked": true,
+          "isEnvMode": false,
+          "craftGroupId": ""
+        }
+      ],
+      "activationRequirements": [],
+      "ports": [
+        {
+          "index": 0,
+          "direction": "output",
+          "kind": "pipe",
+          "position": {
+            "x": 2,
+            "y": 3,
+            "z": 1
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        }
+      ],
+      "sourceTable": "FactoryBuildingTable.json"
+    }
+  ]
+}

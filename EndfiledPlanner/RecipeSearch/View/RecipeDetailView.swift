@@ -19,9 +19,13 @@ struct RecipeDetailView: View {
     @State private var showingSaveAlert = false
     @State private var saveMessage = ""
     
-    // 根据根节点位置调整的初始偏移
-    private let initialXOffset: CGFloat = -500 // 让根节点水平居中
-    private let initialYOffset: CGFloat = -500
+    private var initialXOffset: CGFloat {
+        -(root.positionX * xSpacing)
+    }
+
+    private var initialYOffset: CGFloat {
+        -(CGFloat(findMaxLevel(node: root)) * ySpacing) / 2
+    }
     
     private let nodeWidth: CGFloat = 160
     private let nodeHeight: CGFloat = 100
@@ -31,11 +35,9 @@ struct RecipeDetailView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                // 深色背景
                 Color(red: 0.08, green: 0.09, blue: 0.12)
                     .ignoresSafeArea()
                 
-                // 网格背景
                 Canvas { context, size in
                     let spacing: CGFloat = 30
                     var path = Path()
@@ -55,7 +57,6 @@ struct RecipeDetailView: View {
                 }
                 .ignoresSafeArea()
                 
-                // 配方树
                 GeometryReader { geometry in
                     ZStack {
                         Canvas { context, size in
@@ -80,7 +81,7 @@ struct RecipeDetailView: View {
                                 .onChanged { value in
                                     scale = lastScale * value
                                 }
-                                .onEnded { value in
+                                .onEnded { _ in
                                     lastScale = scale
                                     scale = min(max(scale, 0.3), 3.0)
                                     lastScale = scale
@@ -92,7 +93,7 @@ struct RecipeDetailView: View {
                                         height: lastOffset.height + value.translation.height
                                     )
                                 }
-                                .onEnded { value in
+                                .onEnded { _ in
                                     lastOffset = offset
                                 }
                         )
@@ -100,7 +101,6 @@ struct RecipeDetailView: View {
                 }
                 .clipped()
                 
-                // 控制按钮
                 VStack {
                     HStack {
                         Spacer()
@@ -206,9 +206,7 @@ struct RecipeDetailView: View {
                 }
                 
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button {
-                        dismiss()
-                    } label: {
+                    Button { dismiss() } label: {
                         HStack(spacing: 4) {
                             Image(systemName: "chevron.left")
                             Text("返回")
@@ -219,15 +217,10 @@ struct RecipeDetailView: View {
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Menu {
-                        Button {
-                            saveAsImage()
-                        } label: {
+                        Button { saveAsImage() } label: {
                             Label("保存为图片", systemImage: "square.and.arrow.down")
                         }
-                        
-                        Button {
-                            shareImage()
-                        } label: {
+                        Button { shareImage() } label: {
                             Label("分享", systemImage: "square.and.arrow.up")
                         }
                     } label: {
@@ -247,29 +240,24 @@ struct RecipeDetailView: View {
     }
     
     // MARK: - 保存功能
+    
     private func saveAsImage() {
-        // 使用当前视图的完整渲染，包括缩放和偏移
         let renderer = ImageRenderer(content: currentView())
         renderer.scale = 3.0
-        
         if let image = renderer.uiImage {
             UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)
             saveMessage = "图片已保存到相册"
-            showingSaveAlert = true
         } else {
             saveMessage = "保存失败"
-            showingSaveAlert = true
         }
+        showingSaveAlert = true
     }
     
     private func shareImage() {
         let renderer = ImageRenderer(content: currentView())
         renderer.scale = 3.0
-        
         guard let image = renderer.uiImage else { return }
-        
         let activityVC = UIActivityViewController(activityItems: [image], applicationActivities: nil)
-        
         if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
            let window = scene.windows.first,
            let rootVC = window.rootViewController {
@@ -281,15 +269,11 @@ struct RecipeDetailView: View {
         }
     }
     
-    // 渲染当前视图状态（包括缩放和偏移）
     @ViewBuilder
     private func currentView() -> some View {
         GeometryReader { geometry in
             ZStack {
-                // 深色背景
                 Color(red: 0.08, green: 0.09, blue: 0.12)
-                
-                // 网格背景
                 Canvas { context, size in
                     let spacing: CGFloat = 30
                     var path = Path()
@@ -303,12 +287,8 @@ struct RecipeDetailView: View {
                     }
                     context.stroke(path, with: .color(Color(red: 1.0, green: 0.8, blue: 0.0).opacity(0.1)), lineWidth: 0.5)
                 }
-                
-                // 配方树 - 应用当前的缩放和偏移
                 ZStack {
-                    Canvas { context, size in
-                        drawConnections(node: root, context: &context)
-                    }
+                    Canvas { context, size in drawConnections(node: root, context: &context) }
                     DetailNodeView(node: root, nodeWidth: nodeWidth, nodeHeight: nodeHeight, xSpacing: xSpacing, ySpacing: ySpacing)
                 }
                 .frame(width: calculateWidth(), height: calculateHeight())
@@ -339,12 +319,12 @@ struct RecipeDetailView: View {
     private func drawConnections(node: RecipeNode, context: inout GraphicsContext) {
         for child in node.children {
             let start = CGPoint(x: child.positionX * xSpacing + nodeWidth / 2, y: CGFloat(child.level) * ySpacing + nodeHeight / 2)
-            let end = CGPoint(x: node.positionX * xSpacing + nodeWidth / 2, y: CGFloat(node.level) * ySpacing - nodeHeight / 2)
+            let end   = CGPoint(x: node.positionX  * xSpacing + nodeWidth / 2, y: CGFloat(node.level)  * ySpacing - nodeHeight / 2)
             var path = Path()
             path.move(to: start)
-            let cp1 = CGPoint(x: start.x, y: start.y + (end.y - start.y) * 0.5)
-            let cp2 = CGPoint(x: end.x, y: start.y + (end.y - start.y) * 0.5)
-            path.addCurve(to: end, control1: cp1, control2: cp2)
+            path.addCurve(to: end,
+                          control1: CGPoint(x: start.x, y: start.y + (end.y - start.y) * 0.5),
+                          control2: CGPoint(x: end.x,   y: start.y + (end.y - start.y) * 0.5))
             context.stroke(path, with: .color(Color(red: 1.0, green: 0.8, blue: 0.0).opacity(0.3)), lineWidth: 2.5)
             drawArrow(at: end, context: &context)
             drawConnections(node: child, context: &context)
@@ -360,6 +340,8 @@ struct RecipeDetailView: View {
     }
 }
 
+// MARK: - DetailNodeView
+
 struct DetailNodeView: View {
     let node: RecipeNode
     let nodeWidth: CGFloat
@@ -369,27 +351,44 @@ struct DetailNodeView: View {
     
     var body: some View {
         ZStack {
-            nodeCard(node).position(x: node.positionX * xSpacing + nodeWidth / 2, y: CGFloat(node.level) * ySpacing)
+            nodeCard(node)
+                .position(x: node.positionX * xSpacing + nodeWidth / 2,
+                          y: CGFloat(node.level) * ySpacing)
             ForEach(node.children) { child in
-                DetailNodeView(node: child, nodeWidth: nodeWidth, nodeHeight: nodeHeight, xSpacing: xSpacing, ySpacing: ySpacing)
+                DetailNodeView(node: child,
+                               nodeWidth: nodeWidth,
+                               nodeHeight: nodeHeight,
+                               xSpacing: xSpacing,
+                               ySpacing: ySpacing)
             }
         }
     }
     
     private func nodeCard(_ node: RecipeNode) -> some View {
         VStack(spacing: 8) {
-            Text(node.name).font(.system(size: 16, weight: .semibold)).multilineTextAlignment(.center).lineLimit(2).foregroundColor(.white)
+            Text(node.name)
+                .font(.system(size: 16, weight: .semibold))
+                .multilineTextAlignment(.center)
+                .lineLimit(2)
+                .foregroundColor(.white)
+            
             HStack(spacing: 4) {
                 Image(systemName: "cube.box.fill").font(.caption2)
                 Text("x\(node.amount)").font(.system(size: 15, weight: .medium, design: .monospaced))
             }
             .foregroundColor(.white.opacity(0.7))
+            
             if let recipe = node.recipe {
                 VStack(spacing: 2) {
-                    Text(recipe.machine).font(.system(size: 11, weight: .medium)).foregroundColor(.white)
-                        .padding(.horizontal, 8).padding(.vertical, 3)
+                    Text(recipe.machine)
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
                         .background(Capsule().fill(machineColor(recipe.machine)))
-                    if recipe.time > 0 {
+                    
+                    // 采矿类机器不显示时间
+                    if recipe.time > 0 && !RecipeViewModel.isMiningMachine(recipe.machine) {
                         HStack(spacing: 3) {
                             Image(systemName: "clock.fill").font(.system(size: 8))
                             Text("\(recipe.time)s").font(.system(size: 9, design: .monospaced))
@@ -402,8 +401,17 @@ struct DetailNodeView: View {
         .frame(width: nodeWidth, height: nodeHeight)
         .background(
             ZStack {
-                Rectangle().fill(node.recipe == nil ? Color(red: 0.9, green: 0.5, blue: 0.2).opacity(0.15) : Color(red: 1.0, green: 0.8, blue: 0.0).opacity(0.15))
-                Rectangle().stroke(node.recipe == nil ? Color(red: 0.9, green: 0.5, blue: 0.2).opacity(0.5) : Color(red: 1.0, green: 0.8, blue: 0.0).opacity(0.5), lineWidth: 2)
+                Rectangle().fill(
+                    node.recipe == nil
+                        ? Color(red: 0.9, green: 0.5, blue: 0.2).opacity(0.15)
+                        : Color(red: 1.0, green: 0.8, blue: 0.0).opacity(0.15)
+                )
+                Rectangle().stroke(
+                    node.recipe == nil
+                        ? Color(red: 0.9, green: 0.5, blue: 0.2).opacity(0.5)
+                        : Color(red: 1.0, green: 0.8, blue: 0.0).opacity(0.5),
+                    lineWidth: 2
+                )
             }
         )
         .shadow(color: Color(red: 1.0, green: 0.8, blue: 0.0).opacity(0.1), radius: 5, x: 0, y: 3)
@@ -411,11 +419,11 @@ struct DetailNodeView: View {
     
     private func machineColor(_ machine: String) -> Color {
         switch machine {
-        case let m where m.contains("矿机"): return Color(red: 0.6, green: 0.4, blue: 0.2)
-        case let m where m.contains("精炼"): return Color(red: 0.9, green: 0.3, blue: 0.2)
-        case let m where m.contains("装配"): return Color(red: 0.6, green: 0.4, blue: 0.9)
-        case let m where m.contains("粉碎"): return Color(red: 0.5, green: 0.5, blue: 0.5)
-        case let m where m.contains("封装"): return Color(red: 0.4, green: 0.8, blue: 0.2)
+        case let m where m.contains("矿机"):  return Color(red: 0.6, green: 0.4, blue: 0.2)
+        case let m where m.contains("精炼"):  return Color(red: 0.9, green: 0.3, blue: 0.2)
+        case let m where m.contains("装配"):  return Color(red: 0.6, green: 0.4, blue: 0.9)
+        case let m where m.contains("粉碎"):  return Color(red: 0.5, green: 0.5, blue: 0.5)
+        case let m where m.contains("封装"):  return Color(red: 0.4, green: 0.8, blue: 0.2)
         default: return Color(red: 1.0, green: 0.8, blue: 0.0)
         }
     }

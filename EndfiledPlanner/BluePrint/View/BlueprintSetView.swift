@@ -12,6 +12,10 @@ struct BlueprintSetView: View {
     @StateObject private var viewModel = BlueprintSetViewModel()
     @State private var selectedSet: BlueprintSet?
     
+    // 免责声明相关状态
+    @AppStorage("hasAcceptedBlueprintDisclaimer") private var hasAccepted = false
+    @State private var showDisclaimer = false
+    
     var body: some View {
         NavigationStack {
             ZStack {
@@ -39,50 +43,71 @@ struct BlueprintSetView: View {
                 }
                 .ignoresSafeArea()
                 
-                VStack(spacing: 0) {
-                    
-                    // 页面横幅
-                    BlueprintSetBanner()
-                        .padding(.horizontal)
-                        .padding(.top, 10)
-                    
-                    // 筛选栏
-                    BlueprintSetFilterBar(
-                        authorSearch: $viewModel.authorSearch,
-                        selectedRegion: $viewModel.selectedRegion,
-                        availableRegions: viewModel.availableRegions
-                    )
-                    .padding(.horizontal)
-                    .padding(.top, 16)
-                    
-                    // 结果统计
-                    if !viewModel.isLoading && !viewModel.filteredSets.isEmpty {
-                        HStack {
-                            Text("找到 \(viewModel.filteredSets.count) 个蓝图集")
-                                .font(.system(size: 12, weight: .medium, design: .monospaced))
-                                .foregroundColor(.white.opacity(0.6))
-                            
-                            Spacer()
-                        }
-                        .padding(.horizontal)
-                        .padding(.top, 12)
-                    }
-                    
-                    // 内容区域
-                    if viewModel.isLoading {
-                        BlueprintSetLoadingView()
-                    } else if let error = viewModel.errorMessage {
-                        BlueprintSetErrorView(message: error) {
-                            viewModel.loadBlueprintSets()
-                        }
-                    } else if viewModel.filteredSets.isEmpty {
-                        BlueprintSetEmptyView(hasSets: !viewModel.blueprintSets.isEmpty)
-                    } else {
-                        BlueprintSetListView(
-                            sets: viewModel.filteredSets,
-                            selectedSet: $selectedSet
+                // 整个页面都可滚动
+                ScrollView {
+                    VStack(spacing: 0) {
+                        
+                        // 页面横幅
+                        BlueprintSetBanner()
+                            .padding(.horizontal)
+                            .padding(.top, 10)
+                        
+                        // 筛选栏
+                        BlueprintSetFilterBar(
+                            authorSearch: $viewModel.authorSearch,
+                            selectedRegion: $viewModel.selectedRegion,
+                            availableRegions: viewModel.availableRegions
                         )
+                        .padding(.horizontal)
+                        .padding(.top, 16)
+                        
+                        // 结果统计
+                        if !viewModel.isLoading && !viewModel.filteredSets.isEmpty {
+                            HStack {
+                                Text("找到 \(viewModel.filteredSets.count) 个蓝图集")
+                                    .font(.system(size: 12, weight: .medium, design: .monospaced))
+                                    .foregroundColor(.white.opacity(0.6))
+                                
+                                Spacer()
+                            }
+                            .padding(.horizontal)
+                            .padding(.top, 12)
+                        }
+                        
+                        // 内容区域
+                        if viewModel.isLoading {
+                            BlueprintSetLoadingView()
+                                .padding(.top, 60)
+                        } else if let error = viewModel.errorMessage {
+                            BlueprintSetErrorView(message: error) {
+                                viewModel.loadBlueprintSets()
+                            }
+                            .padding(.top, 40)
+                        } else if viewModel.filteredSets.isEmpty {
+                            BlueprintSetEmptyView(hasSets: !viewModel.blueprintSets.isEmpty)
+                                .padding(.top, 60)
+                        } else {
+                            // 蓝图列表
+                            LazyVStack(spacing: 12) {
+                                ForEach(viewModel.filteredSets) { set in
+                                    BlueprintSetCard(blueprintSet: set)
+                                        .onTapGesture {
+                                            selectedSet = set
+                                        }
+                                }
+                            }
+                            .padding(.horizontal)
+                            .padding(.top, 8)
+                            .padding(.bottom, 20)
+                        }
                     }
+                }
+                
+                // 免责声明弹窗（在最上层）
+                if showDisclaimer {
+                    BlueprintDisclaimerView(isPresented: $showDisclaimer)
+                        .transition(.opacity)
+                        .zIndex(999)
                 }
             }
             .navigationTitle("")
@@ -113,6 +138,15 @@ struct BlueprintSetView: View {
                 BlueprintSetDetailView(blueprintSet: set)
             }
             .onAppear {
+                // 首次进入时显示免责声明
+                if !hasAccepted {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            showDisclaimer = true
+                        }
+                    }
+                }
+                
                 if viewModel.blueprintSets.isEmpty {
                     viewModel.loadBlueprintSets()
                 }
@@ -286,7 +320,8 @@ struct BlueprintSetLoadingView: View {
                 .font(.system(size: 14, weight: .bold, design: .monospaced))
                 .foregroundColor(Color(red: 0.2, green: 0.6, blue: 0.9))
         }
-        .frame(maxHeight: .infinity)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 60)
     }
 }
 
@@ -327,8 +362,9 @@ struct BlueprintSetErrorView: View {
                     )
             }
         }
-        .frame(maxHeight: .infinity)
-        .padding()
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 40)
+        .padding(.horizontal)
     }
 }
 
@@ -349,28 +385,8 @@ struct BlueprintSetEmptyView: View {
                 .font(.system(size: 14))
                 .foregroundColor(.white.opacity(0.6))
         }
-        .frame(maxHeight: .infinity)
-    }
-}
-
-struct BlueprintSetListView: View {
-    let sets: [BlueprintSet]
-    @Binding var selectedSet: BlueprintSet?
-    
-    var body: some View {
-        ScrollView {
-            LazyVStack(spacing: 12) {
-                ForEach(sets) { set in
-                    BlueprintSetCard(blueprintSet: set)
-                        .onTapGesture {
-                            selectedSet = set
-                        }
-                }
-            }
-            .padding(.horizontal)
-            .padding(.top, 8)
-            .padding(.bottom, 20)
-        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 60)
     }
 }
 
