@@ -139,6 +139,23 @@ class RecipeViewModel: ObservableObject {
         return result
     }
 
+    /// recipes.txt 没有直接标注物品形态，这里用命名规律近似判断是不是固体（能走传送带）——
+    /// 液化/气态开头，或者气/水/酸/溶液/废液/蒸气结尾的算非固体。已经拿全部产物名核对过，
+    /// 唯一需要注意的是"...耐压罐（已盛装水蒸气）"这类瓶装容器本身是固体，用 hasSuffix 而不是
+    /// contains 就不会被"蒸气"这种中间词误伤
+    static func isLikelySolid(_ name: String) -> Bool {
+        let nonSolidPrefixes = ["液化", "气态"]
+        let nonSolidSuffixes = ["气", "水", "酸", "溶液", "废液", "蒸气"]
+        if nonSolidPrefixes.contains(where: { name.hasPrefix($0) }) { return false }
+        if nonSolidSuffixes.contains(where: { name.hasSuffix($0) }) { return false }
+        return true
+    }
+
+    /// 取线出口的材料选择列表：recipes.txt 里出现过的所有固体产物名
+    func solidOutputNames() -> [String] {
+        recipes.keys.filter { RecipeViewModel.isLikelySolid($0) }.sorted()
+    }
+
     static func isMiningMachine(_ machine: String) -> Bool {
         machine.contains("矿机") ||
         machine.contains("水驱矿机") ||

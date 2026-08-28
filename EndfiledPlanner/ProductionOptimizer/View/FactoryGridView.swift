@@ -17,6 +17,9 @@ struct FactoryGridView: View {
     @Binding var dragLocationInGrid: CGPoint?
 
     @State private var beltAnimPhase: CGFloat = 0
+    // dragLocationInGrid 是父视图传来的"手指全局坐标"，这里换算成网格本地坐标用来画预览——
+    // 单独存一份而不是写回 dragLocationInGrid，避免它被当成新的全局坐标再转一遍，越转越偏
+    @State private var dropPreviewLocal: CGPoint? = nil
 
     private var cols: Int { FactoryGridModel.gridCols }
     private var rows: Int { FactoryGridModel.gridRows }
@@ -26,6 +29,7 @@ struct FactoryGridView: View {
             gridLines
             beltsLayer
             buildingsLayer
+            portsLayer
             dragPreview
             beltStartMarker
             portSnapHighlight
@@ -81,7 +85,9 @@ struct FactoryGridView: View {
     private let beltBlockedColor = Color.red
     private let beltArrowColor = Color.white     // 方向箭头用白色，对比度高
 
-    /// 同一格、同一轴上如果传送带和管道都经过（平行走线），左右/上下分显，各占半格宽度
+    /// 同一格、同一轴上如果传送带和管道都经过（平行走线），管道会缩细叠在传送带上面显示，
+    /// 不用左右分开占位——两者物理上本来就不在同一高度，缩细叠加比硬挤在同一格宽度里更接近实际，
+    /// 也不需要处理拐弯时两条平行线的偏移几何（那套逻辑之前出过畸变）
     private func sharedAxisKeys(_ segs: [BeltSegment]) -> Set<String> {
         var typesByCellAxis: [String: Set<LineType>] = [:]
         for seg in segs {
@@ -94,20 +100,18 @@ struct FactoryGridView: View {
     // MARK: - 传送带/管道层
     private var beltsLayer: some View {
         Canvas { context, size in
-            let occupied = vm.occupiedBuildingCellKeys()
+            // 物流桥/管道桥是特意留给线穿过去的交叉节点，不算挡路，排除在外，
+            // 不然线一穿过自己触发生成的桥就会被判定成"撞到建筑"整条标红
+            let occupied = vm.lineBlockingCellKeys()
             let allSegs = vm.layout.beltNetwork.allSegments
             let sharedKeys = sharedAxisKeys(allSegs + vm.beltPreviewSegments)
 
-            // 每条带独立画（保证 chain 分析正确，衔接带圆角，穿插带不混）
-            for belt in vm.layout.beltNetwork.belts {
-                let blockedSet = Set(belt.segments
-                    .filter { occupied.contains("\($0.cell.col),\($0.cell.row)") }
-                    .map { "\($0.cell.col),\($0.cell.row)" })
-                drawBeltPath(segments: belt.segments,
-                             lineType: belt.lineType,
-                             sharedKeys: sharedKeys,
-                             blockedSet: blockedSet,
-                             isPreview: false, context: &context)
+            // 传送带先画（打底），管道后画（叠在上面），保证共存时管道细线始终可见
+            for belt in vm.layout.beltNetwork.belts where belt.lineType == .belt {
+                drawOneBelt(belt, occupied: occupied, sharedKeys: sharedKeys, isPreview: false, context: &context)
+            }
+            for belt in vm.layout.beltNetwork.belts where belt.lineType == .pipe {
+                drawOneBelt(belt, occupied: occupied, sharedKeys: sharedKeys, isPreview: false, context: &context)
             }
 
             // 拖拽预览
@@ -145,12 +149,14 @@ struct FactoryGridView: View {
         .frame(width: CGFloat(cols) * cellSize, height: CGFloat(rows) * cellSize)
     }
 
-    private func canonicalPerp(for axis: BeltAxis) -> GridPoint {
-        axis == .horizontal ? GridPoint(col: 0, row: 1) : GridPoint(col: 1, row: 0)
-    }
-
-    private func axisOf(_ dir: GridPoint) -> BeltAxis {
-        dir.col != 0 ? .horizontal : .vertical
+    private func drawOneBelt(_ belt: Belt, occupied: Set<String>, sharedKeys: Set<String>,
+                             isPreview: Bool, context: inout GraphicsContext) {
+        let blockedSet = Set(belt.segments
+            .filter { occupied.contains("\($0.cell.col),\($0.cell.row)") }
+            .map { "\($0.cell.col),\($0.cell.row)" })
+        drawBeltPath(segments: belt.segments, lineType: belt.lineType,
+                     sharedKeys: sharedKeys, blockedSet: blockedSet,
+                     isPreview: isPreview, context: &context)
     }
 
     /// 传送带/管道渲染：Belt.segments 本身已有序，直接画圆角折线，不需要重新串链
@@ -162,18 +168,13 @@ struct FactoryGridView: View {
                               context: inout GraphicsContext) {
         guard !segments.isEmpty else { return }
 
-        // 整条带只要有任意一格和另一类型共占同一格同一轴，就整条按半宽偏移绘制，
-        // 避免遮挡（相邻两格局部共存、局部不共存的情况很少见，不做逐格变宽度处理）
+        // 只有管道会在共存时缩细（传送带外观始终不变，管道叠在它上面显示）
         let isShared = segments.contains {
             sharedKeys.contains("\($0.cell.col),\($0.cell.row),\($0.axis.rawValue)")
         }
-        let widthScale: CGFloat = isShared ? 0.5 : 1.0
-        let offsetSign: CGFloat = lineType == .belt ? -1 : 1
-        let shift = isShared ? cellSize * 0.25 * offsetSign : 0
-
+        let widthScale: CGFloat = (isShared && lineType == .pipe) ? 0.34 : 1.0
         let baseColor = lineType == .belt ? beltColor : pipeColor
 
-        // 线宽 = 格子宽度（填满格子），共存时减半
         let lineW  = cellSize * widthScale
         let radius = cellSize * 0.38 * widthScale
         let alpha: Double = isPreview ? 0.45 : 1.0
@@ -183,8 +184,7 @@ struct FactoryGridView: View {
         let bgStyle = StrokeStyle(lineWidth: lineW, lineCap: .butt, lineJoin: .miter)
         drawChain(segments, color: baseColor.opacity(alpha * 0.55),
                   blockedColor: beltBlockedColor.opacity(alpha * 0.55),
-                  blockedSet: blockedSet, style: bgStyle, radius: radius,
-                  shift: shift, context: &context)
+                  blockedSet: blockedSet, style: bgStyle, radius: radius, context: &context)
 
         // 前景层：稍窄亮色
         let fgStyle = StrokeStyle(lineWidth: lineW * 0.55, lineCap: .butt, lineJoin: .miter,
@@ -192,22 +192,15 @@ struct FactoryGridView: View {
                                   dashPhase: isPreview ? 0 : beltAnimPhase * cellSize * 0.05)
         drawChain(segments, color: baseColor.opacity(alpha),
                   blockedColor: beltBlockedColor.opacity(alpha),
-                  blockedSet: blockedSet, style: fgStyle, radius: radius,
-                  shift: shift, context: &context)
+                  blockedSet: blockedSet, style: fgStyle, radius: radius, context: &context)
 
         // 方向箭头：每格中央画白色实心三角，明显
         for seg in segments {
-            var c = cellCenter(seg.cell)
+            let c = cellCenter(seg.cell)
             let cellKey = "\(seg.cell.col),\(seg.cell.row)"
-            let segShared = sharedKeys.contains("\(seg.cell.col),\(seg.cell.row),\(seg.axis.rawValue)")
-            if segShared {
-                let perp = canonicalPerp(for: seg.axis)
-                let s = cellSize * 0.25 * offsetSign
-                c = CGPoint(x: c.x + CGFloat(perp.col) * s, y: c.y + CGFloat(perp.row) * s)
-            }
             let isBlocked = blockedSet.contains(cellKey)
-            // 箭头大小约为格子的 30%，共存时缩小到半宽的箭头
-            let arrowSize = cellSize * 0.30 * (segShared ? 0.6 : 1.0)
+            // 箭头大小约为格子的 30%，管道缩细时箭头也跟着小一号但不要太小看不清
+            let arrowSize = cellSize * 0.30 * max(widthScale, 0.55)
             drawArrow(at: c, dir: seg.toDir, size: arrowSize,
                       color: isBlocked ? Color.white.opacity(0.5) : Color.white.opacity(alpha * 0.9),
                       context: &context)
@@ -226,25 +219,18 @@ struct FactoryGridView: View {
 
 
     /// 画单条 chain 的圆角路径
-    /// - 线宽 = 格子宽，端点对齐格子边缘（占满整格）
+    /// - 线宽 = 格子宽（或缩细后的宽度），端点对齐格子边缘
     /// - 拐角处用 quadCurve 做圆弧
+    /// - 传送带和管道各画各的中心线，互不偏移；共存时靠管道整体缩细叠加在上面区分，
+    ///   所以这里不需要处理"两条平行线在拐弯处怎么错开"这种问题
     private func drawChain(_ chain: [BeltSegment],
                            color: Color,
                            blockedColor: Color,
                            blockedSet: Set<String>,
                            style: StrokeStyle,
                            radius: CGFloat,
-                           shift: CGFloat,
                            context: inout GraphicsContext) {
         guard !chain.isEmpty else { return }
-
-        // 共存时垂直于每一段自身走向的偏移量（正交方向已经用 canonicalPerp 固定，
-        // 保证同一类型不管朝哪个方向走都稳定偏到同一侧，不会因为流动方向不同而两条线叠在一起）
-        func offset(for dir: GridPoint) -> CGPoint {
-            guard shift != 0 else { return .zero }
-            let perp = canonicalPerp(for: axisOf(dir))
-            return CGPoint(x: CGFloat(perp.col) * shift, y: CGFloat(perp.row) * shift)
-        }
 
         // 合并同格拐角段为关键点
         struct KP { var center: CGPoint; var inDir: GridPoint; var outDir: GridPoint; var blocked: Bool }
@@ -271,10 +257,9 @@ struct FactoryGridView: View {
         // 中间各格：只保留真正拐角格的中心点作为折点，直线段不需要中间点
         let first = kps[0]; let last = kps[kps.count - 1]
         var pts: [CGPoint] = []
-        let startOffset = offset(for: first.inDir)
         pts.append(CGPoint(
-            x: first.center.x - CGFloat(first.inDir.col) * cellSize * 0.5 + startOffset.x,
-            y: first.center.y - CGFloat(first.inDir.row) * cellSize * 0.5 + startOffset.y))
+            x: first.center.x - CGFloat(first.inDir.col) * cellSize * 0.5,
+            y: first.center.y - CGFloat(first.inDir.row) * cellSize * 0.5))
         // 只加拐角格的中心（直线段的中间格不需要，连起来就是直线）
         for idx in 0..<kps.count {
             let kp = kps[idx]
@@ -282,17 +267,13 @@ struct FactoryGridView: View {
             let isLast  = idx == kps.count - 1
             let prevDir = isFirst ? kp.inDir  : kps[idx - 1].outDir
             let nextDir = isLast  ? kp.outDir : kps[idx + 1].inDir
-            // 方向变了才是拐角，需要保留中心点（偏移用出方向所在的轴，和相邻直线段衔接一致）
+            // 方向变了才是拐角，需要保留中心点
             let turning = (prevDir.col != nextDir.col) || (prevDir.row != nextDir.row)
-            if turning {
-                let o = offset(for: kp.outDir)
-                pts.append(CGPoint(x: kp.center.x + o.x, y: kp.center.y + o.y))
-            }
+            if turning { pts.append(kp.center) }
         }
-        let endOffset = offset(for: last.outDir)
         pts.append(CGPoint(
-            x: last.center.x + CGFloat(last.outDir.col) * cellSize * 0.5 + endOffset.x,
-            y: last.center.y + CGFloat(last.outDir.row) * cellSize * 0.5 + endOffset.y))
+            x: last.center.x + CGFloat(last.outDir.col) * cellSize * 0.5,
+            y: last.center.y + CGFloat(last.outDir.row) * cellSize * 0.5))
 
         // 构建圆角路径
         var path = Path()
@@ -372,22 +353,66 @@ struct FactoryGridView: View {
         let y = CGFloat(placed.origin.row) * cellSize
         let isSelected = placed.id == vm.selectedBuildingID
 
+        // 仓库取货口/存货口这类只有 1 格厚的长条形建筑，塞不下竖排的图标+名字+材料+朝向
+        // 四行文字（超出边框但没裁切，看着就像"整个建筑变大了一圈"），改成横向紧凑排布
+        let isThin = size.width == 1 || size.height == 1
+
+        // rotation 记录的是端口"安装朝向"，出口的物流方向跟它一致，但入口（比如存货口）
+        // 物流方向其实是反过来的（东西是从外面流进来的）——卡片上这个箭头是给人看流向的，
+        // 入口类建筑要显示 rotation 的反方向，不然会跟旁边传送带的箭头对不上、看着像反了
+        let flowSymbol = (def.id == BuildingDefinition.warehouseInletID
+                          ? placed.rotation.opposite : placed.rotation).symbol
+
         return ZStack {
             Rectangle().fill(def.category.color.opacity(isSelected ? 0.4 : 0.25))
             Rectangle().stroke(
                 isSelected ? Color(red: 1.0, green: 0.8, blue: 0.0) : def.category.color.opacity(0.6),
                 lineWidth: isSelected ? 2.5 : 1.5)
-            VStack(spacing: 3) {
-                Image(systemName: def.category.icon)
-                    .font(.system(size: min(w, h) * 0.28))
-                    .foregroundColor(def.category.color)
-                Text(def.name)
-                    .font(.system(size: min(w, h) * 0.16, weight: .bold, design: .monospaced))
-                    .foregroundColor(.white).lineLimit(1)
-                Text(placed.rotation.symbol)
-                    .font(.system(size: min(w, h) * 0.18))
-                    .foregroundColor(.white.opacity(0.5))
-            }.padding(4)
+            if isThin {
+                HStack(spacing: 4) {
+                    Image(systemName: def.category.icon)
+                        .font(.system(size: min(w, h) * 0.5))
+                        .foregroundColor(def.category.color)
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(def.name)
+                            .font(.system(size: min(w, h) * 0.32, weight: .bold, design: .monospaced))
+                            .foregroundColor(.white).lineLimit(1)
+                        if def.id == BuildingDefinition.warehouseOutletID {
+                            Text(placed.outletMaterial ?? "未设置")
+                                .font(.system(size: min(w, h) * 0.26, design: .monospaced))
+                                .foregroundColor(placed.outletMaterial == nil
+                                                 ? .white.opacity(0.35)
+                                                 : Color(red: 0.4, green: 0.8, blue: 0.2))
+                                .lineLimit(1)
+                        }
+                    }
+                    Text(flowSymbol)
+                        .font(.system(size: min(w, h) * 0.4))
+                        .foregroundColor(.white.opacity(0.5))
+                }
+                .padding(4)
+                .minimumScaleFactor(0.6)
+            } else {
+                VStack(spacing: 3) {
+                    Image(systemName: def.category.icon)
+                        .font(.system(size: min(w, h) * 0.28))
+                        .foregroundColor(def.category.color)
+                    Text(def.name)
+                        .font(.system(size: min(w, h) * 0.16, weight: .bold, design: .monospaced))
+                        .foregroundColor(.white).lineLimit(1)
+                    if def.id == BuildingDefinition.warehouseOutletID {
+                        Text(placed.outletMaterial ?? "未设置")
+                            .font(.system(size: min(w, h) * 0.14, design: .monospaced))
+                            .foregroundColor(placed.outletMaterial == nil
+                                             ? .white.opacity(0.35)
+                                             : Color(red: 0.4, green: 0.8, blue: 0.2))
+                            .lineLimit(1)
+                    }
+                    Text(flowSymbol)
+                        .font(.system(size: min(w, h) * 0.18))
+                        .foregroundColor(.white.opacity(0.5))
+                }.padding(4)
+            }
             if isSelected {
                 VStack {
                     HStack {
@@ -400,13 +425,45 @@ struct FactoryGridView: View {
             }
         }
         .frame(width: w, height: h)
+        .clipped()
         .offset(x: x, y: y)
+    }
+
+    // MARK: - 端口标记层：每个入口/出口在建筑边缘画一个小圆点，接上线是实心，没接是空心
+    private var portsLayer: some View {
+        ForEach(vm.layout.buildings) { placed in
+            if let def = BuildingDefinition.find(placed.definitionID) {
+                ForEach(Array(def.ports.enumerated()), id: \.offset) { _, port in
+                    portMarker(port: port, placed: placed, def: def)
+                }
+            }
+        }
+    }
+
+    private func portMarker(port: BuildingPort, placed: PlacedBuilding, def: BuildingDefinition) -> some View {
+        let (cell, facing) = port.resolvedPosition(placed: placed, definition: def)
+        let center = cellCenter(cell)
+        // 往端口朝外的方向偏一点，让点落在建筑边缘上而不是格子正中心
+        let inset = cellSize * 0.34
+        let cx = center.x + CGFloat(facing.outputOffset.col) * inset
+        let cy = center.y + CGFloat(facing.outputOffset.row) * inset
+        let connected = vm.isPortConnected(port, placed: placed, definition: def)
+        let color = port.kind == .pipe ? pipeColor : beltColor
+        let dot = cellSize * 0.22
+
+        return ZStack {
+            Circle().fill(connected ? color : Color(red: 0.06, green: 0.07, blue: 0.10))
+            Circle().stroke(color, lineWidth: connected ? 0 : 1.5)
+        }
+        .frame(width: dot, height: dot)
+        .offset(x: cx - dot / 2, y: cy - dot / 2)
+        .allowsHitTesting(false)
     }
 
     // MARK: - 拖拽放置预览（从建筑板拖入）
     @ViewBuilder
     private var dragPreview: some View {
-        if let def = draggingDef, let loc = dragLocationInGrid {
+        if let def = draggingDef, let loc = dropPreviewLocal {
             let cell = cellAt(point: loc)
             let canPlace = vm.canPlaceAt(def, cell: cell)
             let dummy = PlacedBuilding(definitionID: def.id, origin: cell, rotation: vm.pendingRotation)
@@ -511,6 +568,7 @@ struct FactoryGridView: View {
                     .onChange(of: dragLocationInGrid) { globalPt in
                         guard let globalPt, draggingDef != nil else {
                             vm.pendingDropCell = nil
+                            dropPreviewLocal = nil
                             return
                         }
                         let origin = geo.frame(in: .global).origin
@@ -518,8 +576,16 @@ struct FactoryGridView: View {
                         let gridW = CGFloat(cols) * cellSize
                         let gridH = CGFloat(rows) * cellSize
                         if local.x >= 0, local.y >= 0, local.x <= gridW, local.y <= gridH {
-                            vm.pendingDropCell = cellAt(point: local)
-                            dragLocationInGrid = local
+                            let cell = cellAt(point: local)
+                            vm.pendingDropCell = cell
+                            dropPreviewLocal = local
+                            // 仓库取货口/存货口这类要贴边的建筑，靠拖拽落点自动转成对应朝向，不用手动转
+                            if let def = draggingDef,
+                               let suggested = vm.autoOrientedRotation(for: def, at: cell) {
+                                vm.pendingRotation = suggested
+                            }
+                        } else {
+                            dropPreviewLocal = nil
                         }
                     }
             }

@@ -93,6 +93,39 @@ struct FactoryStatsView: View {
                         .background(Color(red: 0.9, green: 0.5, blue: 0.2).opacity(0.1))
                     }
 
+                    // 直通节点提示（分流器/汇流器/物流桥等，不产不耗，不算进下面的产线）
+                    if stats.passthroughCount > 0 {
+                        HStack(spacing: 8) {
+                            Image(systemName: "arrow.triangle.branch")
+                                .font(.system(size: 11))
+                                .foregroundColor(Color(red: 0.4, green: 0.7, blue: 0.9))
+                            Text("直通节点 ×\(stats.passthroughCount)（分流器/汇流器等，不计入产线）")
+                                .font(.system(size: 10, weight: .bold, design: .monospaced))
+                                .foregroundColor(Color(red: 0.4, green: 0.7, blue: 0.9))
+                            Spacer()
+                        }
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 8)
+                        .background(Color(red: 0.4, green: 0.7, blue: 0.9).opacity(0.1))
+                    }
+
+                    // 仓库取线：没有速率概念（游戏里取多少取决于仓库存量），只列出每个出口设置了什么
+                    if !stats.outletMaterials.isEmpty {
+                        HStack(spacing: 8) {
+                            Image(systemName: "shippingbox.fill")
+                                .font(.system(size: 11))
+                                .foregroundColor(Color(red: 0.4, green: 0.8, blue: 0.2))
+                            Text("仓库取线：\(stats.outletMaterials.joined(separator: "、"))")
+                                .font(.system(size: 10, weight: .bold, design: .monospaced))
+                                .foregroundColor(Color(red: 0.4, green: 0.8, blue: 0.2))
+                                .lineLimit(2)
+                            Spacer()
+                        }
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 8)
+                        .background(Color(red: 0.4, green: 0.8, blue: 0.2).opacity(0.1))
+                    }
+
                     // 建筑类型分布
                     if !stats.categoryBreakdown.isEmpty {
                         VStack(alignment: .leading, spacing: 6) {

@@ -32,9 +32,13 @@ class FactoryViewModel: ObservableObject {
 
     // 配方数据：按机器名分组去重，PlacedBuilding.selectedRecipeIndex 就是这份列表里的下标
     let machineRecipes: [String: [Recipe]]
+    // 取线出口能选的材料：recipes.txt 里所有固体产物
+    let solidMaterials: [String]
 
     init() {
-        machineRecipes = RecipeViewModel().recipesByMachine()
+        let recipeVM = RecipeViewModel()
+        machineRecipes = recipeVM.recipesByMachine()
+        solidMaterials = recipeVM.solidOutputNames()
         let loaded = FactoryGridModel.load()
         layout = loaded
         stats = FactoryGridModel.analyze(layout: loaded, machineRecipes: machineRecipes)
@@ -49,6 +53,77 @@ class FactoryViewModel: ObservableObject {
     func selectRecipe(_ index: Int?, for buildingID: UUID) {
         guard let idx = layout.buildings.firstIndex(where: { $0.id == buildingID }) else { return }
         layout.buildings[idx].selectedRecipeIndex = index
+        refreshStats()
+    }
+
+    // MARK: - 地图
+    /// 切换地图会清空当前布局——两张地图的仓库取线规则完全不同（贴边 vs 连基段），
+    /// 建筑/线路留着也大概率不合法，不如直接清干净重新摆
+    func switchMap(to mapType: MapType) {
+        layout = .empty
+        layout.mapType = mapType
+        selectedBuildingID = nil
+        beltStart = nil
+        beltPreviewSegments = []
+        pendingEraseBeltIDs = []
+        FactoryGridModel.clear()
+        refreshStats()
+    }
+
+    /// 仓库取货口/存货口自动定向，不用用户自己转：优先选一个能让当前位置直接合法摆放的朝向
+    /// （四号谷地是贴地图边，武陵是贴基段，两边都要求长边贴死+口朝对方反方向开），
+    /// 避免拖拽路径不同导致预览来回跳；还没拖到合法位置时（比如刚从建造面板拿起来）
+    /// 才退回一个大概方向，仅供预览用
+    func autoOrientedRotation(for def: BuildingDefinition, at cell: GridPoint) -> BuildingRotation? {
+        guard BuildingDefinition.warehousePortIDs.contains(def.id) else { return nil }
+        for candidate in BuildingRotation.allCases {
+            if FactoryGridModel.canPlace(definition: def, at: cell, rotation: candidate,
+                                          existing: layout.buildings, mapType: layout.mapType) {
+                return candidate
+            }
+        }
+        switch layout.mapType {
+        case .valley4:
+            return cell.row <= cell.col ? .down : .right
+        case .wuling:
+            // 基段和源桩都能贴，猜方向时两种都算候选
+            let dockTargets = layout.buildings.filter {
+                $0.definitionID == BuildingDefinition.warehouseBaseSegmentID ||
+                $0.definitionID == BuildingDefinition.warehouseSourceID
+            }
+            guard let nearest = nearestCell(to: cell, among: dockTargets) else { return nil }
+            return direction(from: cell, toward: nearest)
+        }
+    }
+
+    private func nearestCell(to cell: GridPoint, among buildings: [PlacedBuilding]) -> GridPoint? {
+        var best: GridPoint? = nil
+        var bestDist = Int.max
+        for placed in buildings {
+            guard let def = BuildingDefinition.find(placed.definitionID) else { continue }
+            for c in placed.occupiedCells(definition: def) {
+                let d = abs(c.col - cell.col) + abs(c.row - cell.row)
+                if d < bestDist { bestDist = d; best = c }
+            }
+        }
+        return best
+    }
+
+    private func direction(from cell: GridPoint, toward target: GridPoint) -> BuildingRotation {
+        let dc = target.col - cell.col
+        let dr = target.row - cell.row
+        if abs(dr) >= abs(dc) {
+            return dr >= 0 ? .down : .up
+        } else {
+            return dc >= 0 ? .right : .left
+        }
+    }
+
+    // MARK: - 取线出口
+    /// 设置/清空某个取线出口当前取货的材料
+    func setOutletMaterial(_ material: String?, for buildingID: UUID) {
+        guard let idx = layout.buildings.firstIndex(where: { $0.id == buildingID }) else { return }
+        layout.buildings[idx].outletMaterial = material
         refreshStats()
     }
 
@@ -75,7 +150,8 @@ class FactoryViewModel: ObservableObject {
             definition: def,
             at: cell,
             rotation: pendingRotation,
-            existing: layout.buildings
+            existing: layout.buildings,
+            mapType: layout.mapType
         ) else { return }
 
         let placed = PlacedBuilding(definitionID: def.id, origin: cell, rotation: pendingRotation)
@@ -171,6 +247,13 @@ class FactoryViewModel: ObservableObject {
         layout.beltNetwork.belts.contains {
             $0.headCell == externalCell || $0.tailCell == externalCell
         }
+    }
+
+    /// 给渲染层用：这台已放置建筑的某个端口，现在有没有接上传送带/管道
+    func isPortConnected(_ port: BuildingPort, placed: PlacedBuilding, definition: BuildingDefinition) -> Bool {
+        let (cell, facing) = port.resolvedPosition(placed: placed, definition: definition)
+        let external = GridPoint(col: cell.col + facing.outputOffset.col, row: cell.row + facing.outputOffset.row)
+        return isPortOccupied(externalCell: external)
     }
 
     /// 在 cell 周围找一个"外部连接格恰好是 cell"的建筑端口
@@ -278,19 +361,23 @@ class FactoryViewModel: ObservableObject {
     /// 规则：
     ///   - 新带起点格 == 某已有【同类型】带的 tailCell → 追加进那条带（衔接，圆角转弯）
     ///   - 否则新建一条带
-    ///   - 过滤完全重叠的段（同格+同轴+同方向+同类型）
-    ///   - 允许十字交叉（同格异轴），也允许传送带和管道在同格共存（同格同轴不同类型）
+    ///   - 同一格、同一轴、同一类型的线不能重复摆放，哪怕方向相反也算冲突（物理上不能叠在一起）
+    ///   - 同类型异轴真交叉（属于两条不同的带）自动放一个物流桥/管道桥；
+    ///     同一条带自己拐弯不算交叉，衔接逻辑已经把它接成一条带了
+    ///   - 不同类型（belt/pipe）随便共存，不算冲突也不用放桥
     private func commitSegments(_ newSegs: [BeltSegment]) {
         guard !newSegs.isEmpty else { return }
         let lineType = newSegs[0].lineType
+        let existingSegs = layout.beltNetwork.allSegments
 
-        // 去重：过滤掉已存在的完全相同段（类型也要匹配，belt 和 pipe 不互相视为重复）
-        let existingKeys = Set(layout.beltNetwork.allSegments.map {
-            "\($0.cell.col),\($0.cell.row),\($0.axis.rawValue),\($0.toDir.col),\($0.toDir.row),\($0.lineType.rawValue)"
+        // 同格+同轴+同类型 = 冲突，不管方向是不是相反，直接不让放这一段
+        // （这个 key 里不含 toDir，所以已存在的同向重复段也会被这条规则一起挡掉，等价于原来的去重逻辑）
+        let conflictKeys = Set(existingSegs.map {
+            "\($0.cell.col),\($0.cell.row),\($0.axis.rawValue),\($0.lineType.rawValue)"
         })
         let filtered = newSegs.filter { seg in
-            let key = "\(seg.cell.col),\(seg.cell.row),\(seg.axis.rawValue),\(seg.toDir.col),\(seg.toDir.row),\(seg.lineType.rawValue)"
-            return !existingKeys.contains(key)
+            let key = "\(seg.cell.col),\(seg.cell.row),\(seg.axis.rawValue),\(seg.lineType.rawValue)"
+            return !conflictKeys.contains(key)
         }
         guard !filtered.isEmpty else { return }
 
@@ -316,6 +403,53 @@ class FactoryViewModel: ObservableObject {
         else {
             layout.beltNetwork.belts.append(Belt(segments: filtered))
         }
+
+        // 交叉检测放在合并【之后】：只有当这一格现在属于两条不同 id 的同类型带，
+        // 才是真交叉（自己拐弯会被上面的衔接逻辑合并成同一条带，id 只有一个，不会误判）
+        for seg in filtered {
+            autoPlaceBridgeIfCrossing(at: seg.cell, lineType: seg.lineType)
+        }
+        refreshStats()
+    }
+
+    private func autoPlaceBridgeIfCrossing(at cell: GridPoint, lineType: LineType) {
+        let beltIDsHere = Set(layout.beltNetwork.belts
+            .filter { belt in
+                belt.lineType == lineType &&
+                belt.segments.contains { $0.cell.col == cell.col && $0.cell.row == cell.row }
+            }
+            .map { $0.id })
+        guard beltIDsHere.count > 1 else { return }   // 只属于一条带，是自己拐弯不是交叉
+        autoPlaceBridge(at: cell, lineType: lineType)
+    }
+
+    /// 物流桥/管道桥的建筑 id，渲染时要把它们从"挡路"判定里排除掉——
+    /// 交叉点本来就是让线穿过去的，不该被当成建筑冲突标红
+    static let bridgeBuildingIDs: Set<String> = ["log_connector", "log_pipe_connector"]
+
+    /// 同类型十字交叉自动放的物流桥/管道桥：1x1 占地，四个方向都有入口和出口，
+    /// 已经占了建筑或者放不下就跳过，不强行覆盖
+    private func autoPlaceBridge(at cell: GridPoint, lineType: LineType) {
+        let bridgeID = lineType == .belt ? "log_connector" : "log_pipe_connector"
+        guard let def = BuildingDefinition.find(bridgeID) else { return }
+        let alreadyBuilt = layout.buildings.contains { placed in
+            guard let d = BuildingDefinition.find(placed.definitionID) else { return false }
+            return placed.occupiedCells(definition: d).contains(cell)
+        }
+        guard !alreadyBuilt else { return }
+        guard FactoryGridModel.canPlace(definition: def, at: cell, rotation: .up, existing: layout.buildings, mapType: layout.mapType) else { return }
+        layout.buildings.append(PlacedBuilding(definitionID: bridgeID, origin: cell, rotation: .up))
+    }
+
+    /// 传送带/管道渲染用的"挡路格子"：普通建筑挡，但物流桥/管道桥这类交叉节点不挡
+    /// （它们本来就是给线穿过去用的）
+    func lineBlockingCellKeys() -> Set<String> {
+        Set(layout.buildings
+            .filter { !FactoryViewModel.bridgeBuildingIDs.contains($0.definitionID) }
+            .flatMap { placed -> [String] in
+                guard let def = BuildingDefinition.find(placed.definitionID) else { return [] }
+                return placed.occupiedCells(definition: def).map { "\($0.col),\($0.row)" }
+            })
     }
 
     /// 建筑重叠格子 key 列表
@@ -490,7 +624,8 @@ class FactoryViewModel: ObservableObject {
             definition: def,
             at: cell,
             rotation: pendingRotation,
-            existing: layout.buildings
+            existing: layout.buildings,
+            mapType: layout.mapType
         )
     }
 

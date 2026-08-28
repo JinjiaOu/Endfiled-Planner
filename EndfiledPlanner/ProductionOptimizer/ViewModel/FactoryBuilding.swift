@@ -18,6 +18,10 @@ enum BuildingRotation: Int, Codable, CaseIterable {
         BuildingRotation(rawValue: (rawValue + 1) % 4) ?? .up
     }
 
+    var opposite: BuildingRotation {
+        BuildingRotation(rawValue: (rawValue + 2) % 4) ?? .up
+    }
+
     var symbol: String {
         switch self {
         case .up:    return "↑"
@@ -70,6 +74,16 @@ enum BuildingCategory: String, Codable, CaseIterable {
     }
 }
 
+// MARK: - 地图
+/// 仓库取线机制是地图特定的：四号谷地只能贴外围放，武陵要连取线终端，
+/// 所以布局本身要记住自己是哪张地图，建筑清单也要按地图过滤
+enum MapType: String, Codable, CaseIterable {
+    case valley4 = "四号谷地"
+    case wuling  = "武陵"
+
+    var displayName: String { rawValue }
+}
+
 // MARK: - 端口类型
 enum PortKind: String, Codable {
     case item   // 普通物流口
@@ -101,6 +115,23 @@ struct BuildingDefinition: Identifiable, Hashable {
     let size: GridSize          // 占格尺寸（未旋转）
     let powerUsage: Double      // 功率（MW）
     let ports: [BuildingPort]
+    /// nil = 两张地图都能造；非 nil 就只有列出来的地图能造（比如取线终端只有武陵有）
+    let allowedMaps: Set<MapType>?
+
+    init(id: String, name: String, category: BuildingCategory, size: GridSize,
+         powerUsage: Double, ports: [BuildingPort], allowedMaps: Set<MapType>? = nil) {
+        self.id = id
+        self.name = name
+        self.category = category
+        self.size = size
+        self.powerUsage = powerUsage
+        self.ports = ports
+        self.allowedMaps = allowedMaps
+    }
+
+    func isAvailable(on map: MapType) -> Bool {
+        allowedMaps?.contains(map) ?? true
+    }
 
     func hash(into hasher: inout Hasher) { hasher.combine(id) }
     static func == (lhs: BuildingDefinition, rhs: BuildingDefinition) -> Bool { lhs.id == rhs.id }
@@ -169,6 +200,8 @@ struct PlacedBuilding: Identifiable, Codable {
     var isActive: Bool
     /// 这台机器有多个配方时，用户选的是哪一个（下标对应 RecipeViewModel.recipesByMachine() 里该机器的配方列表）
     var selectedRecipeIndex: Int? = nil
+    /// 仅取线出口用：当前设置的取货材料，未设置时不产出
+    var outletMaterial: String? = nil
 
     init(definitionID: String, origin: GridPoint, rotation: BuildingRotation = .up) {
         self.id = UUID()
@@ -331,9 +364,40 @@ struct BeltNetwork: Codable {
     }
 }
 
-// MARK: - 建筑库（从 devices_generated.json 解析）
+// MARK: - 仓库取线机制
+// "仓库取货口"(unloader_1)/"仓库存货口"(loader_1)/"仓库存取线源桩"(log_hongs_bus_source)/
+// "仓库存取线基段"(log_hongs_bus) 都已经在 devices_generated.json 的仓储存取分类里了，不用手写；
+// 只是 JSON 本身不知道"源桩/基段是武陵专属机制"这件事，需要手动覆盖它们的 allowedMaps
 extension BuildingDefinition {
-    static let all: [BuildingDefinition] = BuildingParser.loadAll()
+    /// 仓库取货口：只出，取货具体是什么材料由 PlacedBuilding.outletMaterial 决定
+    static let warehouseOutletID = "unloader_1"
+    /// 仓库存货口：只入，接收传送带送来的任意材料存进仓库，不需要额外配置
+    static let warehouseInletID = "loader_1"
+    /// 仓库取线相关的两个口，地图专属摆放规则对这两个都生效
+    static let warehousePortIDs: Set<String> = [warehouseOutletID, warehouseInletID]
+
+    /// 武陵专属：仓库存取线源桩——取货口/存货口最终都要挂在这套线上的根
+    static let warehouseSourceID = "log_hongs_bus_source"
+    /// 武陵专属：仓库存取线基段——必须连着源桩，取货口/存货口再连到基段上
+    static let warehouseBaseSegmentID = "log_hongs_bus"
+
+    /// JSON 数据本身不带"这个建筑只有武陵能用"这种地图限定信息，这里按实际游戏机制手动覆盖
+    private static let mapOverrides: [String: Set<MapType>] = [
+        warehouseSourceID: [.wuling],
+        warehouseBaseSegmentID: [.wuling],
+    ]
+}
+
+// MARK: - 建筑库（从 devices_generated.json 解析，叠加地图限定覆盖）
+extension BuildingDefinition {
+    static let all: [BuildingDefinition] = BuildingParser.loadAll().map { def in
+        guard let override = mapOverrides[def.id] else { return def }
+        return BuildingDefinition(
+            id: def.id, name: def.name, category: def.category,
+            size: def.size, powerUsage: def.powerUsage, ports: def.ports,
+            allowedMaps: override
+        )
+    }
 
     static func find(_ id: String) -> BuildingDefinition? {
         all.first { $0.id == id }

@@ -31,6 +31,7 @@ struct FactoryLayoutView: View {
 
     // 其他
     @State private var showClearConfirm = false
+    @State private var pendingMapSwitch: MapType? = nil
 
     private var usesSidePalette: Bool {
         horizontalSizeClass == .regular
@@ -114,12 +115,30 @@ struct FactoryLayoutView: View {
                         Text("基建规划")
                             .font(.system(size: 16, weight: .bold, design: .monospaced))
                             .foregroundColor(.white)
+                        Text("· \(vm.layout.mapType.displayName)")
+                            .font(.system(size: 12, weight: .medium, design: .monospaced))
+                            .foregroundColor(.white.opacity(0.5))
                     }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Menu {
                         Button { vm.saveLayout() } label: {
                             Label("保存布局", systemImage: "square.and.arrow.down")
+                        }
+                        Menu {
+                            ForEach(MapType.allCases, id: \.self) { map in
+                                Button {
+                                    if map != vm.layout.mapType { pendingMapSwitch = map }
+                                } label: {
+                                    if map == vm.layout.mapType {
+                                        Label(map.displayName, systemImage: "checkmark")
+                                    } else {
+                                        Text(map.displayName)
+                                    }
+                                }
+                            }
+                        } label: {
+                            Label("切换地图（当前：\(vm.layout.mapType.displayName)）", systemImage: "map")
                         }
                         Button(role: .destructive) { showClearConfirm = true } label: {
                             Label("清空布局", systemImage: "trash")
@@ -137,6 +156,22 @@ struct FactoryLayoutView: View {
                 Button("清空", role: .destructive) { vm.clearLayout() }
             } message: {
                 Text("将删除所有建筑和传送带，此操作不可撤销。")
+            }
+            // 切换地图确认
+            .alert(
+                pendingMapSwitch.map { "切换到\($0.displayName)？" } ?? "切换地图",
+                isPresented: Binding(
+                    get: { pendingMapSwitch != nil },
+                    set: { if !$0 { pendingMapSwitch = nil } }
+                )
+            ) {
+                Button("取消", role: .cancel) { pendingMapSwitch = nil }
+                Button("切换", role: .destructive) {
+                    if let map = pendingMapSwitch { vm.switchMap(to: map) }
+                    pendingMapSwitch = nil
+                }
+            } message: {
+                Text("两张地图的仓库取线规则不一样，切换会清空当前所有建筑和传送带，此操作不可撤销。")
             }
             // 删除建筑确认
             .alert(
@@ -356,8 +391,9 @@ struct FactoryLayoutView: View {
     }
 
     private var filteredBuildings: [BuildingDefinition] {
-        guard let cat = selectedCategory else { return BuildingDefinition.all }
-        return BuildingDefinition.all.filter { $0.category == cat }
+        let onMap = BuildingDefinition.all.filter { $0.isAvailable(on: vm.layout.mapType) }
+        guard let cat = selectedCategory else { return onMap }
+        return onMap.filter { $0.category == cat }
     }
 
     private func categoryChip(category: BuildingCategory?, label: String) -> some View {
@@ -388,10 +424,17 @@ struct FactoryLayoutView: View {
                 .font(.system(size: 9, design: .monospaced)).foregroundColor(.white.opacity(0.4))
         }
         .frame(width: 72)
-        // 拖拽手势：拖动时更新预览位置，松手时放置
-        .gesture(
-            DragGesture(minimumDistance: 4, coordinateSpace: .global)
+        .scaleEffect(draggingDef?.id == def.id ? 1.08 : 1.0)
+        .animation(.spring(response: 0.2), value: draggingDef?.id)
+        // 用 simultaneousGesture 而不是 gesture：普通的 .gesture 会独占这次触摸，
+        // ScrollView 自己的横向滚动手势完全拿不到事件，怎么都滑不动。
+        // simultaneousGesture 让两边都能收到触摸，这里再按“整体位移是不是明显偏纵向”
+        // 来判断——明显往上拖才当成"拿建筑去放置"，左右滑动交给 ScrollView 正常滚动
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 12, coordinateSpace: .global)
                 .onChanged { value in
+                    let isVerticalDrag = abs(value.translation.height) > abs(value.translation.width) * 1.2
+                    guard isVerticalDrag || draggingDef != nil else { return }
                     if draggingDef == nil {
                         draggingDef = def
                         vm.editMode = .place(def)
@@ -403,12 +446,8 @@ struct FactoryLayoutView: View {
                     dragLocationInGrid = value.location
                 }
                 .onEnded { value in
-                    if let def = draggingDef {
-                        // dragLocationInGrid 此时是全局坐标，FactoryGridView 会在 overlay 里转换
-                        // 这里用 vm 的 pendingDropLocation 做最终放置
-                        if let cell = vm.pendingDropCell {
-                            vm.placeBuilding(def, at: cell)
-                        }
+                    if draggingDef != nil, let cell = vm.pendingDropCell {
+                        vm.placeBuilding(def, at: cell)
                     }
                     draggingDef = nil
                     dragLocationInGrid = nil
@@ -511,6 +550,7 @@ struct FactoryLayoutView: View {
                     }
                 }
                 recipePicker(for: def)
+                outletMaterialPicker(for: def)
             }
             Spacer()
             VStack(spacing: 6) {
@@ -558,6 +598,32 @@ struct FactoryLayoutView: View {
                 )
                 .font(.system(size: 10, design: .monospaced))
                 .foregroundColor(Color(red: 0.4, green: 0.8, blue: 0.2))
+            }
+        }
+    }
+
+    /// 仓库取货口的材料选择：只对取货口显示（存货口是入口，接收任意材料，不用选），选完立即重新计算产能统计
+    @ViewBuilder
+    private func outletMaterialPicker(for def: BuildingDefinition) -> some View {
+        if def.id == BuildingDefinition.warehouseOutletID, let placedID = vm.selectedBuildingID {
+            let current = vm.selectedPlaced?.outletMaterial
+            Menu {
+                Button {
+                    vm.setOutletMaterial(nil, for: placedID)
+                } label: {
+                    Text("未设置")
+                }
+                ForEach(vm.solidMaterials, id: \.self) { material in
+                    Button {
+                        vm.setOutletMaterial(material, for: placedID)
+                    } label: {
+                        Text(material)
+                    }
+                }
+            } label: {
+                Label(current ?? "选择材料", systemImage: "shippingbox.fill")
+                    .font(.system(size: 10, design: .monospaced))
+                    .foregroundColor(Color(red: 0.4, green: 0.8, blue: 0.2))
             }
         }
     }
