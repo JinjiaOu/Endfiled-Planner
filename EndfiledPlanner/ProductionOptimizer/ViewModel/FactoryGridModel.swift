@@ -175,10 +175,13 @@ class FactoryGridModel {
         let totalPower: Double          // 总功率消耗 (MW)
         let buildingCount: Int
         let categoryBreakdown: [BuildingCategory: Int]
-        let bottleneck: String?         // 瓶颈建筑名称
+        let bottleneck: String?         // 瓶颈建筑（节流系数最低的那台）
         let productionLines: [ProductionLine]
         let passthroughCount: Int       // 分流器/汇流器/物流桥这类直通节点数量（不产不耗，不算进产线）
-        let outletMaterials: [String]   // 每个取线出口当前设置的材料（未设置显示"未设置"），仓库取线没有速率概念，单独列出来
+        let outletMaterials: [String]   // 每个取线出口当前设置的材料（未设置显示"未设置"）
+        let machineStates: [FlowSimulator.MachineState]
+        let sinkStates: [FlowSimulator.SinkState]
+        let flowConverged: Bool
     }
 
     struct ProductionLine {
@@ -187,70 +190,69 @@ class FactoryGridModel {
         let buildingNames: [String]
     }
 
-    /// - Parameter machineRecipes: 按机器名分组去重的配方表（RecipeViewModel.recipesByMachine()），
-    ///   selectedRecipeIndex 就是这个表里对应机器那份列表的下标
+    /// 某台建筑可选的配方：本机器名的配方在前，"（xx环境）"这类后缀变体接在后面
+    /// （只往后追加，已保存的 selectedRecipeIndex 不会错位）
+    static func recipes(for def: BuildingDefinition, in machineRecipes: [String: [Recipe]]) -> [Recipe] {
+        var result = machineRecipes[def.name] ?? []
+        let variantKeys = machineRecipes.keys.filter { $0.hasPrefix(def.name + "（") }.sorted()
+        for key in variantKeys { result += machineRecipes[key] ?? [] }
+        return result
+    }
+
+    /// - Parameter machineRecipes: 按机器名分组去重的配方表（RecipeViewModel.recipesByMachine()）
     static func analyze(layout: FactoryLayout, machineRecipes: [String: [Recipe]]) -> ProductionStats {
         var totalPower = 0.0
         var categoryBreakdown: [BuildingCategory: Int] = [:]
         var passthroughCount = 0
         var outletMaterials: [String] = []
 
-        // V1：按"建筑类型 + 已选配方"分组，算每组的理论产出速率。
-        // 不做传送带连通性分析，也不做瓶颈检测（瓶颈需要匹配下游消耗速率，工作量较大，先留空）。
-        struct GroupKey: Hashable { let defID: String; let recipeIndex: Int }
-        var groups: [GroupKey: Int] = [:]   // 每组建筑数量
-
         for placed in layout.buildings where placed.isActive {
             guard let def = BuildingDefinition.find(placed.definitionID) else { continue }
             totalPower += def.powerUsage
             categoryBreakdown[def.category, default: 0] += 1
 
-            // 仓库取货口没有配方，产出的是用户自己设置的材料，单独列出来
             if def.id == BuildingDefinition.warehouseOutletID {
                 outletMaterials.append(placed.outletMaterial ?? "未设置")
-                continue
             }
-
-            // 分流器/汇流器/物流桥/取线终端这类物流节点不在 recipes.txt 里，没有配方可选，
-            // 单独计数标出来，别让它们看起来像是"被漏统计"了
-            if def.category == .logistics {
-                passthroughCount += 1
-                continue
-            }
-
-            guard let idx = placed.selectedRecipeIndex else { continue }
-            groups[GroupKey(defID: placed.definitionID, recipeIndex: idx), default: 0] += 1
+            if def.category == .logistics { passthroughCount += 1 }
         }
 
-        var outputRates: [String: (rate: Double, buildings: [String])] = [:]
-        for (key, count) in groups {
-            guard let def = BuildingDefinition.find(key.defID),
-                  let recipeList = machineRecipes[def.name],
-                  key.recipeIndex >= 0, key.recipeIndex < recipeList.count
-            else { continue }
-            let recipe = recipeList[key.recipeIndex]
-            // 挖矿类设备的耗时不计入生产链瓶颈判断，但产出速率本身仍然按配方算
-            for output in recipe.outputs {
-                let rate = (Double(output.count) / Double(recipe.time)) * 60 * Double(count)
-                var entry = outputRates[output.name] ?? (rate: 0, buildings: [])
-                entry.rate += rate
-                entry.buildings.append("\(def.name) ×\(count)")
-                outputRates[output.name] = entry
+        let sim = FlowSimulator.simulate(layout: layout) { recipes(for: $0, in: machineRecipes) }
+
+        var outputRates: [String: (rate: Double, buildings: [String: Int])] = [:]
+        for machine in sim.machines where !machine.isWarehouseOutlet {
+            for (item, perSecond) in machine.outputs where perSecond > 0 {
+                var entry = outputRates[item] ?? (rate: 0, buildings: [:])
+                entry.rate += perSecond * 60
+                entry.buildings[machine.name, default: 0] += 1
+                outputRates[item] = entry
             }
         }
-
         let lines = outputRates.map { key, value in
-            ProductionLine(output: key, ratePerMin: value.rate, buildingNames: value.buildings)
+            ProductionLine(output: key, ratePerMin: value.rate,
+                           buildingNames: value.buildings.sorted { $0.key < $1.key }.map { "\($0.key) ×\($0.value)" })
         }.sorted { $0.ratePerMin > $1.ratePerMin }
+
+        let worst = sim.machines
+            .filter { $0.status == .starved || $0.status == .blocked || $0.status == .inactive }
+            .min { $0.throttle < $1.throttle }
+        var bottleneck: String? = nil
+        if let worst {
+            let detail = worst.detail.map { "：" + $0 } ?? ""
+            bottleneck = "\(worst.name)（\(worst.status.label)\(detail)）"
+        }
 
         return ProductionStats(
             totalPower: totalPower,
             buildingCount: layout.buildings.count,
             categoryBreakdown: categoryBreakdown,
-            bottleneck: nil,
+            bottleneck: bottleneck,
             productionLines: lines,
             passthroughCount: passthroughCount,
-            outletMaterials: outletMaterials
+            outletMaterials: outletMaterials,
+            machineStates: sim.machines,
+            sinkStates: sim.sinks,
+            flowConverged: sim.converged
         )
     }
 }

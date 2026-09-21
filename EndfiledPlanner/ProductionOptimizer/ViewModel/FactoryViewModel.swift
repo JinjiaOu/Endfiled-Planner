@@ -46,7 +46,7 @@ class FactoryViewModel: ObservableObject {
 
     /// 这台建筑（按 name 匹配）可选的配方列表
     func availableRecipes(for def: BuildingDefinition) -> [Recipe] {
-        machineRecipes[def.name] ?? []
+        FactoryGridModel.recipes(for: def, in: machineRecipes)
     }
 
     /// 设置/切换某台已放置建筑使用的配方
@@ -119,6 +119,14 @@ class FactoryViewModel: ObservableObject {
         }
     }
 
+    // MARK: - 准入口限速
+    /// 设置物品/管道准入口的最大流速（个/分钟），nil = 不额外限速
+    func setFlowLimit(_ perMin: Double?, for buildingID: UUID) {
+        guard let idx = layout.buildings.firstIndex(where: { $0.id == buildingID }) else { return }
+        layout.buildings[idx].flowLimitPerMin = perMin
+        refreshStats()
+    }
+
     // MARK: - 取线出口
     /// 设置/清空某个取线出口当前取货的材料
     func setOutletMaterial(_ material: String?, for buildingID: UUID) {
@@ -182,6 +190,7 @@ class FactoryViewModel: ObservableObject {
             return
         }
         layout.buildings[idx].rotation = layout.buildings[idx].rotation.next
+        refreshStats()
     }
 
     // MARK: - 传送带 / 管道（拖拽绘制，共用同一套路由逻辑）
@@ -516,6 +525,7 @@ class FactoryViewModel: ObservableObject {
         removeCellFromAllBelts(cell, lineType: lineType)
         pendingEraseCell = nil
         pendingEraseBeltIDs = []
+        refreshStats()
     }
 
     /// 确认删除整条带（按 Belt ID 精确删，不影响十字穿插/同格共存的其他带；
@@ -528,6 +538,7 @@ class FactoryViewModel: ObservableObject {
         }
         pendingEraseCell = nil
         pendingEraseBeltIDs = []
+        refreshStats()
     }
 
     func cancelErase() {
@@ -638,7 +649,7 @@ class FactoryViewModel: ObservableObject {
         return BuildingDefinition.find(p.definitionID)
     }
 
-    private func refreshStats() {
+    func refreshStats() {
         stats = FactoryGridModel.analyze(layout: layout, machineRecipes: machineRecipes)
     }
 }

@@ -202,6 +202,8 @@ struct PlacedBuilding: Identifiable, Codable {
     var selectedRecipeIndex: Int? = nil
     /// 仅取线出口用：当前设置的取货材料，未设置时不产出
     var outletMaterial: String? = nil
+    /// 仅物品/管道准入口用：用户设置的最大流速（个/分钟），nil = 不额外限速（跑满带速/管速）
+    var flowLimitPerMin: Double? = nil
 
     init(definitionID: String, origin: GridPoint, rotation: BuildingRotation = .up) {
         self.id = UUID()

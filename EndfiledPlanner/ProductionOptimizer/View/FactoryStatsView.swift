@@ -126,6 +126,27 @@ struct FactoryStatsView: View {
                         .background(Color(red: 0.4, green: 0.8, blue: 0.2).opacity(0.1))
                     }
 
+                    // 流量模拟没收敛：数字仅供参考
+                    if !stats.flowConverged {
+                        noticeRow(icon: "exclamationmark.triangle.fill",
+                                  text: "流量模拟未收敛（可能有环路），数字仅供参考",
+                                  color: Color(red: 0.9, green: 0.3, blue: 0.2))
+                    }
+
+                    // 没正常运行的机器
+                    ForEach(stats.machineStates.filter { $0.status != .running }) { machine in
+                        noticeRow(icon: "gearshape.fill",
+                                  text: machineStateText(machine),
+                                  color: Color(red: 0.9, green: 0.5, blue: 0.2))
+                    }
+
+                    // 终点消耗（存货口/废水处理机实际吃进去的东西）
+                    ForEach(stats.sinkStates) { sink in
+                        noticeRow(icon: "tray.and.arrow.down.fill",
+                                  text: sinkText(sink),
+                                  color: Color(red: 0.4, green: 0.7, blue: 0.9))
+                    }
+
                     // 建筑类型分布
                     if !stats.categoryBreakdown.isEmpty {
                         VStack(alignment: .leading, spacing: 6) {
@@ -177,6 +198,39 @@ struct FactoryStatsView: View {
     }
 
     // MARK: - 子组件
+
+    private func noticeRow(icon: String, text: String, color: Color) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: icon)
+                .font(.system(size: 11))
+                .foregroundColor(color)
+            Text(text)
+                .font(.system(size: 10, weight: .bold, design: .monospaced))
+                .foregroundColor(color)
+                .lineLimit(3)
+            Spacer()
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 8)
+        .background(color.opacity(0.1))
+    }
+
+    private func machineStateText(_ machine: FlowSimulator.MachineState) -> String {
+        var text = "\(machine.name)：\(machine.status.label)"
+        if machine.status != .noRecipe, machine.status != .inactive {
+            text += "（\(Int((machine.throttle * 100).rounded()))%）"
+        }
+        if let detail = machine.detail { text += " · \(detail)" }
+        return text
+    }
+
+    private func sinkText(_ sink: FlowSimulator.SinkState) -> String {
+        let items = sink.consumed
+            .filter { $0.value > 1e-9 }
+            .sorted { $0.key < $1.key }
+            .map { $0.key + " " + String(format: "%.1f", $0.value * 60) + "/min" }
+        return "\(sink.name)：" + (items.isEmpty ? "无消耗" : items.joined(separator: "、"))
+    }
 
     private func statBox(title: String, value: String, unit: String, color: Color) -> some View {
         VStack(spacing: 3) {
