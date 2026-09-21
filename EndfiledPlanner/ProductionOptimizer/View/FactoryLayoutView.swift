@@ -32,6 +32,9 @@ struct FactoryLayoutView: View {
     // 其他
     @State private var showClearConfirm = false
     @State private var pendingMapSwitch: MapType? = nil
+    @State private var showRecipeSheet = false
+    @State private var showMaterialSheet = false
+    @State private var showPresetConfirm = false
 
     private var usesSidePalette: Bool {
         horizontalSizeClass == .regular
@@ -140,6 +143,9 @@ struct FactoryLayoutView: View {
                         } label: {
                             Label("切换地图（当前：\(vm.layout.mapType.displayName)）", systemImage: "map")
                         }
+                        Button { showPresetConfirm = true } label: {
+                            Label("加载测试产线", systemImage: "wand.and.stars")
+                        }
                         Button(role: .destructive) { showClearConfirm = true } label: {
                             Label("清空布局", systemImage: "trash")
                         }
@@ -156,6 +162,12 @@ struct FactoryLayoutView: View {
                 Button("清空", role: .destructive) { vm.clearLayout() }
             } message: {
                 Text("将删除所有建筑和传送带，此操作不可撤销。")
+            }
+            .alert("加载测试产线", isPresented: $showPresetConfirm) {
+                Button("取消", role: .cancel) {}
+                Button("加载", role: .destructive) { vm.loadTestPreset() }
+            } message: {
+                Text("将切换到四号谷地并替换当前布局（不会自动保存），用于测试。")
             }
             // 切换地图确认
             .alert(
@@ -551,6 +563,8 @@ struct FactoryLayoutView: View {
                 }
                 recipePicker(for: def)
                 outletMaterialPicker(for: def)
+                flowLimitControl(for: def)
+                machineStateLabel()
             }
             Spacer()
             VStack(spacing: 6) {
@@ -582,15 +596,8 @@ struct FactoryLayoutView: View {
         let recipes = vm.availableRecipes(for: def)
         if !recipes.isEmpty, let placedID = vm.selectedBuildingID {
             let currentIndex = vm.selectedPlaced?.selectedRecipeIndex
-            Menu {
-                ForEach(Array(recipes.enumerated()), id: \.offset) { idx, recipe in
-                    Button {
-                        vm.selectRecipe(idx, for: placedID)
-                    } label: {
-                        let outputText = recipe.outputs.map { "\($0.name)×\($0.count)" }.joined(separator: "+")
-                        Text("\(outputText)（\(recipe.time)s）")
-                    }
-                }
+            Button {
+                showRecipeSheet = true
             } label: {
                 Label(
                     currentIndex.flatMap { recipes.indices.contains($0) ? recipes[$0].outputs.first?.name : nil } ?? "选择配方",
@@ -599,6 +606,71 @@ struct FactoryLayoutView: View {
                 .font(.system(size: 10, design: .monospaced))
                 .foregroundColor(Color(red: 0.4, green: 0.8, blue: 0.2))
             }
+            .buttonStyle(.plain)
+            .sheet(isPresented: $showRecipeSheet) {
+                SearchablePickerSheet(
+                    title: "选择配方",
+                    items: recipes.enumerated().map { idx, recipe in
+                        let outputText = recipe.outputs.map { "\($0.name)×\($0.count)" }.joined(separator: " + ")
+                        let inputText = recipe.inputs.map { "\($0.name)×\($0.count)" }.joined(separator: " + ")
+                        return SearchablePickerItem(
+                            id: String(idx),
+                            title: "\(outputText)（\(recipe.time)s）",
+                            subtitle: recipeSubtitle(inputText: inputText, env: recipe.requiredEnv)
+                        )
+                    },
+                    selectedID: currentIndex.map(String.init),
+                    clearTitle: "不选择配方",
+                    onSelect: { id in
+                        vm.selectRecipe(id.flatMap(Int.init), for: placedID)
+                    }
+                )
+            }
+        }
+    }
+
+    private func recipeSubtitle(inputText: String, env: String?) -> String? {
+        var parts: [String] = []
+        if !inputText.isEmpty { parts.append("原料：\(inputText)") }
+        if let env { parts.append("需要\(env)环境") }
+        return parts.isEmpty ? nil : parts.joined(separator: " · ")
+    }
+
+    /// 物品准入口/管道准入口的限速：步长 6/min（游戏里滑条的步长），到带速/管速上限；关掉就是不额外限速
+    @ViewBuilder
+    private func flowLimitControl(for def: BuildingDefinition) -> some View {
+        if def.id == "log_conditioner" || def.id == "log_pipe_conditioner",
+           let placedID = vm.selectedBuildingID {
+            let maxPerMin = (def.id == "log_pipe_conditioner" ? FlowSimulator.pipeCapacity : FlowSimulator.beltCapacity) * 60
+            let current = vm.selectedPlaced?.flowLimitPerMin
+            HStack(spacing: 8) {
+                Image(systemName: "speedometer")
+                    .font(.system(size: 10))
+                Text(current.map { String(format: "限速 %.0f/min", $0) } ?? "不限速")
+                    .font(.system(size: 10, design: .monospaced))
+                Button {
+                    vm.setFlowLimit(max((current ?? maxPerMin) - 6, 0), for: placedID)
+                } label: { Image(systemName: "minus.circle") }
+                Button {
+                    let next = (current ?? maxPerMin) + 6
+                    vm.setFlowLimit(next >= maxPerMin ? nil : next, for: placedID)
+                } label: { Image(systemName: "plus.circle") }
+            }
+            .foregroundColor(Color(red: 0.4, green: 0.8, blue: 0.2))
+            .buttonStyle(.plain)
+        }
+    }
+
+    /// 选中机器当前的模拟状态（运行率/缺什么）
+    @ViewBuilder
+    private func machineStateLabel() -> some View {
+        if let id = vm.selectedBuildingID,
+           let state = vm.stats.machineStates.first(where: { $0.id == id }) {
+            let percent = Int((state.throttle * 100).rounded())
+            let detail = state.detail.map { " · " + $0 } ?? ""
+            Text("\(state.status.label) \(percent)%\(detail)")
+                .font(.system(size: 10, design: .monospaced))
+                .foregroundColor(state.status == .running ? Color(red: 0.4, green: 0.8, blue: 0.2) : Color(red: 0.9, green: 0.5, blue: 0.2))
         }
     }
 
@@ -607,23 +679,24 @@ struct FactoryLayoutView: View {
     private func outletMaterialPicker(for def: BuildingDefinition) -> some View {
         if def.id == BuildingDefinition.warehouseOutletID, let placedID = vm.selectedBuildingID {
             let current = vm.selectedPlaced?.outletMaterial
-            Menu {
-                Button {
-                    vm.setOutletMaterial(nil, for: placedID)
-                } label: {
-                    Text("未设置")
-                }
-                ForEach(vm.solidMaterials, id: \.self) { material in
-                    Button {
-                        vm.setOutletMaterial(material, for: placedID)
-                    } label: {
-                        Text(material)
-                    }
-                }
+            Button {
+                showMaterialSheet = true
             } label: {
                 Label(current ?? "选择材料", systemImage: "shippingbox.fill")
                     .font(.system(size: 10, design: .monospaced))
                     .foregroundColor(Color(red: 0.4, green: 0.8, blue: 0.2))
+            }
+            .buttonStyle(.plain)
+            .sheet(isPresented: $showMaterialSheet) {
+                SearchablePickerSheet(
+                    title: "选择取货材料",
+                    items: vm.solidMaterials.map { SearchablePickerItem(id: $0, title: $0) },
+                    selectedID: current,
+                    clearTitle: "未设置",
+                    onSelect: { material in
+                        vm.setOutletMaterial(material, for: placedID)
+                    }
+                )
             }
         }
     }
