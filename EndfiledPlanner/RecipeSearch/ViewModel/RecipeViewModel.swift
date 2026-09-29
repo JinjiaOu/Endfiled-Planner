@@ -136,6 +136,9 @@ class RecipeViewModel: ObservableObject {
         for key in result.keys {
             result[key]?.sort { ($0.outputs.first?.name ?? "") < ($1.outputs.first?.name ?? "") }
         }
+        // 水泵实际只能抽清水，recipes.txt 里列的液化息壤/污水/沉积酸等其它配方是二型耐酸水泵专属，
+        // 水泵那边是数据源自带的噪音，这里按实际游戏表现砍掉，只留清水
+        result["水泵"] = result["水泵"]?.filter { $0.outputs.first?.name == "清水" }
         return result
     }
 

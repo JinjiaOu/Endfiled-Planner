@@ -34,6 +34,47 @@ enum FlowSimulator {
     /// 转化机激活口要求的物品
     static let transmuterActivators: [String: String] = ["transmuter_1": "液化息壤", "transmuter_2": "息壤气"]
 
+    // MARK: - 反应池 / 扩容反应池：多配方自我供给的净流量计算
+    // 同时生效的几条配方，同一物品的产出和消耗互相抵消（净零就是纯内部循环，不占对外的口），
+    // 剩下的净缺口/净盈余才是真正要接传送带/管道的外部原料/产物
+    struct NetItem {
+        let name: String
+        let net: Double   // 正 = 净产出，负 = 净消耗，0 = 纯内部循环
+        let isSolid: Bool
+    }
+
+    static func computeNetFlows(_ recipes: [Recipe]) -> [NetItem] {
+        var net: [String: Double] = [:]
+        for recipe in recipes {
+            let seconds = Double(max(recipe.time, 1))
+            for input in recipe.inputs { net[input.name, default: 0] -= Double(input.count) / seconds }
+            for output in recipe.outputs { net[output.name, default: 0] += Double(output.count) / seconds }
+        }
+        return net.map { NetItem(name: $0.key, net: $0.value, isSolid: RecipeViewModel.isLikelySolid($0.key)) }
+    }
+
+    struct SelfSupplyAnalysis {
+        let netItems: [NetItem]
+        /// 总共涉及的物品种类（含净零的纯内部循环），要跟 multiRecipeItemCapacity 比
+        var totalDistinctItems: Int { netItems.count }
+        var externalInputs: [NetItem] { netItems.filter { $0.net < -1e-9 } }
+        var externalOutputs: [NetItem] { netItems.filter { $0.net > 1e-9 } }
+        var externalLiquidOutputs: [NetItem] { externalOutputs.filter { !$0.isSolid } }
+        var externalSolidOutputs: [NetItem] { externalOutputs.filter { $0.isSolid } }
+        var exceedsCapacity = false
+        var exceedsOutputCap = false
+    }
+
+    static func analyzeSelfSupply(recipes: [Recipe], capacity: Int?) -> SelfSupplyAnalysis {
+        let netItems = computeNetFlows(recipes)
+        var analysis = SelfSupplyAnalysis(netItems: netItems)
+        if let capacity { analysis.exceedsCapacity = analysis.totalDistinctItems > capacity }
+        analysis.exceedsOutputCap =
+            analysis.externalLiquidOutputs.count > BuildingDefinition.multiRecipeMaxExternalLiquidOutputs ||
+            analysis.externalSolidOutputs.count > BuildingDefinition.multiRecipeMaxExternalSolidOutputs
+        return analysis
+    }
+
     // MARK: - 结果
     enum MachineStatus {
         case running, starved, blocked, inactive, noRecipe
@@ -126,6 +167,7 @@ private final class Node {
     let bounds: Bounds
 
     var recipe: Recipe? = nil
+    var hasRecipeConfigured = false
     var ingredients: [(name: String, rate: Double)] = []
     var products: [(name: String, rate: Double)] = []
     var requiredEnv: String? = nil
@@ -228,10 +270,21 @@ private final class Engine {
         switch node.kind {
         case .machine:
             let recipes = recipesFor(node.def)
-            if let idx = node.placed.selectedRecipeIndex, recipes.indices.contains(idx) {
+            if node.def.isMultiRecipeMachine {
+                let selected = node.placed.selectedRecipeIndices.sorted().compactMap {
+                    recipes.indices.contains($0) ? recipes[$0] : nil
+                }
+                if !selected.isEmpty {
+                    node.hasRecipeConfigured = true
+                    let net = FlowSimulator.computeNetFlows(selected)
+                    node.ingredients = net.filter { $0.net < -1e-9 }.map { ($0.name, -$0.net) }
+                    node.products = net.filter { $0.net > 1e-9 }.map { ($0.name, $0.net) }
+                }
+            } else if let idx = node.placed.selectedRecipeIndex, recipes.indices.contains(idx) {
                 let recipe = recipes[idx]
                 let seconds = Double(max(recipe.time, 1))
                 node.recipe = recipe
+                node.hasRecipeConfigured = true
                 node.ingredients = recipe.inputs.map { ($0.name, Double($0.count) / seconds) }
                 node.products = recipe.outputs.map { ($0.name, Double($0.count) / seconds) }
                 node.requiredEnv = recipe.requiredEnv
@@ -375,9 +428,21 @@ private final class Engine {
         node.ports.compactMap { $0.isOutput ? $0.linkIndex : nil }
     }
 
+    /// 一般机器不用管走哪个口，所有同类型输出口平均分；反应池/扩容反应池净产出可能不止一种，
+    /// 同类型口有几个净产物时必须按用户手动指定的 outputPortAssignments 走各自的口，
+    /// 不然会把两种液体都各分一半糊到两个管道口上，接错下游
     private func outputLinks(_ node: Node, for item: String) -> [Int] {
         let kind = portKind(for: item)
-        return node.ports.compactMap { $0.isOutput && $0.port.kind == kind ? $0.linkIndex : nil }
+        let allOfKind = node.ports.enumerated().filter { $0.element.isOutput && $0.element.port.kind == kind }
+        let assignments = node.placed.outputPortAssignments
+        if !assignments.isEmpty {
+            let assignedToThis = allOfKind.filter { assignments[$0.offset] == item }
+            if !assignedToThis.isEmpty { return assignedToThis.compactMap { $0.element.linkIndex } }
+            // 没给这个物品单独指定口：退回到"没被指定给别的物品"的口，避免抢别人已经分配好的口
+            let unassigned = allOfKind.filter { assignments[$0.offset] == nil }
+            if !unassigned.isEmpty { return unassigned.compactMap { $0.element.linkIndex } }
+        }
+        return allOfKind.compactMap { $0.element.linkIndex }
     }
 
     private func finalize(_ li: Int) {
@@ -560,7 +625,7 @@ private final class Engine {
 
         var t = 1.0
         node.limitingItem = nil
-        if node.recipe == nil { t = 0 }
+        if !node.hasRecipeConfigured { t = 0 }
         for ingredient in node.ingredients where ingredient.rate > 0 {
             let ratio = (arrivals[ingredient.name] ?? 0) / ingredient.rate
             if ratio < t { t = ratio; node.limitingItem = ingredient.name }
@@ -621,8 +686,9 @@ private final class Engine {
                 var detail: String? = nil
                 if node.kind == .unloader && node.products.isEmpty {
                     status = .noRecipe; detail = "未设置取货材料"
-                } else if node.kind == .machine && node.recipe == nil {
-                    status = .noRecipe; detail = "未选择配方"
+                } else if node.kind == .machine && !node.hasRecipeConfigured {
+                    status = .noRecipe
+                    detail = node.def.isMultiRecipeMachine ? "未勾选配方" : "未选择配方"
                 } else if node.throttle < 0.999 {
                     if let note = node.gateNote {
                         status = .inactive; detail = note

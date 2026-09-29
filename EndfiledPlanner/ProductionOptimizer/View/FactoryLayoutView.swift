@@ -7,6 +7,111 @@
 
 import SwiftUI
 
+/// 把 FactoryLayoutView 里一大串 .alert/.confirmationDialog 拆出来单独一个 ViewModifier——
+/// 全堆在 body 那条链上会导致 Swift 类型检查超时编译不过
+private struct FactoryAlertsModifier: ViewModifier {
+    @ObservedObject var vm: FactoryViewModel
+    @Binding var showClearConfirm: Bool
+    @Binding var showPresetConfirm: Bool
+    @Binding var showWulingPresetConfirm: Bool
+    @Binding var pendingMapSwitch: MapType?
+
+    func body(content: Content) -> some View {
+        content
+            .alert("清空布局", isPresented: $showClearConfirm) {
+                Button("取消", role: .cancel) {}
+                Button("清空", role: .destructive) { vm.clearLayout() }
+            } message: {
+                Text("将删除所有建筑和传送带，此操作不可撤销。")
+            }
+            .alert("加载测试产线", isPresented: $showPresetConfirm) {
+                Button("取消", role: .cancel) {}
+                Button("加载", role: .destructive) { vm.loadTestPreset() }
+            } message: {
+                Text("将切换到四号谷地并替换当前布局（不会自动保存），用于测试。")
+            }
+            .alert("加载测试产线", isPresented: $showWulingPresetConfirm) {
+                Button("取消", role: .cancel) {}
+                Button("加载", role: .destructive) { vm.loadWulingSelfSupplyPreset() }
+            } message: {
+                Text("将切换到武陵并替换当前布局（不会自动保存）。两个场景对比上游机组数量对下游负载的影响，坐标是手推的没跑过，出问题请看控制台报错。")
+            }
+            // 切换地图确认
+            .alert(
+                pendingMapSwitch.map { "切换到\($0.displayName)？" } ?? "切换地图",
+                isPresented: Binding(
+                    get: { pendingMapSwitch != nil },
+                    set: { if !$0 { pendingMapSwitch = nil } }
+                )
+            ) {
+                Button("取消", role: .cancel) { pendingMapSwitch = nil }
+                Button("切换", role: .destructive) {
+                    if let map = pendingMapSwitch { vm.switchMap(to: map) }
+                    pendingMapSwitch = nil
+                }
+            } message: {
+                Text("两张地图的仓库取线规则不一样，切换会清空当前所有建筑和传送带，此操作不可撤销。")
+            }
+            // 删除建筑确认
+            .alert(
+                vm.pendingEraseBuilding.map { "删除 \($0.def.name)？" } ?? "删除建筑",
+                isPresented: Binding(
+                    get: { vm.pendingEraseBuilding != nil },
+                    set: { if !$0 { vm.cancelErase() } }
+                )
+            ) {
+                Button("取消", role: .cancel) { vm.cancelErase() }
+                Button("删除", role: .destructive) { vm.confirmEraseBuilding() }
+            } message: {
+                Text("此操作不可撤销。")
+            }
+            // 协议核心不让删的提示
+            .alert(
+                "无法删除",
+                isPresented: Binding(
+                    get: { vm.eraseBlockedMessage != nil },
+                    set: { if !$0 { vm.eraseBlockedMessage = nil } }
+                )
+            ) {
+                Button("知道了", role: .cancel) { vm.eraseBlockedMessage = nil }
+            } message: {
+                Text(vm.eraseBlockedMessage ?? "")
+            }
+            // 删除传送带/管道确认（单格 or 整条；同格共存/十字交叉时可能同时命中传送带和管道，
+            // 这种情况下拆开显示"只删传送带/只删管道/两者都删"，避免删一个把另一个也带走）
+            .confirmationDialog(
+                "删除线路",
+                isPresented: Binding(
+                    get: { vm.pendingEraseCell != nil },
+                    set: { if !$0 { vm.cancelErase() } }
+                ),
+                titleVisibility: .visible
+            ) {
+                let types = vm.pendingEraseLineTypes
+                if types.count > 1 {
+                    ForEach(types, id: \.self) { type in
+                        Button("只删\(type.displayName)（这一格）", role: .destructive) {
+                            vm.confirmEraseCell(lineType: type)
+                        }
+                    }
+                    Button("两者都删（这一格）", role: .destructive) { vm.confirmEraseCell() }
+                    ForEach(types, id: \.self) { type in
+                        Button("只删\(type.displayName)（整条）", role: .destructive) {
+                            vm.confirmEraseWholeBelt(lineType: type)
+                        }
+                    }
+                    Button("两者都删（整条）", role: .destructive) { vm.confirmEraseWholeBelt() }
+                } else {
+                    Button("删除这一格", role: .destructive) { vm.confirmEraseCell() }
+                    Button("删除整条线路", role: .destructive) { vm.confirmEraseWholeBelt() }
+                }
+                Button("取消", role: .cancel) { vm.cancelErase() }
+            } message: {
+                Text("请选择删除范围")
+            }
+    }
+}
+
 struct FactoryLayoutView: View {
 
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
@@ -15,7 +120,7 @@ struct FactoryLayoutView: View {
     // 网格缩放
     @State private var cellSize: CGFloat = 72
     @State private var lastCellSize: CGFloat = 72
-    private let minCellSize: CGFloat = 40
+    private let minCellSize: CGFloat = 16
     private let maxCellSize: CGFloat = 120
 
     // 建筑板
@@ -35,6 +140,7 @@ struct FactoryLayoutView: View {
     @State private var showRecipeSheet = false
     @State private var showMaterialSheet = false
     @State private var showPresetConfirm = false
+    @State private var showWulingPresetConfirm = false
 
     private var usesSidePalette: Bool {
         horizontalSizeClass == .regular
@@ -144,7 +250,10 @@ struct FactoryLayoutView: View {
                             Label("切换地图（当前：\(vm.layout.mapType.displayName)）", systemImage: "map")
                         }
                         Button { showPresetConfirm = true } label: {
-                            Label("加载测试产线", systemImage: "wand.and.stars")
+                            Label("加载测试产线（四号谷地）", systemImage: "wand.and.stars")
+                        }
+                        Button { showWulingPresetConfirm = true } label: {
+                            Label("加载测试产线（武陵·重息壤对比）", systemImage: "wand.and.stars.inverse")
                         }
                         Button(role: .destructive) { showClearConfirm = true } label: {
                             Label("清空布局", systemImage: "trash")
@@ -157,79 +266,10 @@ struct FactoryLayoutView: View {
             }
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbarBackground(Color(red: 0.08, green: 0.09, blue: 0.12), for: .navigationBar)
-            .alert("清空布局", isPresented: $showClearConfirm) {
-                Button("取消", role: .cancel) {}
-                Button("清空", role: .destructive) { vm.clearLayout() }
-            } message: {
-                Text("将删除所有建筑和传送带，此操作不可撤销。")
-            }
-            .alert("加载测试产线", isPresented: $showPresetConfirm) {
-                Button("取消", role: .cancel) {}
-                Button("加载", role: .destructive) { vm.loadTestPreset() }
-            } message: {
-                Text("将切换到四号谷地并替换当前布局（不会自动保存），用于测试。")
-            }
-            // 切换地图确认
-            .alert(
-                pendingMapSwitch.map { "切换到\($0.displayName)？" } ?? "切换地图",
-                isPresented: Binding(
-                    get: { pendingMapSwitch != nil },
-                    set: { if !$0 { pendingMapSwitch = nil } }
-                )
-            ) {
-                Button("取消", role: .cancel) { pendingMapSwitch = nil }
-                Button("切换", role: .destructive) {
-                    if let map = pendingMapSwitch { vm.switchMap(to: map) }
-                    pendingMapSwitch = nil
-                }
-            } message: {
-                Text("两张地图的仓库取线规则不一样，切换会清空当前所有建筑和传送带，此操作不可撤销。")
-            }
-            // 删除建筑确认
-            .alert(
-                vm.pendingEraseBuilding.map { "删除 \($0.def.name)？" } ?? "删除建筑",
-                isPresented: Binding(
-                    get: { vm.pendingEraseBuilding != nil },
-                    set: { if !$0 { vm.cancelErase() } }
-                )
-            ) {
-                Button("取消", role: .cancel) { vm.cancelErase() }
-                Button("删除", role: .destructive) { vm.confirmEraseBuilding() }
-            } message: {
-                Text("此操作不可撤销。")
-            }
-            // 删除传送带/管道确认（单格 or 整条；同格共存/十字交叉时可能同时命中传送带和管道，
-            // 这种情况下拆开显示"只删传送带/只删管道/两者都删"，避免删一个把另一个也带走）
-            .confirmationDialog(
-                "删除线路",
-                isPresented: Binding(
-                    get: { vm.pendingEraseCell != nil },
-                    set: { if !$0 { vm.cancelErase() } }
-                ),
-                titleVisibility: .visible
-            ) {
-                let types = vm.pendingEraseLineTypes
-                if types.count > 1 {
-                    ForEach(types, id: \.self) { type in
-                        Button("只删\(type.displayName)（这一格）", role: .destructive) {
-                            vm.confirmEraseCell(lineType: type)
-                        }
-                    }
-                    Button("两者都删（这一格）", role: .destructive) { vm.confirmEraseCell() }
-                    ForEach(types, id: \.self) { type in
-                        Button("只删\(type.displayName)（整条）", role: .destructive) {
-                            vm.confirmEraseWholeBelt(lineType: type)
-                        }
-                    }
-                    Button("两者都删（整条）", role: .destructive) { vm.confirmEraseWholeBelt() }
-                } else {
-                    Button("删除这一格", role: .destructive) { vm.confirmEraseCell() }
-                    Button("删除整条线路", role: .destructive) { vm.confirmEraseWholeBelt() }
-                }
-                Button("取消", role: .cancel) { vm.cancelErase() }
-            } message: {
-                Text("请选择删除范围")
-            }
+            .modifier(FactoryAlertsModifier(vm: vm, showClearConfirm: $showClearConfirm,
+                                           showPresetConfirm: $showPresetConfirm,
+                                           showWulingPresetConfirm: $showWulingPresetConfirm,
+                                           pendingMapSwitch: $pendingMapSwitch))
         }
     }
 
@@ -403,7 +443,8 @@ struct FactoryLayoutView: View {
     }
 
     private var filteredBuildings: [BuildingDefinition] {
-        let onMap = BuildingDefinition.all.filter { $0.isAvailable(on: vm.layout.mapType) }
+        // 协议核心每张图自动生成、全局唯一，不放进建造面板里让人手动摆第二个
+        let onMap = BuildingDefinition.all.filter { $0.isAvailable(on: vm.layout.mapType) && !$0.isProtocolCore }
         guard let cat = selectedCategory else { return onMap }
         return onMap.filter { $0.category == cat }
     }
@@ -532,11 +573,16 @@ struct FactoryLayoutView: View {
                 .padding(.horizontal, 14).padding(.vertical, 10)
                 .background(Color(red: 0.08, green: 0.09, blue: 0.12))
 
-                FactoryStatsView(stats: vm.stats, isExpanded: .constant(true))
+                // 内容可能很长（建筑一多，"没正常运行的机器"这类提示行会刷很多条），
+                // 之前没套 ScrollView 会直接顶出屏幕、连最上面的功率数字都划不到
+                ScrollView {
+                    FactoryStatsView(stats: vm.stats, isExpanded: .constant(true))
+                }
             }
             .background(Color(red: 0.10, green: 0.11, blue: 0.14))
             .overlay(Rectangle().stroke(Color(red: 0.4, green: 0.8, blue: 0.2).opacity(0.4), lineWidth: 1))
             .frame(maxWidth: 340)
+            .frame(maxHeight: 480)
             .padding(.trailing, 16)
             .padding(.bottom, 80)   // 留出悬浮按钮空间
         }
@@ -561,7 +607,11 @@ struct FactoryLayoutView: View {
                             .foregroundColor(Color(red: 0.9, green: 0.5, blue: 0.2))
                     }
                 }
-                recipePicker(for: def)
+                if def.isMultiRecipeMachine {
+                    multiRecipePicker(for: def)
+                } else {
+                    recipePicker(for: def)
+                }
                 outletMaterialPicker(for: def)
                 flowLimitControl(for: def)
                 machineStateLabel()
@@ -623,10 +673,137 @@ struct FactoryLayoutView: View {
                     clearTitle: "不选择配方",
                     onSelect: { id in
                         vm.selectRecipe(id.flatMap(Int.init), for: placedID)
-                    }
+                    },
+                    filterChips: ingredientChips(for: recipes),
+                    chipsLabel: "按原料筛选（跟游戏一样先选吃什么）"
                 )
             }
         }
+    }
+
+    /// 反应池/扩容反应池：多选配方 + 自我供给分析 + 净产出的输出口手动指定
+    @ViewBuilder
+    private func multiRecipePicker(for def: BuildingDefinition) -> some View {
+        let recipes = vm.availableRecipes(for: def)
+        if !recipes.isEmpty, let placedID = vm.selectedBuildingID, let placed = vm.selectedPlaced {
+            let selectedIndices = placed.selectedRecipeIndices
+            VStack(alignment: .leading, spacing: 4) {
+                Button {
+                    showRecipeSheet = true
+                } label: {
+                    Label(selectedIndices.isEmpty ? "勾选配方（可多选）" : "已勾选 \(selectedIndices.count) 条配方",
+                          systemImage: "list.bullet.rectangle.fill")
+                        .font(.system(size: 10, design: .monospaced))
+                        .foregroundColor(Color(red: 0.4, green: 0.8, blue: 0.2))
+                }
+                .buttonStyle(.plain)
+                .sheet(isPresented: $showRecipeSheet) {
+                    SearchablePickerSheet(
+                        title: "勾选配方",
+                        items: recipes.enumerated().map { idx, recipe in
+                            let outputText = recipe.outputs.map { "\($0.name)×\($0.count)" }.joined(separator: " + ")
+                            let inputText = recipe.inputs.map { "\($0.name)×\($0.count)" }.joined(separator: " + ")
+                            return SearchablePickerItem(
+                                id: String(idx),
+                                title: "\(outputText)（\(recipe.time)s）",
+                                subtitle: inputText.isEmpty ? nil : "原料：\(inputText)"
+                            )
+                        },
+                        multiSelect: true,
+                        selectedIDs: Set(selectedIndices.map(String.init)),
+                        onToggle: { id in
+                            if let idx = Int(id) { vm.toggleRecipe(idx, for: placedID) }
+                        },
+                        filterChips: ingredientChips(for: recipes),
+                        chipsLabel: "按原料筛选（跟游戏一样先选吃什么，能多选配方）"
+                    )
+                }
+
+                if let analysis = vm.selfSupplyAnalysis(for: placed, definition: def) {
+                    selfSupplySummary(analysis, def: def, placedID: placedID)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func selfSupplySummary(_ analysis: FlowSimulator.SelfSupplyAnalysis, def: BuildingDefinition, placedID: UUID) -> some View {
+        VStack(alignment: .leading, spacing: 3) {
+            if let cap = def.multiRecipeItemCapacity {
+                Text("涉及物品 \(analysis.totalDistinctItems)/\(cap) 种")
+                    .font(.system(size: 9, design: .monospaced))
+                    .foregroundColor(analysis.exceedsCapacity ? .red : .white.opacity(0.5))
+            }
+            let internalItems = analysis.netItems.filter { abs($0.net) < 1e-9 }
+            if !internalItems.isEmpty {
+                Text("内部循环：\(internalItems.map { $0.name }.joined(separator: "、"))（不占外部口）")
+                    .font(.system(size: 9, design: .monospaced))
+                    .foregroundColor(Color(red: 0.4, green: 0.7, blue: 0.9))
+            }
+            if !analysis.externalInputs.isEmpty {
+                let text = analysis.externalInputs
+                    .map { "\($0.name) \(String(format: "%.0f", -$0.net * 60))/min" }
+                    .joined(separator: "、")
+                Text("外部输入：\(text)")
+                    .font(.system(size: 9, design: .monospaced))
+                    .foregroundColor(.white.opacity(0.6))
+            }
+            ForEach(analysis.externalOutputs, id: \.name) { output in
+                outputAssignmentRow(item: output.name, rate: output.net, def: def, placedID: placedID)
+            }
+            if analysis.exceedsOutputCap {
+                Text("对外输出超限：同时最多 2 种液体 + 1 种固体，多出来的必须靠另一条配方内部消化掉")
+                    .font(.system(size: 9, weight: .bold, design: .monospaced))
+                    .foregroundColor(.red)
+            }
+        }
+    }
+
+    private func outputPortsOfKind(_ def: BuildingDefinition, isSolid: Bool) -> [Int] {
+        let kind: PortKind = isSolid ? .item : .pipe
+        return def.ports.enumerated()
+            .filter { $0.element.ioDirection == .output && $0.element.kind == kind }
+            .map { $0.offset }
+    }
+
+    /// 净产出的物品要不要手动指定输出口：只有同类型口有 2 个以上净产物时才需要选，只有 1 个净产物时用不着
+    @ViewBuilder
+    private func outputAssignmentRow(item: String, rate: Double, def: BuildingDefinition, placedID: UUID) -> some View {
+        let isSolid = RecipeViewModel.isLikelySolid(item)
+        let ports = outputPortsOfKind(def, isSolid: isSolid)
+        HStack(spacing: 6) {
+            Text("输出：\(item) \(String(format: "%.0f", rate * 60))/min")
+                .font(.system(size: 9, design: .monospaced))
+                .foregroundColor(.white.opacity(0.7))
+            if ports.count > 1 {
+                let current = vm.selectedPlaced?.outputPortAssignments.first { $0.value == item }?.key
+                ForEach(Array(ports.enumerated()), id: \.element) { seq, portIdx in
+                    Button {
+                        vm.setOutputPortAssignment(item: item, portIndex: portIdx, for: placedID)
+                    } label: {
+                        Text("口\(seq + 1)")
+                            .font(.system(size: 9, weight: .bold, design: .monospaced))
+                            .padding(.horizontal, 6).padding(.vertical, 2)
+                            .background(current == portIdx ? Color(red: 0.4, green: 0.8, blue: 0.2) : Color.white.opacity(0.12))
+                            .foregroundColor(current == portIdx ? .black : .white.opacity(0.6))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+    }
+
+    /// 这批配方里出现过的所有原料名（去重），给"先选原料再看配方"这个筛选条用
+    private func ingredientChips(for recipes: [Recipe]) -> [String] {
+        var seen = Set<String>()
+        var ordered: [String] = []
+        for recipe in recipes {
+            for input in recipe.inputs where !seen.contains(input.name) {
+                seen.insert(input.name)
+                ordered.append(input.name)
+            }
+        }
+        return ordered
     }
 
     private func recipeSubtitle(inputText: String, env: String?) -> String? {

@@ -39,7 +39,8 @@ class FactoryViewModel: ObservableObject {
         let recipeVM = RecipeViewModel()
         machineRecipes = recipeVM.recipesByMachine()
         solidMaterials = recipeVM.solidOutputNames()
-        let loaded = FactoryGridModel.load()
+        var loaded = FactoryGridModel.load()
+        FactoryGridModel.ensureProtocolCore(in: &loaded)
         layout = loaded
         stats = FactoryGridModel.analyze(layout: loaded, machineRecipes: machineRecipes)
     }
@@ -56,12 +57,51 @@ class FactoryViewModel: ObservableObject {
         refreshStats()
     }
 
+    // MARK: - 反应池 / 扩容反应池：多配方 + 自我供给
+    /// 勾选/取消某条配方（多选，反应池/扩容反应池专用）
+    func toggleRecipe(_ index: Int, for buildingID: UUID) {
+        guard let idx = layout.buildings.firstIndex(where: { $0.id == buildingID }) else { return }
+        if layout.buildings[idx].selectedRecipeIndices.contains(index) {
+            layout.buildings[idx].selectedRecipeIndices.remove(index)
+        } else {
+            layout.buildings[idx].selectedRecipeIndices.insert(index)
+        }
+        refreshStats()
+    }
+
+    /// 净产出物品选择哪个物理输出口（同类型口有 2 种以上净产物时才需要手动指定）
+    func setOutputPortAssignment(item: String, portIndex: Int, for buildingID: UUID) {
+        guard let idx = layout.buildings.firstIndex(where: { $0.id == buildingID }) else { return }
+        // 同一个口只能对应一种物品，先清掉这个口原来指定的物品，再清掉这个物品原来指定的口
+        layout.buildings[idx].outputPortAssignments = layout.buildings[idx].outputPortAssignments.filter {
+            $0.key != portIndex && $0.value != item
+        }
+        layout.buildings[idx].outputPortAssignments[portIndex] = item
+        refreshStats()
+    }
+
+    func clearOutputPortAssignment(item: String, for buildingID: UUID) {
+        guard let idx = layout.buildings.firstIndex(where: { $0.id == buildingID }) else { return }
+        layout.buildings[idx].outputPortAssignments = layout.buildings[idx].outputPortAssignments.filter { $0.value != item }
+        refreshStats()
+    }
+
+    /// 选中建筑当前的自我供给分析（净流量、是否超容量/超输出上限），非反应池类建筑返回 nil
+    func selfSupplyAnalysis(for placed: PlacedBuilding, definition: BuildingDefinition) -> FlowSimulator.SelfSupplyAnalysis? {
+        guard definition.isMultiRecipeMachine else { return nil }
+        let recipes = availableRecipes(for: definition)
+        let selected = placed.selectedRecipeIndices.sorted().compactMap { recipes.indices.contains($0) ? recipes[$0] : nil }
+        guard !selected.isEmpty else { return nil }
+        return FlowSimulator.analyzeSelfSupply(recipes: selected, capacity: definition.multiRecipeItemCapacity)
+    }
+
     // MARK: - 地图
     /// 切换地图会清空当前布局——两张地图的仓库取线规则完全不同（贴边 vs 连基段），
     /// 建筑/线路留着也大概率不合法，不如直接清干净重新摆
     func switchMap(to mapType: MapType) {
         layout = .empty
         layout.mapType = mapType
+        FactoryGridModel.ensureProtocolCore(in: &layout)
         selectedBuildingID = nil
         beltStart = nil
         beltPreviewSegments = []
@@ -482,12 +522,18 @@ class FactoryViewModel: ObservableObject {
     @Published var pendingEraseCell: GridPoint? = nil
     // 十字格可能属于多条带，记录所有候选带 ID
     @Published var pendingEraseBeltIDs: [UUID] = []
+    /// 协议核心不让删，点了给个提示而不是弹确认框
+    @Published var eraseBlockedMessage: String? = nil
 
     func eraseAt(cell: GridPoint) {
         // 优先检测建筑
         for placed in layout.buildings {
             guard let def = BuildingDefinition.find(placed.definitionID) else { continue }
             if placed.occupiedCells(definition: def).contains(cell) {
+                if def.isProtocolCore {
+                    eraseBlockedMessage = "协议核心是地图必需的核心仓库，不能删除"
+                    return
+                }
                 pendingEraseBuilding = (placed, def)
                 return
             }
@@ -512,6 +558,11 @@ class FactoryViewModel: ObservableObject {
     /// 确认删除建筑（同时移除其格子上的所有传送带段）
     func confirmEraseBuilding() {
         guard let target = pendingEraseBuilding else { return }
+        guard !target.def.isProtocolCore else {
+            pendingEraseBuilding = nil
+            eraseBlockedMessage = "协议核心是地图必需的核心仓库，不能删除"
+            return
+        }
         let cells = target.placed.occupiedCells(definition: target.def)
         layout.buildings.removeAll { $0.id == target.placed.id }
         for cell in cells { removeCellFromAllBelts(cell, lineType: nil) }
@@ -593,6 +644,10 @@ class FactoryViewModel: ObservableObject {
               let placed = layout.buildings.first(where: { $0.id == id }),
               let def = BuildingDefinition.find(placed.definitionID)
         else { return }
+        guard !def.isProtocolCore else {
+            eraseBlockedMessage = "协议核心是地图必需的核心仓库，不能删除"
+            return
+        }
 
         let cells = placed.occupiedCells(definition: def)
         layout.buildings.removeAll { $0.id == id }
@@ -611,6 +666,7 @@ class FactoryViewModel: ObservableObject {
 
     func clearLayout() {
         layout = .empty
+        FactoryGridModel.ensureProtocolCore(in: &layout)
         selectedBuildingID = nil
         beltStart = nil
         beltPreviewSegments = []
@@ -638,6 +694,27 @@ class FactoryViewModel: ObservableObject {
             existing: layout.buildings,
             mapType: layout.mapType
         )
+    }
+
+    // MARK: - 拖拽重定位已放置建筑
+    /// 校验某台已放置建筑挪到新坐标合不合法（碰撞检测要把它自己从"已有建筑"里排除，不然永远撞自己）
+    func canReposition(_ id: UUID, to origin: GridPoint) -> Bool {
+        guard let placed = layout.buildings.first(where: { $0.id == id }),
+              let def = BuildingDefinition.find(placed.definitionID)
+        else { return false }
+        let others = layout.buildings.filter { $0.id != id }
+        return FactoryGridModel.canPlace(definition: def, at: origin, rotation: placed.rotation,
+                                         existing: others, mapType: layout.mapType)
+    }
+
+    /// 提交重定位；坐标不合法就什么都不做（原地不动）。注意：建筑身上原来接的传送带/管道
+    /// 还是钉在旧坐标上，挪动后这些线不会跟着走，需要用户自己重新接
+    func commitReposition(_ id: UUID, to origin: GridPoint) {
+        guard canReposition(id, to: origin),
+              let idx = layout.buildings.firstIndex(where: { $0.id == id })
+        else { return }
+        layout.buildings[idx].origin = origin
+        refreshStats()
     }
 
     var selectedPlaced: PlacedBuilding? {

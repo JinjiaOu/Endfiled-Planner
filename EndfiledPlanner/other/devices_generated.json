@@ -3968,6 +3968,7 @@
         "z": 0
       },
       "powerConsume": 0,
+      "powerGenerate": 150,
       "needPower": true,
       "liquidEnabled": false,
       "bandwidth": 2,
@@ -6024,6 +6025,332 @@
         }
       ],
       "sourceTable": "FactoryBuildingTable.json"
+    },
+    {
+      "id": "sp_hub_1",
+      "name": "协议核心",
+      "recordType": "building",
+      "categoryId": "hub",
+      "categoryName": "核心",
+      "buildingType": 1,
+      "size": {
+        "width": 9,
+        "depth": 9,
+        "height": 10,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "powerConsume": 0,
+      "powerGenerate": 200,
+      "needPower": true,
+      "liquidEnabled": false,
+      "bandwidth": 0,
+      "modes": [],
+      "activationRequirements": [],
+      "ports": [
+        {
+          "index": 0,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 1,
+            "y": 0,
+            "z": 8
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 1,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 2,
+            "y": 0,
+            "z": 8
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 2,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 3,
+            "y": 0,
+            "z": 8
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 3,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 4,
+            "y": 0,
+            "z": 8
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 4,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 5,
+            "y": 0,
+            "z": 8
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 5,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 6,
+            "y": 0,
+            "z": 8
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 6,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 7,
+            "y": 0,
+            "z": 8
+          },
+          "rotation": {
+            "x": 0,
+            "y": 180,
+            "z": 0
+          }
+        },
+        {
+          "index": 7,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 1,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        {
+          "index": 8,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 2,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        {
+          "index": 9,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 3,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        {
+          "index": 10,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 4,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        {
+          "index": 11,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 5,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        {
+          "index": 12,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 6,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        {
+          "index": 13,
+          "direction": "input",
+          "kind": "item",
+          "position": {
+            "x": 7,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        {
+          "index": 0,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 8,
+            "y": 0,
+            "z": 1
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        },
+        {
+          "index": 1,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 8,
+            "y": 0,
+            "z": 4
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        },
+        {
+          "index": 2,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 8,
+            "y": 0,
+            "z": 7
+          },
+          "rotation": {
+            "x": 0,
+            "y": 90,
+            "z": 0
+          }
+        },
+        {
+          "index": 3,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 1
+          },
+          "rotation": {
+            "x": 0,
+            "y": 270,
+            "z": 0
+          }
+        },
+        {
+          "index": 4,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 4
+          },
+          "rotation": {
+            "x": 0,
+            "y": 270,
+            "z": 0
+          }
+        },
+        {
+          "index": 5,
+          "direction": "output",
+          "kind": "item",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 7
+          },
+          "rotation": {
+            "x": 0,
+            "y": 270,
+            "z": 0
+          }
+        }
+      ],
+      "sourceTable": "FactoryHubTable.json+FactoryBuildingTable.json（手动补录，游戏解包数据里这个建筑之前完全没导入过，sp_sub_hub_1 是其他小地图专属核心，跟本项目无关，特意不导入）"
     }
   ]
 }

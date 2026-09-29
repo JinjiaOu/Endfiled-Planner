@@ -50,6 +50,7 @@ enum BuildingCategory: String, Codable, CaseIterable {
     case production  = "基础生产"
     case synthesis   = "合成制造"
     case power       = "电力供应"
+    case hub         = "核心"   // 协议核心，每张地图必有且只有一个
 
     var color: Color {
         switch self {
@@ -59,6 +60,7 @@ enum BuildingCategory: String, Codable, CaseIterable {
         case .production: return Color(red: 0.9, green: 0.3, blue: 0.2)
         case .synthesis:  return Color(red: 0.6, green: 0.4, blue: 0.9)
         case .power:      return Color(red: 1.0, green: 0.8, blue: 0.0)
+        case .hub:        return Color(red: 0.2, green: 0.9, blue: 0.7)
         }
     }
 
@@ -70,6 +72,7 @@ enum BuildingCategory: String, Codable, CaseIterable {
         case .production: return "flame.fill"
         case .synthesis:  return "gearshape.2.fill"
         case .power:      return "bolt.fill"
+        case .hub:        return "atom"
         }
     }
 }
@@ -113,18 +116,22 @@ struct BuildingDefinition: Identifiable, Hashable {
     let name: String
     let category: BuildingCategory
     let size: GridSize          // 占格尺寸（未旋转）
-    let powerUsage: Double      // 功率（MW）
+    let powerUsage: Double      // 耗电（MW）
+    /// 发电量（MW）。绝大多数建筑是 0，协议核心和热能池这类真正的发电建筑才非零；
+    /// 净耗电 = powerUsage − powerGenerate，见 FactoryGridModel.analyze
+    let powerGenerate: Double
     let ports: [BuildingPort]
     /// nil = 两张地图都能造；非 nil 就只有列出来的地图能造（比如取线终端只有武陵有）
     let allowedMaps: Set<MapType>?
 
     init(id: String, name: String, category: BuildingCategory, size: GridSize,
-         powerUsage: Double, ports: [BuildingPort], allowedMaps: Set<MapType>? = nil) {
+         powerUsage: Double, powerGenerate: Double = 0, ports: [BuildingPort], allowedMaps: Set<MapType>? = nil) {
         self.id = id
         self.name = name
         self.category = category
         self.size = size
         self.powerUsage = powerUsage
+        self.powerGenerate = powerGenerate
         self.ports = ports
         self.allowedMaps = allowedMaps
     }
@@ -204,6 +211,10 @@ struct PlacedBuilding: Identifiable, Codable {
     var outletMaterial: String? = nil
     /// 仅物品/管道准入口用：用户设置的最大流速（个/分钟），nil = 不额外限速（跑满带速/管速）
     var flowLimitPerMin: Double? = nil
+    /// 仅反应池/扩容反应池用：同时勾选运行的配方下标集合（下标含义同 selectedRecipeIndex）
+    var selectedRecipeIndices: Set<Int> = []
+    /// 仅反应池/扩容反应池用：净产出的物品 → 走哪个物理输出口（下标对应 BuildingDefinition.ports 数组，只在同一物品口/管道口不止一个净产物时才需要手动指定）
+    var outputPortAssignments: [Int: String] = [:]
 
     init(definitionID: String, origin: GridPoint, rotation: BuildingRotation = .up) {
         self.id = UUID()
@@ -390,13 +401,46 @@ extension BuildingDefinition {
     ]
 }
 
+// MARK: - 协议核心：每张地图必有且只有一个的中心仓库
+// sp_sub_hub_1（其他小地图/副本专属的协议核心）跟本项目支持的四号谷地/武陵无关，
+// 一开始就没有导入进 devices_generated.json，不需要在这里再单独过滤
+extension BuildingDefinition {
+    static let protocolCoreID = "sp_hub_1"
+    var isProtocolCore: Bool { id == BuildingDefinition.protocolCoreID }
+}
+
+// MARK: - 反应池 / 扩容反应池：多配方 + 自我供给
+// 跟游戏里实测过：这两台机器能同时"装"的物料种类（原料+产物+纯内部循环，不分角色）是一个固定总容量，
+// 反应池 5 种、扩容反应池 8 种；对外输出上限两台机器一样，最多同时 2 种液体+1 种固体，
+// 超出的产物必须是净零（被同时生效的另一条配方内部消化掉），不能既超限又对外送
+extension BuildingDefinition {
+    static let mixPoolID = "mix_pool_1"
+    static let expandedMixPoolID = "mix_pool_2"
+    static let multiRecipeMachineIDs: Set<String> = [mixPoolID, expandedMixPoolID]
+
+    var isMultiRecipeMachine: Bool { BuildingDefinition.multiRecipeMachineIDs.contains(id) }
+
+    /// 同时生效的配方里，原料+产物（含内部循环）加起来最多能涉及几种物品
+    var multiRecipeItemCapacity: Int? {
+        switch id {
+        case BuildingDefinition.mixPoolID: return 5
+        case BuildingDefinition.expandedMixPoolID: return 8
+        default: return nil
+        }
+    }
+
+    /// 对外输出上限：两台机器一样
+    static let multiRecipeMaxExternalLiquidOutputs = 2
+    static let multiRecipeMaxExternalSolidOutputs = 1
+}
+
 // MARK: - 建筑库（从 devices_generated.json 解析，叠加地图限定覆盖）
 extension BuildingDefinition {
     static let all: [BuildingDefinition] = BuildingParser.loadAll().map { def in
         guard let override = mapOverrides[def.id] else { return def }
         return BuildingDefinition(
             id: def.id, name: def.name, category: def.category,
-            size: def.size, powerUsage: def.powerUsage, ports: def.ports,
+            size: def.size, powerUsage: def.powerUsage, powerGenerate: def.powerGenerate, ports: def.ports,
             allowedMaps: override
         )
     }

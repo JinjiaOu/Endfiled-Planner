@@ -32,7 +32,7 @@ struct FactoryStatsView: View {
 
                     Spacer()
 
-                    // 总功率快速预览
+                    // 净功率快速预览（耗电－发电）
                     Text(String(format: "%.1f MW", stats.totalPower))
                         .font(.system(size: 11, weight: .medium, design: .monospaced))
                         .foregroundColor(Color(red: 0.9, green: 0.5, blue: 0.2))
@@ -61,7 +61,7 @@ struct FactoryStatsView: View {
                         )
                         Divider().overlay(Color.white.opacity(0.1))
                         statBox(
-                            title: "功率",
+                            title: "净功率",
                             value: String(format: "%.1f", stats.totalPower),
                             unit: "MW",
                             color: Color(red: 0.9, green: 0.5, blue: 0.2)
@@ -124,6 +124,14 @@ struct FactoryStatsView: View {
                         .padding(.horizontal, 14)
                         .padding(.vertical, 8)
                         .background(Color(red: 0.4, green: 0.8, blue: 0.2).opacity(0.1))
+                    }
+
+                    // 有发电建筑（协议核心/热能池等）时才展开显示耗电/发电两个分项，没有就不用刷这行存在感
+                    if stats.totalPowerGenerated > 0 {
+                        noticeRow(icon: "bolt.horizontal.fill",
+                                  text: String(format: "耗电 %.1f MW，发电 %.1f MW（净功率已经是抵消后的数字）",
+                                               stats.totalPowerConsumed, stats.totalPowerGenerated),
+                                  color: Color(red: 1.0, green: 0.8, blue: 0.0))
                     }
 
                     // 流量模拟没收敛：数字仅供参考

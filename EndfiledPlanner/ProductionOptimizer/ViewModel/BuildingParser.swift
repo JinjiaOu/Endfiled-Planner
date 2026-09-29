@@ -23,6 +23,7 @@ enum BuildingParser {
         let categoryName: String
         let size: DeviceSize
         let powerConsume: Double?   // 物流网络节点（分流器/传送带本身等）没有这个字段
+        let powerGenerate: Double?  // 只有协议核心、热能池这类真正的发电建筑才有，绝大多数记录没有这个字段
         let ports: [DevicePort]?
     }
 
@@ -53,6 +54,7 @@ enum BuildingParser {
         "基础生产": .production,
         "合成制造": .synthesis,
         "电力供应": .power,
+        "核心": .hub,
     ]
 
     static func loadAll() -> [BuildingDefinition] {
@@ -85,6 +87,7 @@ enum BuildingParser {
             category: category,
             size: size,
             powerUsage: device.powerConsume ?? 0,
+            powerGenerate: device.powerGenerate ?? 0,
             ports: ports
         )
     }

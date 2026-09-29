@@ -21,6 +21,11 @@ struct FactoryGridView: View {
     // 单独存一份而不是写回 dragLocationInGrid，避免它被当成新的全局坐标再转一遍，越转越偏
     @State private var dropPreviewLocal: CGPoint? = nil
 
+    // 已放置建筑拖拽重定位：只在"当前选中建筑自己的那块区域"响应拖拽手势，不碰整个网格的
+    // gestureOverlay，这样滚动/点选其它地方完全不受影响，只有摸到选中建筑本体才会触发挪动
+    @State private var repositionOriginalOrigin: GridPoint? = nil
+    @State private var repositionCandidateOrigin: GridPoint? = nil
+
     private var cols: Int { FactoryGridModel.gridCols }
     private var rows: Int { FactoryGridModel.gridRows }
 
@@ -34,6 +39,7 @@ struct FactoryGridView: View {
             beltStartMarker
             portSnapHighlight
             gestureOverlay
+            repositionHandle
         }
         .frame(width: CGFloat(cols) * cellSize, height: CGFloat(rows) * cellSize)
         .onAppear {
@@ -489,6 +495,57 @@ struct FactoryGridView: View {
             .frame(width: w, height: h)
             .offset(x: x, y: y)
             .allowsHitTesting(false)
+        }
+    }
+
+    // MARK: - 已放置建筑拖拽重定位
+    // 只在选中模式、且有选中建筑时才铺这一小块透明手势层，精确盖在建筑当前渲染的矩形上——
+    // 拖拽中建筑本体还画在原位，另外单独画一个跟手的预览框（绿色=能放，红色=不能放），
+    // 松手时预览框在哪就试着挪到哪，不合法就地不动
+    @ViewBuilder
+    private var repositionHandle: some View {
+        if vm.editMode == .select, let placed = vm.selectedPlaced, let def = vm.selectedDefinition {
+            let size = placed.effectiveSize(definition: def)
+            let w = CGFloat(size.width) * cellSize
+            let h = CGFloat(size.height) * cellSize
+            let x = CGFloat(placed.origin.col) * cellSize
+            let y = CGFloat(placed.origin.row) * cellSize
+
+            Color.clear
+                .contentShape(Rectangle())
+                .frame(width: w, height: h)
+                .offset(x: x, y: y)
+                .gesture(
+                    DragGesture(minimumDistance: 6)
+                        .onChanged { value in
+                            if repositionOriginalOrigin == nil {
+                                repositionOriginalOrigin = placed.origin
+                            }
+                            guard let origin = repositionOriginalOrigin else { return }
+                            let dCol = Int((value.translation.width / cellSize).rounded())
+                            let dRow = Int((value.translation.height / cellSize).rounded())
+                            repositionCandidateOrigin = GridPoint(col: origin.col + dCol, row: origin.row + dRow)
+                        }
+                        .onEnded { _ in
+                            if let candidate = repositionCandidateOrigin {
+                                vm.commitReposition(placed.id, to: candidate)
+                            }
+                            repositionOriginalOrigin = nil
+                            repositionCandidateOrigin = nil
+                        }
+                )
+
+            if let candidate = repositionCandidateOrigin, candidate != placed.origin {
+                let canPlace = vm.canReposition(placed.id, to: candidate)
+                let color = canPlace ? def.category.color : Color.red
+                ZStack {
+                    Rectangle().fill(color.opacity(0.35))
+                    Rectangle().stroke(color, style: StrokeStyle(lineWidth: 2, dash: [6, 3]))
+                }
+                .frame(width: w, height: h)
+                .offset(x: CGFloat(candidate.col) * cellSize, y: CGFloat(candidate.row) * cellSize)
+                .allowsHitTesting(false)
+            }
         }
     }
 

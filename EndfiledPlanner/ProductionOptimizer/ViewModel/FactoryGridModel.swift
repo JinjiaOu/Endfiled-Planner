@@ -63,6 +63,35 @@ class FactoryGridModel {
         UserDefaults.standard.removeObject(forKey: saveKey)
     }
 
+    // MARK: - 协议核心：每张地图必有且只有一个，没有就在默认位置（网格正中心）自动生成
+    static func defaultProtocolCoreOrigin() -> GridPoint {
+        guard let def = BuildingDefinition.find(BuildingDefinition.protocolCoreID) else { return GridPoint(col: 0, row: 0) }
+        return GridPoint(col: (gridCols - def.size.width) / 2, row: (gridRows - def.size.height) / 2)
+    }
+
+    /// 优先放网格正中心；测试产线这种摆得比较满的布局中心可能被占了，
+    /// 那就从左上角逐格扫描找第一个能放的位置，尽量不让协议核心直接消失
+    static func ensureProtocolCore(in layout: inout FactoryLayout) {
+        guard !layout.buildings.contains(where: { $0.definitionID == BuildingDefinition.protocolCoreID }) else { return }
+        guard let def = BuildingDefinition.find(BuildingDefinition.protocolCoreID) else { return }
+
+        let center = defaultProtocolCoreOrigin()
+        if canPlace(definition: def, at: center, rotation: .up, existing: layout.buildings, mapType: layout.mapType) {
+            layout.buildings.append(PlacedBuilding(definitionID: def.id, origin: center, rotation: .up))
+            return
+        }
+        for row in 0...(gridRows - def.size.height) {
+            for col in 0...(gridCols - def.size.width) {
+                let origin = GridPoint(col: col, row: row)
+                if canPlace(definition: def, at: origin, rotation: .up, existing: layout.buildings, mapType: layout.mapType) {
+                    layout.buildings.append(PlacedBuilding(definitionID: def.id, origin: origin, rotation: .up))
+                    return
+                }
+            }
+        }
+        print("协议核心整张图都放不下，需要手动检查布局密度")
+    }
+
     // MARK: - 碰撞检测
     /// 检查新建筑是否与已有建筑重叠，并且符合当前地图的专属放置规则
     static func canPlace(
@@ -74,6 +103,11 @@ class FactoryGridModel {
     ) -> Bool {
         // 这个建筑本来就不允许出现在当前地图（比如取线终端在四号谷地）
         guard definition.isAvailable(on: mapType) else { return false }
+
+        // 协议核心全局唯一：已经有一个了就不能再放第二个（重定位时 existing 会把它自己排除掉，不受影响）
+        if definition.isProtocolCore, existing.contains(where: { $0.definitionID == definition.id }) {
+            return false
+        }
 
         let dummy = PlacedBuilding(definitionID: definition.id, origin: origin, rotation: rotation)
         let newCellsArr = dummy.occupiedCells(definition: definition)
@@ -172,7 +206,9 @@ class FactoryGridModel {
 
     // MARK: - 产线分析
     struct ProductionStats {
-        let totalPower: Double          // 总功率消耗 (MW)
+        let totalPower: Double          // 净功率 = 耗电合计 − 发电合计 (MW)，负数表示净发电
+        let totalPowerConsumed: Double  // 耗电合计 (MW)
+        let totalPowerGenerated: Double // 发电合计 (MW)，绝大多数布局是 0
         let buildingCount: Int
         let categoryBreakdown: [BuildingCategory: Int]
         let bottleneck: String?         // 瓶颈建筑（节流系数最低的那台）
@@ -201,14 +237,16 @@ class FactoryGridModel {
 
     /// - Parameter machineRecipes: 按机器名分组去重的配方表（RecipeViewModel.recipesByMachine()）
     static func analyze(layout: FactoryLayout, machineRecipes: [String: [Recipe]]) -> ProductionStats {
-        var totalPower = 0.0
+        var totalPowerConsumed = 0.0
+        var totalPowerGenerated = 0.0
         var categoryBreakdown: [BuildingCategory: Int] = [:]
         var passthroughCount = 0
         var outletMaterials: [String] = []
 
         for placed in layout.buildings where placed.isActive {
             guard let def = BuildingDefinition.find(placed.definitionID) else { continue }
-            totalPower += def.powerUsage
+            totalPowerConsumed += def.powerUsage
+            totalPowerGenerated += def.powerGenerate
             categoryBreakdown[def.category, default: 0] += 1
 
             if def.id == BuildingDefinition.warehouseOutletID {
@@ -243,7 +281,9 @@ class FactoryGridModel {
         }
 
         return ProductionStats(
-            totalPower: totalPower,
+            totalPower: totalPowerConsumed - totalPowerGenerated,
+            totalPowerConsumed: totalPowerConsumed,
+            totalPowerGenerated: totalPowerGenerated,
             buildingCount: layout.buildings.count,
             categoryBreakdown: categoryBreakdown,
             bottleneck: bottleneck,
