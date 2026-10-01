@@ -152,6 +152,7 @@ struct FactoryStatsView: View {
                     ForEach(stats.sinkStates) { sink in
                         noticeRow(icon: "tray.and.arrow.down.fill",
                                   text: sinkText(sink),
+                                  itemNames: sink.consumed.filter { $0.value > 1e-9 }.map(\.key).sorted(),
                                   color: Color(red: 0.4, green: 0.7, blue: 0.9))
                     }
 
@@ -207,11 +208,14 @@ struct FactoryStatsView: View {
 
     // MARK: - 子组件
 
-    private func noticeRow(icon: String, text: String, color: Color) -> some View {
+    private func noticeRow(icon: String, text: String, itemNames: [String] = [], color: Color) -> some View {
         HStack(spacing: 8) {
             Image(systemName: icon)
                 .font(.system(size: 11))
                 .foregroundColor(color)
+            ForEach(itemNames, id: \.self) { name in
+                ItemIcon(name: name, size: 20)
+            }
             Text(text)
                 .font(.system(size: 10, weight: .bold, design: .monospaced))
                 .foregroundColor(color)
@@ -281,6 +285,8 @@ struct FactoryStatsView: View {
             Circle()
                 .fill(Color(red: 0.4, green: 0.8, blue: 0.2).opacity(0.6))
                 .frame(width: 6, height: 6)
+
+            ItemIcon(name: line.output, size: 24)
 
             Text(line.output)
                 .font(.system(size: 12))

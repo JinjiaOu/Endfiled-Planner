@@ -11,6 +11,7 @@ struct SearchablePickerItem: Identifiable {
     let id: String
     let title: String
     var subtitle: String? = nil
+    var iconName: String? = nil
 }
 
 /// 全屏搜索选择弹窗：长列表（取货材料 170+ 个、多配方）用原生 Menu 很难点选，换成大行高 + 搜索框。
@@ -69,7 +70,7 @@ struct SearchablePickerSheet: View {
                 }
                 ForEach(filteredItems) { item in
                     let isSelected = multiSelect ? selectedIDs.contains(item.id) : item.id == selectedID
-                    row(title: item.title, subtitle: item.subtitle, isSelected: isSelected) {
+                    row(title: item.title, subtitle: item.subtitle, iconName: item.iconName, isSelected: isSelected) {
                         if multiSelect {
                             onToggle?(item.id)
                         } else {
@@ -124,7 +125,10 @@ struct SearchablePickerSheet: View {
                         Button {
                             activeChip = isOn ? nil : chip
                         } label: {
-                            Text(chip)
+                            HStack(spacing: 4) {
+                                ItemIcon(name: chip, size: 18)
+                                Text(chip)
+                            }
                                 .font(.system(size: 12, weight: .medium))
                                 .padding(.horizontal, 10).padding(.vertical, 6)
                                 .background(isOn ? accent : Color.white.opacity(0.1))
@@ -141,12 +145,15 @@ struct SearchablePickerSheet: View {
         .padding(.horizontal, 4).padding(.vertical, 6)
     }
 
-    private func row(title: String, subtitle: String?, isSelected: Bool, action: @escaping () -> Void) -> some View {
+    private func row(title: String, subtitle: String?, iconName: String? = nil, isSelected: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: 12) {
                 if multiSelect {
                     Image(systemName: isSelected ? "checkmark.square.fill" : "square")
                         .foregroundColor(isSelected ? accent : .white.opacity(0.3))
+                }
+                if let iconName {
+                    ItemIcon(name: iconName, size: 32)
                 }
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title)

@@ -649,10 +649,16 @@ struct FactoryLayoutView: View {
             Button {
                 showRecipeSheet = true
             } label: {
-                Label(
+                HStack(spacing: 4) {
+                    if let currentIndex, recipes.indices.contains(currentIndex),
+                       let output = recipes[currentIndex].outputs.first {
+                        ItemIcon(name: output.name, size: 20)
+                    }
+                    Label(
                     currentIndex.flatMap { recipes.indices.contains($0) ? recipes[$0].outputs.first?.name : nil } ?? "选择配方",
                     systemImage: "list.bullet.rectangle"
-                )
+                    )
+                }
                 .font(.system(size: 10, design: .monospaced))
                 .foregroundColor(Color(red: 0.4, green: 0.8, blue: 0.2))
             }
@@ -666,7 +672,8 @@ struct FactoryLayoutView: View {
                         return SearchablePickerItem(
                             id: String(idx),
                             title: "\(outputText)（\(recipe.time)s）",
-                            subtitle: recipeSubtitle(inputText: inputText, env: recipe.requiredEnv)
+                            subtitle: recipeSubtitle(inputText: inputText, env: recipe.requiredEnv),
+                            iconName: recipe.outputs.first?.name
                         )
                     },
                     selectedID: currentIndex.map(String.init),
@@ -706,7 +713,8 @@ struct FactoryLayoutView: View {
                             return SearchablePickerItem(
                                 id: String(idx),
                                 title: "\(outputText)（\(recipe.time)s）",
-                                subtitle: inputText.isEmpty ? nil : "原料：\(inputText)"
+                                subtitle: inputText.isEmpty ? nil : "原料：\(inputText)",
+                                iconName: recipe.outputs.first?.name
                             )
                         },
                         multiSelect: true,
@@ -736,7 +744,12 @@ struct FactoryLayoutView: View {
             }
             let internalItems = analysis.netItems.filter { abs($0.net) < 1e-9 }
             if !internalItems.isEmpty {
-                Text("内部循环：\(internalItems.map { $0.name }.joined(separator: "、"))（不占外部口）")
+                HStack(spacing: 3) {
+                    ForEach(internalItems, id: \.name) { item in
+                        ItemIcon(name: item.name, size: 18)
+                    }
+                    Text("内部循环：\(internalItems.map { $0.name }.joined(separator: "、"))（不占外部口）")
+                }
                     .font(.system(size: 9, design: .monospaced))
                     .foregroundColor(Color(red: 0.4, green: 0.7, blue: 0.9))
             }
@@ -744,7 +757,12 @@ struct FactoryLayoutView: View {
                 let text = analysis.externalInputs
                     .map { "\($0.name) \(String(format: "%.0f", -$0.net * 60))/min" }
                     .joined(separator: "、")
-                Text("外部输入：\(text)")
+                HStack(spacing: 3) {
+                    ForEach(analysis.externalInputs, id: \.name) { item in
+                        ItemIcon(name: item.name, size: 18)
+                    }
+                    Text("外部输入：\(text)")
+                }
                     .font(.system(size: 9, design: .monospaced))
                     .foregroundColor(.white.opacity(0.6))
             }
@@ -772,6 +790,7 @@ struct FactoryLayoutView: View {
         let isSolid = RecipeViewModel.isLikelySolid(item)
         let ports = outputPortsOfKind(def, isSolid: isSolid)
         HStack(spacing: 6) {
+            ItemIcon(name: item, size: 18)
             Text("输出：\(item) \(String(format: "%.0f", rate * 60))/min")
                 .font(.system(size: 9, design: .monospaced))
                 .foregroundColor(.white.opacity(0.7))
@@ -859,7 +878,10 @@ struct FactoryLayoutView: View {
             Button {
                 showMaterialSheet = true
             } label: {
-                Label(current ?? "选择材料", systemImage: "shippingbox.fill")
+                HStack(spacing: 4) {
+                    if let current { ItemIcon(name: current, size: 20) }
+                    Label(current ?? "选择材料", systemImage: "shippingbox.fill")
+                }
                     .font(.system(size: 10, design: .monospaced))
                     .foregroundColor(Color(red: 0.4, green: 0.8, blue: 0.2))
             }
@@ -867,7 +889,7 @@ struct FactoryLayoutView: View {
             .sheet(isPresented: $showMaterialSheet) {
                 SearchablePickerSheet(
                     title: "选择取货材料",
-                    items: vm.solidMaterials.map { SearchablePickerItem(id: $0, title: $0) },
+                    items: vm.solidMaterials.map { SearchablePickerItem(id: $0, title: $0, iconName: $0) },
                     selectedID: current,
                     clearTitle: "未设置",
                     onSelect: { material in
