@@ -791,7 +791,7 @@ struct FactoryLayoutView: View {
         let ports = outputPortsOfKind(def, isSolid: isSolid)
         HStack(spacing: 6) {
             ItemIcon(name: item, size: 18)
-            Text("选择输出产物：\(item) \(String(format: "%.0f", rate * 60))/min")
+            Text("输出：\(item) \(String(format: "%.0f", rate * 60))/min")
                 .font(.system(size: 9, design: .monospaced))
                 .foregroundColor(.white.opacity(0.7))
             if ports.count > 1 {
@@ -800,7 +800,7 @@ struct FactoryLayoutView: View {
                     Button {
                         vm.setOutputPortAssignment(item: item, portIndex: portIdx, for: placedID)
                     } label: {
-                        Text("更换（口\(seq + 1)）")
+                        Text("口\(seq + 1)")
                             .font(.system(size: 9, weight: .bold, design: .monospaced))
                             .padding(.horizontal, 6).padding(.vertical, 2)
                             .background(current == portIdx ? Color(red: 0.4, green: 0.8, blue: 0.2) : Color.white.opacity(0.12))

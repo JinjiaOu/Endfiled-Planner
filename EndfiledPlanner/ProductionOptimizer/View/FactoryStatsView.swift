@@ -61,7 +61,7 @@ struct FactoryStatsView: View {
                         )
                         Divider().overlay(Color.white.opacity(0.1))
                         statBox(
-                            title: "净耗电功率值",
+                            title: "净功率",
                             value: String(format: "%.1f", stats.totalPower),
                             unit: "MW",
                             color: Color(red: 0.9, green: 0.5, blue: 0.2)
@@ -129,7 +129,7 @@ struct FactoryStatsView: View {
                     // 有发电建筑（协议核心/热能池等）时才展开显示耗电/发电两个分项，没有就不用刷这行存在感
                     if stats.totalPowerGenerated > 0 {
                         noticeRow(icon: "bolt.horizontal.fill",
-                                  text: String(format: "耗电 %.1f MW，发电 %.1f MW（净耗电功率值已经是抵消后的数字）",
+                                  text: String(format: "耗电 %.1f MW，发电 %.1f MW（净功率已经是抵消后的数字）",
                                                stats.totalPowerConsumed, stats.totalPowerGenerated),
                                   color: Color(red: 1.0, green: 0.8, blue: 0.0))
                     }
