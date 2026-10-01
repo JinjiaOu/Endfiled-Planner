@@ -81,9 +81,9 @@ enum FlowSimulator {
 
         var label: String {
             switch self {
-            case .running:  return "运行中"
+            case .running:  return "生产中"
             case .starved:  return "原料不足"
-            case .blocked:  return "出口堵塞"
+            case .blocked:  return "阻塞"
             case .inactive: return "未激活"
             case .noRecipe: return "未设置"
             }

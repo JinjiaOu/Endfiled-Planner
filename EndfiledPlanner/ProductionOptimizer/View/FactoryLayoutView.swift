@@ -54,20 +54,20 @@ private struct FactoryAlertsModifier: ViewModifier {
             }
             // 删除建筑确认
             .alert(
-                vm.pendingEraseBuilding.map { "删除 \($0.def.name)？" } ?? "删除建筑",
+                vm.pendingEraseBuilding.map { "收纳 \($0.def.name)？" } ?? "收纳",
                 isPresented: Binding(
                     get: { vm.pendingEraseBuilding != nil },
                     set: { if !$0 { vm.cancelErase() } }
                 )
             ) {
                 Button("取消", role: .cancel) { vm.cancelErase() }
-                Button("删除", role: .destructive) { vm.confirmEraseBuilding() }
+                Button("收纳", role: .destructive) { vm.confirmEraseBuilding() }
             } message: {
                 Text("此操作不可撤销。")
             }
             // 协议核心不让删的提示
             .alert(
-                "无法删除",
+                "无法收纳",
                 isPresented: Binding(
                     get: { vm.eraseBlockedMessage != nil },
                     set: { if !$0 { vm.eraseBlockedMessage = nil } }
@@ -602,7 +602,7 @@ struct FactoryLayoutView: View {
                 Text(def.name).font(.system(size: 14, weight: .bold)).foregroundColor(.white)
                 HStack(spacing: 10) {
                     if def.powerUsage > 0 {
-                        Label(String(format: "%.1fMW", def.powerUsage), systemImage: "bolt.fill")
+                        Label(String(format: "耗电功率值 %.1fMW", def.powerUsage), systemImage: "bolt.fill")
                             .font(.system(size: 10, design: .monospaced))
                             .foregroundColor(Color(red: 0.9, green: 0.5, blue: 0.2))
                     }
@@ -655,7 +655,7 @@ struct FactoryLayoutView: View {
                         ItemIcon(name: output.name, size: 20)
                     }
                     Label(
-                    currentIndex.flatMap { recipes.indices.contains($0) ? recipes[$0].outputs.first?.name : nil } ?? "选择配方",
+                    currentIndex.flatMap { recipes.indices.contains($0) ? recipes[$0].outputs.first?.name : nil } ?? "配方一览",
                     systemImage: "list.bullet.rectangle"
                     )
                 }
@@ -665,7 +665,7 @@ struct FactoryLayoutView: View {
             .buttonStyle(.plain)
             .sheet(isPresented: $showRecipeSheet) {
                 SearchablePickerSheet(
-                    title: "选择配方",
+                    title: "配方一览",
                     items: recipes.enumerated().map { idx, recipe in
                         let outputText = recipe.outputs.map { "\($0.name)×\($0.count)" }.joined(separator: " + ")
                         let inputText = recipe.inputs.map { "\($0.name)×\($0.count)" }.joined(separator: " + ")
@@ -677,7 +677,7 @@ struct FactoryLayoutView: View {
                         )
                     },
                     selectedID: currentIndex.map(String.init),
-                    clearTitle: "不选择配方",
+                    clearTitle: "不设置配方",
                     onSelect: { id in
                         vm.selectRecipe(id.flatMap(Int.init), for: placedID)
                     },
@@ -698,7 +698,7 @@ struct FactoryLayoutView: View {
                 Button {
                     showRecipeSheet = true
                 } label: {
-                    Label(selectedIndices.isEmpty ? "勾选配方（可多选）" : "已勾选 \(selectedIndices.count) 条配方",
+                    Label(selectedIndices.isEmpty ? "配方一览（可多选）" : "已勾选 \(selectedIndices.count) 条配方",
                           systemImage: "list.bullet.rectangle.fill")
                         .font(.system(size: 10, design: .monospaced))
                         .foregroundColor(Color(red: 0.4, green: 0.8, blue: 0.2))
@@ -706,7 +706,7 @@ struct FactoryLayoutView: View {
                 .buttonStyle(.plain)
                 .sheet(isPresented: $showRecipeSheet) {
                     SearchablePickerSheet(
-                        title: "勾选配方",
+                        title: "配方一览",
                         items: recipes.enumerated().map { idx, recipe in
                             let outputText = recipe.outputs.map { "\($0.name)×\($0.count)" }.joined(separator: " + ")
                             let inputText = recipe.inputs.map { "\($0.name)×\($0.count)" }.joined(separator: " + ")
@@ -791,7 +791,7 @@ struct FactoryLayoutView: View {
         let ports = outputPortsOfKind(def, isSolid: isSolid)
         HStack(spacing: 6) {
             ItemIcon(name: item, size: 18)
-            Text("输出：\(item) \(String(format: "%.0f", rate * 60))/min")
+            Text("选择输出产物：\(item) \(String(format: "%.0f", rate * 60))/min")
                 .font(.system(size: 9, design: .monospaced))
                 .foregroundColor(.white.opacity(0.7))
             if ports.count > 1 {
@@ -800,7 +800,7 @@ struct FactoryLayoutView: View {
                     Button {
                         vm.setOutputPortAssignment(item: item, portIndex: portIdx, for: placedID)
                     } label: {
-                        Text("口\(seq + 1)")
+                        Text("更换（口\(seq + 1)）")
                             .font(.system(size: 9, weight: .bold, design: .monospaced))
                             .padding(.horizontal, 6).padding(.vertical, 2)
                             .background(current == portIdx ? Color(red: 0.4, green: 0.8, blue: 0.2) : Color.white.opacity(0.12))
