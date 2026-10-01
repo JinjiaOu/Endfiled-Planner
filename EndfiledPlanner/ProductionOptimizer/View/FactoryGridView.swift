@@ -358,6 +358,8 @@ struct FactoryGridView: View {
         let x = CGFloat(placed.origin.col) * cellSize
         let y = CGFloat(placed.origin.row) * cellSize
         let isSelected = placed.id == vm.selectedBuildingID
+        let machineStatus = vm.stats.machineStates.first { $0.id == placed.id }?.status
+        let displayedStatus = placed.isActive ? machineStatus : .inactive
 
         // 仓库取货口/存货口这类只有 1 格厚的长条形建筑，塞不下竖排的图标+名字+材料+朝向
         // 四行文字（超出边框但没裁切，看着就像"整个建筑变大了一圈"），改成横向紧凑排布
@@ -422,17 +424,38 @@ struct FactoryGridView: View {
             if isSelected {
                 VStack {
                     HStack {
-                        Spacer()
                         Circle().fill(Color(red: 1.0, green: 0.8, blue: 0.0))
                             .frame(width: 8, height: 8).padding(4)
+                        Spacer()
                     }
                     Spacer()
                 }
             }
         }
         .frame(width: w, height: h)
+        .overlay(alignment: .topTrailing) {
+            if let displayedStatus {
+                Circle()
+                    .fill(statusColor(displayedStatus))
+                    .overlay(Circle().stroke(Color.black.opacity(0.5), lineWidth: 1))
+                    .frame(width: 8, height: 8)
+                    .padding(4)
+                    .accessibilityLabel(displayedStatus.label)
+                    .allowsHitTesting(false)
+            }
+        }
+        .opacity(placed.isActive ? 1 : 0.45)
         .clipped()
         .offset(x: x, y: y)
+    }
+
+    private func statusColor(_ status: FlowSimulator.MachineStatus) -> Color {
+        switch status {
+        case .running: return .green
+        case .blocked: return .red
+        case .starved: return .orange
+        case .inactive, .noRecipe: return .gray
+        }
     }
 
     // MARK: - 端口标记层：每个入口/出口在建筑边缘画一个小圆点，接上线是实心，没接是空心
