@@ -37,7 +37,7 @@ PROTOCOL_CORE = 'sp_hub_1'
 BRIDGES = {'item': 'log_connector', 'pipe': 'log_pipe_connector'}
 MULTI_RECIPE = {'mix_pool_1', 'mix_pool_2'}
 CATEGORY_KIND = {'基础生产': 'production', '合成制造': 'synthesis', '资源开采': 'extraction',
-                 '物流': 'logistics', '仓储存取': 'storage', '电力供应': 'power', '核心': 'hub'}
+                 '物流': 'logistics', '仓储存取': 'storage', '电力': 'power', '核心': 'hub'}
 
 
 def opposite(d):
@@ -58,6 +58,9 @@ def _load():
 
 
 DEVICES_RAW, RECIPES_RAW, ITEMS_RAW = _load()
+FUELS = {f['name']: f for f in json.loads((OTHER / 'fuels.json').read_text())['fuels']}
+POWER_STATION = 'power_station_1'
+DIFFUSER = 'power_diffuser_1'
 ITEM_BY_NAME = {i['name']: i for i in ITEMS_RAW}
 ITEM_BY_ID = {i['itemId']: i for i in ITEMS_RAW}
 RECIPE_BY_ID = {r['id']: r for r in RECIPES_RAW}
@@ -84,6 +87,7 @@ class Device:
         self.w, self.h = raw['size']['width'], raw['size']['depth']
         self.power = raw.get('powerConsume') or 0
         self.power_gen = raw.get('powerGenerate') or 0
+        self.power_range = raw.get('powerRange')
         self.ports = []
         for i, p in enumerate(raw.get('ports') or []):
             flow = _deg_to_dir(p['rotation']['y'])
@@ -444,6 +448,35 @@ class Layout:
             assert cell not in occ, f'桥的位置被建筑占了 {cell}'
             self.buildings.append(b)
 
+    def place_diffusers(self, region=None):
+        """贪心摆供电桩：每次挑一个能覆盖最多"耗电 > 0 且还没通电"建筑的空位（不压建筑、不压线），
+        直到全部通电。region=(x0, x1, y0, y1) 限定候选范围。返回放了几个"""
+        dev = DEVICES[DIFFUSER]
+        line_cells = {c for belt in self.belts for c in belt['cells']}
+        placed = 0
+        while True:
+            need = [b for b in self.buildings if b.device.power > 0 and not covered(self, b)]
+            if not need:
+                return placed
+            occ = self.occupied()
+            best = None
+            x0, x1, y0, y1 = region or (0, GRID_COLS - 2, 0, GRID_ROWS - 2)
+            for y in range(y0, y1 + 1):
+                for x in range(x0, x1 + 1):
+                    cells = [(x, y), (x + 1, y), (x, y + 1), (x + 1, y + 1)]
+                    if any(c in occ or c in line_cells for c in cells):
+                        continue
+                    if not all(0 <= c[0] < GRID_COLS and 0 <= c[1] < GRID_ROWS for c in cells):
+                        continue
+                    bd = (x, x + 1, y, y + 1)
+                    n = sum(1 for b in need if _overlap(bd, dev.power_range, b.bounds()))
+                    if n and (best is None or n > best[0]):
+                        best = (n, x, y)
+            if best is None:
+                raise PlacementError(f'{self.name}: 供电桩放不下，还有 {len(need)} 个建筑没通电: {[b.label for b in need][:5]}')
+            self.place(DIFFUSER, best[1], best[2], UP, label='供电桩')
+            placed += 1
+
     # MARK: 导出
     def to_json(self):
         ns = uuid.uuid5(uuid.NAMESPACE_URL, f'endfield-planner/preset/{self.name}')
@@ -533,6 +566,9 @@ class _Node:
         self.conditioner_scale = 1.0
         self.active_env = None
         self.consumed = {}
+        self.unpowered = False
+        self.generated = 0.0
+        self.fuel = None
 
 
 ROUTER_KINDS = {'splitter', 'converger', 'bridge', 'conditioner'}
@@ -544,7 +580,7 @@ def _node_kind(dev):
                'log_converger': 'converger', 'log_pipe_converger': 'converger',
                'log_connector': 'bridge', 'log_pipe_connector': 'bridge',
                'log_conditioner': 'conditioner', 'log_pipe_conditioner': 'conditioner',
-               'vaporizer_1': 'vaporizer'}
+               'vaporizer_1': 'vaporizer', POWER_STATION: 'generator'}
     if dev.id in special:
         return special[dev.id]
     return 'machine' if dev.category in ('production', 'synthesis', 'extraction') else 'ignored'
@@ -559,6 +595,15 @@ def net_flows(recipe_list):
         for o in r['outcomes']:
             net[o['name']] = net.get(o['name'], 0) + o['count'] / s
     return net
+
+
+def _overlap(a, e, b):
+    """b 的范围是否跟 a 向四周扩 e 格后的范围重叠（bounds = (x0, x1, y0, y1)）"""
+    return a[1] >= b[0] - e and a[0] <= b[1] + e and a[3] >= b[2] - e and a[2] <= b[3] + e
+
+
+def covered(layout, b):
+    return any(_overlap(d.bounds(), d.device.power_range, b.bounds()) for d in layout.buildings if d.device.power_range)
 
 
 def simulate(layout, max_iter=400, eps=1e-7):
@@ -596,6 +641,11 @@ def simulate(layout, max_iter=400, eps=1e-7):
             cap = PIPE_CAP if b.device.id == 'log_pipe_conditioner' else BELT_CAP
             n.conditioner_limit = min(cap, max(b.flow_limit, 0) / 60) if b.flow_limit is not None else cap
         nodes.append(n)
+
+    diffusers = [(n.bounds, n.b.device.power_range) for n in nodes if n.b.device.power_range]
+    for n in nodes:
+        if n.b.device.power > 0:
+            n.unpowered = not any(_overlap(bd, r, n.bounds) for bd, r in diffusers)
 
     links = []
     out_ext, in_ext, in_cell = {}, {}, {}
@@ -647,7 +697,7 @@ def simulate(layout, max_iter=400, eps=1e-7):
             producers.append(i)
         elif n.kind == 'vaporizer':
             vaporizers.append(i)
-        elif n.kind in ('loader', 'cleaner', 'ignored'):
+        elif n.kind in ('loader', 'cleaner', 'generator', 'ignored'):
             terminals.append(i)
     routers = [i for i, n in enumerate(nodes) if n.kind in ROUTER_KINDS]
     indeg = {r: 0 for r in routers}
@@ -729,6 +779,9 @@ def simulate(layout, max_iter=400, eps=1e-7):
         if n.required_env and not env_ok(n, n.required_env):
             t = 0
             n.gate_note = f'需要{n.required_env}环境'
+        if n.unpowered:
+            t = 0
+            n.gate_note = '未通电'
         if n.activator_item:
             rate = act.get(n.activator_item, 0)
             ok = n.activator_port is not None and rate >= ACTIVATOR_NEED - 1e-9
@@ -829,6 +882,23 @@ def simulate(layout, max_iter=400, eps=1e-7):
                     for item, v in links[li].flow.items():
                         links[li].pass_flow[item] = 1
                         n.consumed[item] = n.consumed.get(item, 0) + v
+            elif n.kind == 'generator':
+                arr = {}
+                for li in in_links(n):
+                    for item, v in links[li].flow.items():
+                        arr[item] = arr.get(item, 0) + v
+                cands = [(FUELS[k], v) for k, v in arr.items() if v > 1e-9 and k in FUELS]
+                best = max(cands, key=lambda x: x[0]['powerProvide']) if cands else None
+                n.fuel, n.generated = None, 0.0
+                if best:
+                    need = 1 / best[0]['secondsPerItem']
+                    n.fuel = best[0]['name']
+                    n.generated = best[0]['powerProvide'] * min(1, best[1] / need)
+                for li in in_links(n):
+                    for item in links[li].flow:
+                        links[li].pass_flow[item] = min(1, (1 / best[0]['secondsPerItem']) / best[1]) if best and item == best[0]['name'] else 0
+            elif n.kind == 'cleaner' and n.unpowered:
+                pass
             elif n.kind == 'cleaner':
                 for li in in_links(n):
                     acc = sum(v for k, v in links[li].flow.items() if k in CLEANER_ACCEPTED)
@@ -905,6 +975,10 @@ def simulate(layout, max_iter=400, eps=1e-7):
             machines.append({'b': n.b, 'status': 'running' if n.active_env else 'inactive', 'throttle': 1 if n.active_env else 0,
                              'detail': n.active_env or n.gate_note, 'outputs': {}})
     sinks = [{'b': n.b, 'consumed': {k: v * 60 for k, v in n.consumed.items()}} for n in nodes if n.kind in ('loader', 'cleaner')]
+    unpowered = [n.b.label for n in nodes if n.unpowered]
+    generated = sum(n.generated for n in nodes if n.kind == 'generator') + sum(n.b.device.power_gen for n in nodes if n.b.device.id == PROTOCOL_CORE)
+    consumed = sum(n.b.device.power for n in nodes if not n.unpowered)
+    generators = [(n.b.label, n.fuel, round(n.generated, 1)) for n in nodes if n.kind == 'generator']
 
     # 每条线实际接到了哪里（用于核对布线意图）
     link_report = []
@@ -912,7 +986,8 @@ def simulate(layout, max_iter=400, eps=1e-7):
         ok = (link is not None and nodes[link.from_node].b is belt['from'][0]
               and link.to_node >= 0 and nodes[link.to_node].b is belt['to'][0])
         link_report.append((belt, ok, link))
-    return {'machines': machines, 'sinks': sinks, 'converged': converged, 'links': link_report}
+    return {'machines': machines, 'sinks': sinks, 'converged': converged, 'links': link_report,
+            'unpowered': unpowered, 'power': (consumed, generated), 'generators': generators}
 
 
 def report(layout, sim, expect_partial=()):
@@ -930,8 +1005,14 @@ def report(layout, sim, expect_partial=()):
         print(f'  {tag}: {r}')
     for s in sim['sinks']:
         print('  sink', s['b'].label, {k: round(v, 2) for k, v in s['consumed'].items()})
-    power = sum(b.device.power for b in layout.buildings)
-    gen = sum(b.device.power_gen for b in layout.buildings)
+    power, gen = sim['power']
     print(f'  converged={sim["converged"]} machines={len(rows)} buildings={len(layout.buildings)} '
-          f'belts={len(layout.belts)} bridges={len(layout.bridges)} power={power}MW gen={gen}MW')
-    return bad_links, [r for r in not_full if r[0] not in expect_partial]
+          f'belts={len(layout.belts)} bridges={len(layout.bridges)} 耗电={power}MW 发电={round(gen, 1)}MW {sim["generators"]}')
+    problems = [r for r in not_full if r[0] not in expect_partial]
+    if sim['unpowered']:
+        print('  UNPOWERED', sim['unpowered'])
+        problems.append(('unpowered', sim['unpowered']))
+    if gen + 1e-6 < power:
+        print('  POWER SHORTAGE', power - gen)
+        problems.append(('shortage', power - gen))
+    return bad_links, problems

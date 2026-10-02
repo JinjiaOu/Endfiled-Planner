@@ -26,6 +26,15 @@ from presetlib import UP, RIGHT, DOWN, LEFT
 #             一台满载出 3 条，另一台只接 2 条出口，跑 2/3（比例本身凑不成整数，这是唯一不满载的机器）
 # 整体从上往下流：取货口全在上边，机器都朝下（入口在上、出口在下），成品走左边存货口
 
+def pick_fuel(L, extra=0):
+    """一台热能池：挑发电量最低、但跟协议核心加起来够全图耗电的那档燃料"""
+    need = sum(b.device.power for b in L.buildings) + extra - P.DEVICES[P.PROTOCOL_CORE].power_gen
+    for fuel in sorted(P.FUELS.values(), key=lambda f: f['powerProvide']):
+        if fuel['powerProvide'] >= need:
+            return fuel['name']
+    raise P.PlacementError(f'{L.name}: 一台热能池不够，缺 {need}MW')
+
+
 def build_valley4():
     L = P.Layout('valley4_battery', 'valley4')
 
@@ -104,8 +113,15 @@ def build_valley4():
     feed(packer, (18, 37), inlet, (0, 41))
 
     L.place('sp_hub_1', 45, 20, UP, label='协议核心')
+
+    # 电力：热能池紧贴上边一个取货口（燃料 1 格直连），再自动补供电桩
+    fuel = pick_fuel(L)
+    fuel_out = outlet(40, fuel)
+    station = L.place('power_station_1', 41, 2, DOWN, label=f'热能池·{fuel}')
+    feed(fuel_out, (41, 0), station, (41, 2))
+    L.place_diffusers()
     L.finish()
-    return L, {'粉碎机·砂叶粉末(2/3)', '取货口·砂叶'}
+    return L, {'粉碎机·砂叶粉末(2/3)', '取货口·砂叶'} | {f'取货口·{f}' for f in P.FUELS}
 
 
 def build_wuling():
@@ -117,7 +133,7 @@ def build_wuling():
     if f:
         print('  武陵布线失败:', layout.failures)
     partial = {'水泵·清水(半载)', '二型耐酸水泵·液化息壤(激活)', '二型耐酸水泵·沉积酸', '液气转化机·酸气',
-               '气体收集泵·息壤气', '气体收集泵·息壤气(激活)', '气体收集泵·惰气'}
+               '气体收集泵·息壤气', '气体收集泵·息壤气(激活)', '气体收集泵·惰气'} | {f'取货口·{f}' for f in P.FUELS}
     return layout, partial
 
 

@@ -25,6 +25,7 @@ enum BuildingParser {
         let powerConsume: Double?   // 物流网络节点（分流器/传送带本身等）没有这个字段
         let powerGenerate: Double?  // 只有协议核心、热能池这类真正的发电建筑才有，绝大多数记录没有这个字段
         let ports: [DevicePort]?
+        let powerRange: Int?        // 只有供电桩有：供电范围（本体向四周各扩几格）
     }
 
     private struct DeviceSize: Codable {
@@ -53,9 +54,12 @@ enum BuildingParser {
         "仓储存取": .storage,
         "基础生产": .production,
         "合成制造": .synthesis,
-        "电力供应": .power,
+        "电力": .power,
         "核心": .hub,
     ]
+
+    /// 中继器只负责远距离连线，这个项目不做电网连线（所有供电桩视为同一张电网），直接不导入
+    private static let hiddenDeviceIDs: Set<String> = ["power_pole_2", "power_pole_3"]
 
     static func loadAll() -> [BuildingDefinition] {
         guard let url = Bundle.main.url(forResource: "devices", withExtension: "json") else {
@@ -73,7 +77,7 @@ enum BuildingParser {
     }
 
     private static func parseDevice(_ device: DeviceRecord) -> BuildingDefinition? {
-        guard let category = categoryMap[device.categoryName] else { return nil }
+        guard let category = categoryMap[device.categoryName], !hiddenDeviceIDs.contains(device.id) else { return nil }
         // 传送带/管道本身是 0x0x0 的占位记录（真正的线用现有拖拽绘制系统画），
         // 排除掉这两条；分流器/汇流器/物流桥这些是有真实占地的建筑，要保留
         guard device.size.width > 0, device.size.depth > 0 else { return nil }
@@ -88,7 +92,8 @@ enum BuildingParser {
             size: size,
             powerUsage: device.powerConsume ?? 0,
             powerGenerate: device.powerGenerate ?? 0,
-            ports: ports
+            ports: ports,
+            powerRange: device.powerRange
         )
     }
 

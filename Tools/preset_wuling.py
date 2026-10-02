@@ -105,7 +105,7 @@ def build(mv=None, soft=True, first_nets=None):
     # ===== 固定：下方赤铜矿仓库线 + 精炼炉模块 =====
     s1 = place('log_hongs_bus_source', 8, 44); s2 = place('log_hongs_bus_source', 32, 44); place('log_hongs_bus_source', 44, 44)
     g1 = place('log_hongs_bus', 0, 44, RIGHT); g2 = place('log_hongs_bus', 12, 44, RIGHT)
-    g3 = place('log_hongs_bus', 24, 44, RIGHT); place('log_hongs_bus', 36, 44, RIGHT); g5 = place('log_hongs_bus', 48, 44, RIGHT)
+    g3 = place('log_hongs_bus', 24, 44, RIGHT); g4 = place('log_hongs_bus', 36, 44, RIGHT); g5 = place('log_hongs_bus', 48, 44, RIGHT)
     xs = [1, 9, 17, 25, 33, 47]
     furn, furn_docks = [], []
     for x, (seg, off) in zip(xs, [(g1, 0), (s1, 1), (g2, 5), (g3, 1), (s2, 1), (g5, 0)]):
@@ -121,6 +121,11 @@ def build(mv=None, soft=True, first_nets=None):
     C5 = place('liquid_cleaner_1', 43, 38, label='废水处理机·惰性壤晶废液')
     C6 = place('liquid_cleaner_1', 57, 38, label='废水处理机·惰性壤晶废液')
     place('sp_hub_1', 50, 19, label='协议核心')
+    # 电力：热能池贴着下方仓库线，燃料从基段上的取货口直接送进去
+    import gen_presets
+    fuel = gen_presets.pick_fuel(L, extra=sum(P.DEVICES[v[0]].power for v in mv.values()))
+    fuel_out = L.dock('unloader_1', g4, UP, 0, material=fuel, label=f'取货口·{fuel}')
+    station = place('power_station_1', 39, 41, RIGHT, label=f'热能池·{fuel}')
 
     # ===== 可调的辅助机器 =====
     m = {name: mplace(name) for name in MOVABLE}
@@ -140,6 +145,8 @@ def build(mv=None, soft=True, first_nets=None):
 
     def add(fn, *args, **kw):
         nets.append((fn, args, kw))
+
+    add(conn, fuel_out, station)
 
     # ===== 布线：先紧贴的，再主干，再辅助 =====
     for o, ov in oven_docks:
@@ -194,6 +201,10 @@ def build(mv=None, soft=True, first_nets=None):
             failed.append(i)
     L.failed_nets = failed
     if not bad:
+        try:
+            L.place_diffusers()
+        except P.PlacementError as e:
+            L.failures.append(str(e))
         L.finish()
     return L, bad
 

@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "source": "EndfieldData/TableCfg",
+  "language": "zh-CN",
+  "fuels": [
+    {
+      "itemId": "item_originium_ore",
+      "name": "源矿",
+      "powerProvide": 50,
+      "secondsPerItem": 8.0
+    },
+    {
+      "itemId": "item_proc_battery_1",
+      "name": "低容谷地电池",
+      "powerProvide": 220,
+      "secondsPerItem": 40.0
+    },
+    {
+      "itemId": "item_proc_battery_2",
+      "name": "中容谷地电池",
+      "powerProvide": 420,
+      "secondsPerItem": 40.0
+    },
+    {
+      "itemId": "item_proc_battery_3",
+      "name": "高容谷地电池",
+      "powerProvide": 1100,
+      "secondsPerItem": 40.0
+    },
+    {
+      "itemId": "item_proc_battery_4",
+      "name": "低容武陵电池",
+      "powerProvide": 1600,
+      "secondsPerItem": 40.0
+    },
+    {
+      "itemId": "item_proc_battery_5",
+      "name": "中容武陵电池",
+      "powerProvide": 3200,
+      "secondsPerItem": 40.0
+    }
+  ]
+}

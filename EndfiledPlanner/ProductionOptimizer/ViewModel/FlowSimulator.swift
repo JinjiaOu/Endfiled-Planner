@@ -111,9 +111,24 @@ enum FlowSimulator {
         let consumed: [String: Double]
     }
 
+    /// 热能池：按实际到货的燃料算发电量
+    struct GeneratorState: Identifiable {
+        let id: UUID
+        let name: String
+        /// 正在烧的燃料（有多种到货时烧发电最高的那种），nil = 没有燃料
+        let fuel: String?
+        /// 实际发电（MW）：燃料发电量 × 到货满足度
+        let power: Double
+        /// 燃料到货满足度 0~1
+        let fuelRatio: Double
+    }
+
     struct Result {
         var machines: [MachineState] = []
         var sinks: [SinkState] = []
+        var generators: [GeneratorState] = []
+        /// 需要供电但不在任何供电桩范围内的建筑
+        var unpoweredIDs: Set<UUID> = []
         var converged = true
         var iterations = 0
 
@@ -132,7 +147,7 @@ enum FlowSimulator {
 private enum NodeKind {
     case machine, unloader, loader, cleaner
     case splitter, converger, bridge, conditioner
-    case vaporizer, ignored
+    case vaporizer, generator, ignored
 
     var isRouter: Bool {
         self == .splitter || self == .converger || self == .bridge || self == .conditioner
@@ -185,6 +200,11 @@ private final class Node {
     var conditionerScale = 1.0
     var activeEnv: String? = nil
     var consumed: [String: Double] = [:]
+    /// 需要供电但不在供电桩范围内：不运行
+    var unpowered = false
+    var generated = 0.0
+    var generatorFuel: String? = nil
+    var fuelRatio = 0.0
 
     init(placed: PlacedBuilding, def: BuildingDefinition, kind: NodeKind, ports: [PortInfo]) {
         self.placed = placed
@@ -231,6 +251,7 @@ private final class Engine {
 
     init(layout: FactoryLayout, recipesFor: (BuildingDefinition) -> [Recipe]) {
         buildNodes(layout: layout, recipesFor: recipesFor)
+        markPowerCoverage()
         buildLinks(layout: layout)
         classifyNodes()
     }
@@ -247,6 +268,7 @@ private final class Engine {
         case "log_connector", "log_pipe_connector": return .bridge
         case "log_conditioner", "log_pipe_conditioner": return .conditioner
         case "vaporizer_1":                        return .vaporizer
+        case "power_station_1":                    return .generator
         default:
             switch def.category {
             case .production, .synthesis, .extraction: return .machine
@@ -310,6 +332,15 @@ private final class Engine {
             }
         default:
             break
+        }
+    }
+
+    /// 供电：所有供电桩视为同一张电网，建筑本体只要跟任一供电桩的范围（本体向四周扩 powerRange 格）有重叠就算通电。
+    /// 协议核心和热能池只发电，自己不带供电范围
+    private func markPowerCoverage() {
+        let diffusers = nodes.compactMap { node in node.def.powerRange.map { (node.bounds, $0) } }
+        for node in nodes where node.def.needsPower {
+            node.unpowered = !diffusers.contains { bounds, range in bounds.overlaps(node.bounds, expandedBy: range) }
         }
     }
 
@@ -380,7 +411,7 @@ private final class Engine {
                 producers.append(i)
             case .vaporizer:
                 vaporizers.append(i)
-            case .loader, .cleaner, .ignored:
+            case .loader, .cleaner, .generator, .ignored:
                 terminals.append(i)
             default:
                 break
@@ -597,7 +628,10 @@ private final class Engine {
                     node.consumed[item, default: 0] += value
                 }
             }
+        case .generator:
+            evaluateGenerator(node)
         case .cleaner:
+            guard !node.unpowered else { break }   // 没通电什么都不收，上游被堵住
             for li in inputLinks(node) {
                 let accepted = links[li].flow.filter { FlowSimulator.cleanerAccepted.contains($0.key) }.values.reduce(0, +)
                 let fraction = accepted > 0 ? min(1, FlowSimulator.cleanerRate / accepted) : 1
@@ -634,6 +668,10 @@ private final class Engine {
             t = 0
             node.gateNote = "需要\(env)环境（附近 \(FlowSimulator.vaporizerRange) 格内要有气体散布机供气）"
         }
+        if node.unpowered {
+            t = 0
+            node.gateNote = "未通电（不在供电桩范围内）"
+        }
         var activatorOK = true
         if let item = node.activatorItem {
             let rate = activatorArrival[item] ?? 0
@@ -662,6 +700,36 @@ private final class Engine {
         }
     }
 
+    /// 热能池同一时间只烧一种燃料：到货里挑发电量最高的那种，按"到货 / 满烧需要量"折算发电；其它燃料堵住不收
+    private func evaluateGenerator(_ node: Node) {
+        var arrivals: [String: Double] = [:]
+        for li in inputLinks(node) {
+            for (item, value) in links[li].flow { arrivals[item, default: 0] += value }
+        }
+        let best = arrivals.compactMap { item, rate -> (FuelInfo, Double)? in
+            guard rate > 1e-9, let fuel = FuelCatalog.byName[item] else { return nil }
+            return (fuel, rate)
+        }.max { $0.0.powerProvide < $1.0.powerProvide }
+        node.generatorFuel = best?.0.name
+        node.fuelRatio = 0
+        node.generated = 0
+        if let best {
+            let need = 1 / best.0.secondsPerItem
+            node.fuelRatio = min(1, best.1 / need)
+            node.generated = best.0.powerProvide * node.fuelRatio
+            node.consumed[best.0.name] = min(best.1, need)
+        }
+        for li in inputLinks(node) {
+            for item in links[li].flow.keys {
+                if let best, item == best.0.name {
+                    links[li].passFlow[item] = min(1, (1 / best.0.secondsPerItem) / best.1)
+                } else {
+                    links[li].passFlow[item] = 0
+                }
+            }
+        }
+    }
+
     // MARK: 运行与结果
 
     func run() -> FlowSimulator.Result {
@@ -678,6 +746,7 @@ private final class Engine {
 
     private func makeResult() -> FlowSimulator.Result {
         var result = FlowSimulator.Result()
+        result.unpoweredIDs = Set(nodes.filter { $0.unpowered }.map { $0.placed.id })
         for node in nodes {
             switch node.kind {
             case .machine, .unloader:
@@ -718,6 +787,10 @@ private final class Engine {
                     outputs: [:], inputs: gas.map { [$0: FlowSimulator.activatorNeed] } ?? [:], isWarehouseOutlet: false))
             case .loader, .cleaner:
                 result.sinks.append(FlowSimulator.SinkState(id: node.placed.id, name: node.def.name, consumed: node.consumed))
+            case .generator:
+                result.generators.append(FlowSimulator.GeneratorState(
+                    id: node.placed.id, name: node.def.name, fuel: node.generatorFuel,
+                    power: node.generated, fuelRatio: node.fuelRatio))
             default:
                 break
             }

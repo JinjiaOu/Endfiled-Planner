@@ -3796,7 +3796,8 @@
       "modes": [],
       "activationRequirements": [],
       "ports": [],
-      "sourceTable": "FactoryBuildingTable.json"
+      "sourceTable": "FactoryBuildingTable.json",
+      "powerRange": 5
     },
     {
       "id": "power_diffuser_2",
@@ -3821,7 +3822,8 @@
       "modes": [],
       "activationRequirements": [],
       "ports": [],
-      "sourceTable": "FactoryBuildingTable.json"
+      "sourceTable": "FactoryBuildingTable.json",
+      "powerRange": 5
     },
     {
       "id": "power_pole_2",
@@ -3871,7 +3873,8 @@
       "modes": [],
       "activationRequirements": [],
       "ports": [],
-      "sourceTable": "FactoryBuildingTable.json"
+      "sourceTable": "FactoryBuildingTable.json",
+      "powerRange": 2
     },
     {
       "id": "power_station_1",

@@ -520,6 +520,103 @@
   },
   {
    "id": "830C9C43-AC2B-5F45-BAAB-B7799256A7C0",
+   "definitionID": "unloader_1",
+   "origin": {
+    "col": 40,
+    "row": 0
+   },
+   "rotation": 2,
+   "isActive": true,
+   "selectedRecipeIDs": [],
+   "outputPortAssignments": {},
+   "outletMaterialID": "item_proc_battery_1"
+  },
+  {
+   "id": "E53CA67D-B7A3-5425-A1BC-53C926C3924F",
+   "definitionID": "power_station_1",
+   "origin": {
+    "col": 41,
+    "row": 2
+   },
+   "rotation": 2,
+   "isActive": true,
+   "selectedRecipeIDs": [],
+   "outputPortAssignments": {}
+  },
+  {
+   "id": "46BE2C24-CB8F-52F9-B2D2-8030439D987B",
+   "definitionID": "power_diffuser_1",
+   "origin": {
+    "col": 7,
+    "row": 6
+   },
+   "rotation": 0,
+   "isActive": true,
+   "selectedRecipeIDs": [],
+   "outputPortAssignments": {}
+  },
+  {
+   "id": "B4370BB4-C8D7-5E7A-9BD5-86BCC444C980",
+   "definitionID": "power_diffuser_1",
+   "origin": {
+    "col": 28,
+    "row": 10
+   },
+   "rotation": 0,
+   "isActive": true,
+   "selectedRecipeIDs": [],
+   "outputPortAssignments": {}
+  },
+  {
+   "id": "BBCD3EC7-30C1-5A74-AB16-FAA33CD9096D",
+   "definitionID": "power_diffuser_1",
+   "origin": {
+    "col": 6,
+    "row": 21
+   },
+   "rotation": 0,
+   "isActive": true,
+   "selectedRecipeIDs": [],
+   "outputPortAssignments": {}
+  },
+  {
+   "id": "FD28BF4C-540F-57E2-9AC9-8A8413A98813",
+   "definitionID": "power_diffuser_1",
+   "origin": {
+    "col": 16,
+    "row": 1
+   },
+   "rotation": 0,
+   "isActive": true,
+   "selectedRecipeIDs": [],
+   "outputPortAssignments": {}
+  },
+  {
+   "id": "877F4FC0-2329-534E-B0A4-2D03A9AB5E9F",
+   "definitionID": "power_diffuser_1",
+   "origin": {
+    "col": 38,
+    "row": 0
+   },
+   "rotation": 0,
+   "isActive": true,
+   "selectedRecipeIDs": [],
+   "outputPortAssignments": {}
+  },
+  {
+   "id": "4A1F0A07-3F14-5118-BF31-605ADEA82099",
+   "definitionID": "power_diffuser_1",
+   "origin": {
+    "col": 12,
+    "row": 28
+   },
+   "rotation": 0,
+   "isActive": true,
+   "selectedRecipeIDs": [],
+   "outputPortAssignments": {}
+  },
+  {
+   "id": "700C29A3-A907-534F-AE28-B445FAECAB74",
    "definitionID": "log_connector",
    "origin": {
     "col": 9,
@@ -531,7 +628,7 @@
    "outputPortAssignments": {}
   },
   {
-   "id": "E53CA67D-B7A3-5425-A1BC-53C926C3924F",
+   "id": "825A53E6-B050-5092-A442-82D4DEAF0787",
    "definitionID": "log_connector",
    "origin": {
     "col": 12,
@@ -543,7 +640,7 @@
    "outputPortAssignments": {}
   },
   {
-   "id": "46BE2C24-CB8F-52F9-B2D2-8030439D987B",
+   "id": "BA903450-A4B4-577C-A50D-3E5378858800",
    "definitionID": "log_connector",
    "origin": {
     "col": 21,
@@ -555,7 +652,7 @@
    "outputPortAssignments": {}
   },
   {
-   "id": "B4370BB4-C8D7-5E7A-9BD5-86BCC444C980",
+   "id": "B8D408C4-2B06-54CA-9778-365C8276FABB",
    "definitionID": "log_connector",
    "origin": {
     "col": 21,
@@ -567,7 +664,7 @@
    "outputPortAssignments": {}
   },
   {
-   "id": "BBCD3EC7-30C1-5A74-AB16-FAA33CD9096D",
+   "id": "BA573B43-95C6-599B-B0F3-81E15B16EEB2",
    "definitionID": "log_connector",
    "origin": {
     "col": 24,
@@ -579,7 +676,7 @@
    "outputPortAssignments": {}
   },
   {
-   "id": "FD28BF4C-540F-57E2-9AC9-8A8413A98813",
+   "id": "628C3CFB-6C84-53D5-A2BA-0A79EA5266E9",
    "definitionID": "log_connector",
    "origin": {
     "col": 24,
@@ -591,7 +688,7 @@
    "outputPortAssignments": {}
   },
   {
-   "id": "877F4FC0-2329-534E-B0A4-2D03A9AB5E9F",
+   "id": "A1D30C1B-A181-5F39-8A41-94B15BA8F2D8",
    "definitionID": "log_connector",
    "origin": {
     "col": 27,
@@ -603,7 +700,7 @@
    "outputPortAssignments": {}
   },
   {
-   "id": "4A1F0A07-3F14-5118-BF31-605ADEA82099",
+   "id": "4DA1F51D-3FE0-574C-8EC3-58293FCF022E",
    "definitionID": "log_connector",
    "origin": {
     "col": 30,
@@ -6223,6 +6320,28 @@
       "toDir": {
        "col": -1,
        "row": 0
+      },
+      "lineType": "belt"
+     }
+    ]
+   },
+   {
+    "id": "5544896B-0CD7-5217-B42E-D7EB77CCDA1E",
+    "segments": [
+     {
+      "id": "574DFD81-C1DE-562C-A2C6-5FFD3911EC5B",
+      "cell": {
+       "col": 41,
+       "row": 1
+      },
+      "axis": "vertical",
+      "fromDir": {
+       "col": 0,
+       "row": 1
+      },
+      "toDir": {
+       "col": 0,
+       "row": 1
       },
       "lineType": "belt"
      }

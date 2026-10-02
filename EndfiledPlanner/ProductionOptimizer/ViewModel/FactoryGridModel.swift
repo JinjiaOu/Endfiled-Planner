@@ -241,7 +241,11 @@ class FactoryGridModel {
     struct ProductionStats {
         let totalPower: Double          // 净功率 = 耗电合计 − 发电合计 (MW)，负数表示净发电
         let totalPowerConsumed: Double  // 耗电合计 (MW)
-        let totalPowerGenerated: Double // 发电合计 (MW)，绝大多数布局是 0
+        let totalPowerGenerated: Double // 发电合计 (MW)：协议核心固定 200 + 各热能池按实际燃料算
+        let hubPower: Double            // 其中协议核心的部分
+        let generators: [FlowSimulator.GeneratorState]
+        let unpoweredCount: Int         // 需要供电但不在供电桩范围内的建筑数（不运行，也不计入耗电）
+        var powerShortage: Double { max(0, totalPowerConsumed - totalPowerGenerated) }
         let buildingCount: Int
         let categoryBreakdown: [BuildingCategory: Int]
         let bottleneck: String?         // 瓶颈建筑（节流系数最低的那台）
@@ -273,11 +277,15 @@ class FactoryGridModel {
         var categoryBreakdown: [BuildingCategory: Int] = [:]
         var passthroughCount = 0
         var outletMaterials: [String] = []
+        var hubPower = 0.0
+
+        let sim = FlowSimulator.simulate(layout: layout) { recipes(for: $0, in: machineRecipes) }
 
         for placed in layout.buildings where placed.isActive {
             guard let def = BuildingDefinition.find(placed.definitionID) else { continue }
-            totalPowerConsumed += def.powerUsage
-            totalPowerGenerated += def.powerGenerate
+            // 没通电的建筑不运行，不算耗电；热能池的发电量看燃料，由模拟器给出
+            if !sim.unpoweredIDs.contains(placed.id) { totalPowerConsumed += def.powerUsage }
+            if def.id != "power_station_1" { hubPower += def.powerGenerate }
             categoryBreakdown[def.category, default: 0] += 1
 
             if def.id == BuildingDefinition.warehouseOutletID {
@@ -286,7 +294,7 @@ class FactoryGridModel {
             if def.category == .logistics { passthroughCount += 1 }
         }
 
-        let sim = FlowSimulator.simulate(layout: layout) { recipes(for: $0, in: machineRecipes) }
+        totalPowerGenerated = hubPower + sim.generators.map(\.power).reduce(0, +)
 
         var outputRates: [String: (rate: Double, buildings: [String: Int])] = [:]
         for machine in sim.machines where !machine.isWarehouseOutlet {
@@ -316,6 +324,10 @@ class FactoryGridModel {
         for sink in sim.sinks where sink.name != BuildingDefinition.find(BuildingDefinition.warehouseInletID)?.name {
             for (item, perSecond) in sink.consumed { addConsumption(item, perSecond, by: sink.name) }
         }
+        for generator in sim.generators {
+            guard let name = generator.fuel, let fuel = FuelCatalog.byName[name] else { continue }
+            addConsumption(name, generator.fuelRatio / fuel.secondsPerItem, by: generator.name)
+        }
         let consumption = inputRates.map { key, value in
             ProductionLine(output: key, ratePerMin: value.rate,
                            buildingNames: value.buildings.sorted { $0.key < $1.key }.map { "\($0.key) ×\($0.value)" })
@@ -334,6 +346,9 @@ class FactoryGridModel {
             totalPower: totalPowerConsumed - totalPowerGenerated,
             totalPowerConsumed: totalPowerConsumed,
             totalPowerGenerated: totalPowerGenerated,
+            hubPower: hubPower,
+            generators: sim.generators,
+            unpoweredCount: sim.unpoweredIDs.count,
             buildingCount: layout.buildings.count,
             categoryBreakdown: categoryBreakdown,
             bottleneck: bottleneck,

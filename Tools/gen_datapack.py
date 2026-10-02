@@ -81,6 +81,7 @@ def generate(tablecfg):
     crafters = load('FactoryMachineCrafterTable')
     transmuters, vaporizers = load('FactoryTransmuterTable'), load('FactoryVaporizerTable')
     stations, hubs = load('FactoryPowerStationTable'), load('FactoryHubTable')
+    poles = load('FactoryPowerPoleTable')
     def size(r):
         return {k: r.get(k, r.get({'width': 'x', 'depth': 'z', 'height': 'y'}.get(k, k), 0))
                 for k in ('width', 'depth', 'height', 'x', 'y', 'z')}
@@ -122,6 +123,9 @@ def generate(tablecfg):
                         'powerGenerate': stations.get(key, {}).get('powerProvide', hubs.get(key, {}).get('powerGenerate', 0)),
                         'needPower': b['needPower'], 'liquidEnabled': b['liquidEnabled'], 'bandwidth': b['bandwidth'],
                         'modes': modes, 'activationRequirements': requirements, 'ports': ports(b), 'sourceTable': 'FactoryBuildingTable.json'})
+        if key in poles and poles[key]['defaultEnableDiffuser']:
+            # 供电范围：建筑本体向四周各扩 rangeExtend.x 格（x/z 两个方向在表里相同）
+            devices[-1]['powerRange'] = poles[key]['rangeExtend']['x']
     for table, data_key, kind, kind_name in LOGISTICS:
         for key, r in load(table).items():
             data = r[data_key]
@@ -136,8 +140,14 @@ def generate(tablecfg):
     item_rows = [{'itemId': k, 'name': item(k, 1)['name'],
                   'phase': 'liquid' if k.startswith('item_liquid_') else 'gas' if k.startswith('item_gas_') else 'solid'} for k in sorted(used)]
     assert len({i['name'] for i in item_rows}) == len(item_rows), 'Duplicate item names'
+    fuels = []
+    station_ms = stations['power_station_1']['msPerRound']
+    for key, f in load('FactoryFuelItemTable').items():
+        fuels.append({'itemId': key, 'name': item(key, 1)['name'], 'powerProvide': f['powerProvide'],
+                      'secondsPerItem': f['progressRound'] * station_ms / 1000})
+    fuels.sort(key=lambda x: x['powerProvide'])
     common = {'schemaVersion': 1, 'source': 'EndfieldData/TableCfg', 'language': 'zh-CN'}
-    return {'recipes.json': dict(common, recipes=recipes), 'devices.json': dict(common, categories=categories, devices=devices), 'items.json': item_rows}
+    return {'fuels.json': dict(common, fuels=fuels), 'recipes.json': dict(common, recipes=recipes), 'devices.json': dict(common, categories=categories, devices=devices), 'items.json': item_rows}
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)

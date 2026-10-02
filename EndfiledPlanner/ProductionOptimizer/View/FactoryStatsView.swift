@@ -126,12 +126,21 @@ struct FactoryStatsView: View {
                         .background(Color(red: 0.4, green: 0.8, blue: 0.2).opacity(0.1))
                     }
 
-                    // 有发电建筑（协议核心/热能池等）时才展开显示耗电/发电两个分项，没有就不用刷这行存在感
-                    if stats.totalPowerGenerated > 0 {
+                    // 电力：耗电 / 发电分项（发电 = 协议核心 + 各热能池按燃料算）
+                    if stats.totalPowerGenerated > 0 || stats.totalPowerConsumed > 0 {
                         noticeRow(icon: "bolt.horizontal.fill",
-                                  text: String(format: "耗电 %.1f MW，发电 %.1f MW（净功率已经是抵消后的数字）",
-                                               stats.totalPowerConsumed, stats.totalPowerGenerated),
+                                  text: powerText(stats),
                                   color: Color(red: 1.0, green: 0.8, blue: 0.0))
+                    }
+                    if stats.powerShortage > 1e-6 {
+                        noticeRow(icon: "bolt.slash.fill",
+                                  text: String(format: "电力不足：还差 %.1f MW", stats.powerShortage),
+                                  color: Color(red: 0.9, green: 0.3, blue: 0.2))
+                    }
+                    if stats.unpoweredCount > 0 {
+                        noticeRow(icon: "powerplug",
+                                  text: "未通电 ×\(stats.unpoweredCount)（不在供电桩范围内，不运行）",
+                                  color: Color(red: 0.9, green: 0.3, blue: 0.2))
                     }
 
                     // 流量模拟没收敛：数字仅供参考
@@ -231,6 +240,20 @@ struct FactoryStatsView: View {
     }
 
     // MARK: - 子组件
+
+    private func powerText(_ stats: FactoryGridModel.ProductionStats) -> String {
+        var parts: [String] = []
+        if stats.hubPower > 0 { parts.append(String(format: "协议核心 %.0f", stats.hubPower)) }
+        for generator in stats.generators {
+            if let fuel = generator.fuel {
+                parts.append(String(format: "热能池·%@ %.0f", fuel, generator.power))
+            } else {
+                parts.append("热能池·无燃料 0")
+            }
+        }
+        let detail = parts.isEmpty ? "" : "（" + parts.joined(separator: " + ") + "）"
+        return String(format: "耗电 %.1f MW，发电 %.1f MW", stats.totalPowerConsumed, stats.totalPowerGenerated) + detail
+    }
 
     private func noticeRow(icon: String, text: String, itemNames: [String] = [], color: Color) -> some View {
         HStack(spacing: 8) {

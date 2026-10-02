@@ -37,3 +37,29 @@ enum ItemCatalog {
     static func name(for itemId: String) -> String? { byID[itemId]?.name }
     static func itemId(for name: String) -> String? { byName[name]?.itemId }
 }
+
+/// 热能池能烧的燃料（fuels.json，来自解包表 FactoryFuelItemTable）：
+/// 烧哪种燃料就按哪种的 powerProvide 发电，每个燃料烧 secondsPerItem 秒
+struct FuelInfo: Decodable {
+    let itemId: String
+    let name: String
+    let powerProvide: Double
+    let secondsPerItem: Double
+}
+
+enum FuelCatalog {
+    private struct File: Decodable { let fuels: [FuelInfo] }
+
+    static let all: [FuelInfo] = {
+        guard let url = Bundle.main.url(forResource: "fuels", withExtension: "json"),
+              let data = try? Data(contentsOf: url),
+              let file = try? JSONDecoder().decode(File.self, from: data)
+        else {
+            print("未找到 fuels.json")
+            return []
+        }
+        return file.fuels
+    }()
+
+    static let byName: [String: FuelInfo] = Dictionary(all.map { ($0.name, $0) }, uniquingKeysWith: { first, _ in first })
+}

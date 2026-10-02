@@ -32,6 +32,7 @@ struct FactoryGridView: View {
     var body: some View {
         ZStack(alignment: .topLeading) {
             gridLines
+            powerRangeLayer
             beltsLayer
             buildingsLayer
             portsLayer
@@ -487,6 +488,45 @@ struct FactoryGridView: View {
         .frame(width: dot, height: dot)
         .offset(x: cx - dot / 2, y: cy - dot / 2)
         .allowsHitTesting(false)
+    }
+
+    // MARK: - 供电范围：选中供电桩、或正在放/拖供电桩时，把所有供电桩的范围（本体向四周扩 powerRange 格）画出来
+    private var showsPowerRanges: Bool {
+        if vm.selectedDefinition?.powerRange != nil { return true }
+        if draggingDef?.powerRange != nil { return true }
+        if case .place(let def) = vm.editMode, def.powerRange != nil { return true }
+        return false
+    }
+
+    @ViewBuilder
+    private var powerRangeLayer: some View {
+        if showsPowerRanges {
+            Canvas { context, _ in
+                func rangeRect(_ placed: PlacedBuilding, _ def: BuildingDefinition, _ range: Int) -> CGRect {
+                    let size = placed.effectiveSize(definition: def)
+                    return CGRect(x: CGFloat(placed.origin.col - range) * cellSize,
+                                  y: CGFloat(placed.origin.row - range) * cellSize,
+                                  width: CGFloat(size.width + range * 2) * cellSize,
+                                  height: CGFloat(size.height + range * 2) * cellSize)
+                }
+                let color = BuildingCategory.power.color
+                for placed in vm.layout.buildings {
+                    guard let def = BuildingDefinition.find(placed.definitionID), let range = def.powerRange else { continue }
+                    let rect = rangeRect(placed, def, range)
+                    let selected = placed.id == vm.selectedBuildingID
+                    context.fill(Path(rect), with: .color(color.opacity(selected ? 0.16 : 0.07)))
+                    context.stroke(Path(rect), with: .color(color.opacity(selected ? 0.8 : 0.35)),
+                                   style: StrokeStyle(lineWidth: 1, dash: [4, 3]))
+                }
+                if let def = draggingDef, let range = def.powerRange, let loc = dropPreviewLocal {
+                    let dummy = PlacedBuilding(definitionID: def.id, origin: cellAt(point: loc), rotation: vm.pendingRotation)
+                    let rect = rangeRect(dummy, def, range)
+                    context.fill(Path(rect), with: .color(color.opacity(0.12)))
+                    context.stroke(Path(rect), with: .color(color.opacity(0.8)), style: StrokeStyle(lineWidth: 1, dash: [4, 3]))
+                }
+            }
+            .allowsHitTesting(false)
+        }
     }
 
     // MARK: - 拖拽放置预览（从建筑板拖入）

@@ -123,9 +123,12 @@ struct BuildingDefinition: Identifiable, Hashable {
     let ports: [BuildingPort]
     /// nil = 两张地图都能造；非 nil 就只有列出来的地图能造（比如取线终端只有武陵有）
     let allowedMaps: Set<MapType>?
+    /// 供电桩的供电范围：本体向四周各扩几格，范围内耗电 > 0 的建筑才能运行；非供电桩为 nil
+    let powerRange: Int?
 
     init(id: String, name: String, category: BuildingCategory, size: GridSize,
-         powerUsage: Double, powerGenerate: Double = 0, ports: [BuildingPort], allowedMaps: Set<MapType>? = nil) {
+         powerUsage: Double, powerGenerate: Double = 0, ports: [BuildingPort], allowedMaps: Set<MapType>? = nil,
+         powerRange: Int? = nil) {
         self.id = id
         self.name = name
         self.category = category
@@ -134,7 +137,11 @@ struct BuildingDefinition: Identifiable, Hashable {
         self.powerGenerate = powerGenerate
         self.ports = ports
         self.allowedMaps = allowedMaps
+        self.powerRange = powerRange
     }
+
+    /// 需要在供电桩范围内才能运行（游戏表里 needPower 的建筑去掉电力建筑本身，正好就是耗电 > 0 的这些）
+    var needsPower: Bool { powerUsage > 0 }
 
     func isAvailable(on map: MapType) -> Bool {
         allowedMaps?.contains(map) ?? true
@@ -479,7 +486,7 @@ extension BuildingDefinition {
         return BuildingDefinition(
             id: def.id, name: def.name, category: def.category,
             size: def.size, powerUsage: def.powerUsage, powerGenerate: def.powerGenerate, ports: def.ports,
-            allowedMaps: override
+            allowedMaps: override, powerRange: def.powerRange
         )
     }
 
