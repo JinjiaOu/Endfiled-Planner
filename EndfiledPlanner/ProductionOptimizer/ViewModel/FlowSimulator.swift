@@ -100,6 +100,12 @@ enum FlowSimulator {
         let outputs: [String: Double]
         /// 实际消耗（个/秒），含激活口/散布机吃掉的气体或液体
         let inputs: [String: Double]
+        /// 各原料的到货量 / 满载需求（个/秒），详情面板用
+        var arrivals: [String: Double] = [:]
+        var needs: [String: Double] = [:]
+        /// 激活口（转化机）或进气口（气体散布机）要的物品和实际到货量（个/秒）
+        var activatorItem: String? = nil
+        var activatorArrival: Double = 0
         /// 仓库取货口不算产线
         let isWarehouseOutlet: Bool
     }
@@ -205,6 +211,8 @@ private final class Node {
     var generated = 0.0
     var generatorFuel: String? = nil
     var fuelRatio = 0.0
+    var lastArrivals: [String: Double] = [:]
+    var lastActivatorArrival: [String: Double] = [:]
 
     init(placed: PlacedBuilding, def: BuildingDefinition, kind: NodeKind, ports: [PortInfo]) {
         self.placed = placed
@@ -599,6 +607,7 @@ private final class Engine {
         node.activeEnv = nil
         guard let pi = node.activatorPort, let li = node.ports[pi].linkIndex else { return }
         let flow = links[li].flow
+        node.lastActivatorArrival = flow
         var best: (gas: String, rate: Double)? = nil
         for (gas, _) in FlowSimulator.vaporizerGases {
             let rate = flow[gas] ?? 0
@@ -657,6 +666,8 @@ private final class Engine {
             }
         }
 
+        node.lastArrivals = arrivals
+        node.lastActivatorArrival = activatorArrival
         var t = 1.0
         node.limitingItem = nil
         if !node.hasRecipeConfigured { t = 0 }
@@ -775,16 +786,27 @@ private final class Engine {
                 if let item = node.activatorItem, node.throttle > 1e-9 {
                     inputs[item, default: 0] += FlowSimulator.activatorNeed
                 }
-                result.machines.append(FlowSimulator.MachineState(
+                var state = FlowSimulator.MachineState(
                     id: node.placed.id, name: node.def.name, status: status, throttle: node.throttle,
-                    detail: detail, outputs: outputs, inputs: inputs, isWarehouseOutlet: isOutlet))
+                    detail: detail, outputs: outputs, inputs: inputs, isWarehouseOutlet: isOutlet)
+                state.arrivals = node.lastArrivals
+                state.needs = Dictionary(node.ingredients.map { ($0.name, $0.rate) }, uniquingKeysWith: +)
+                state.activatorItem = node.activatorItem
+                state.activatorArrival = node.activatorItem.map { node.lastActivatorArrival[$0] ?? 0 } ?? 0
+                result.machines.append(state)
             case .vaporizer:
                 let active = node.activeEnv != nil
                 let gas = node.activeEnv.flatMap { env in FlowSimulator.vaporizerGases.first { $0.value == env }?.key }
-                result.machines.append(FlowSimulator.MachineState(
+                var state = FlowSimulator.MachineState(
                     id: node.placed.id, name: node.def.name, status: active ? .running : .inactive,
                     throttle: active ? 1 : 0, detail: node.activeEnv.map { "\($0)环境" } ?? node.gateNote,
-                    outputs: [:], inputs: gas.map { [$0: FlowSimulator.activatorNeed] } ?? [:], isWarehouseOutlet: false))
+                    outputs: [:], inputs: gas.map { [$0: FlowSimulator.activatorNeed] } ?? [:], isWarehouseOutlet: false)
+                // 散布机进气口：报到货最多的那种气体
+                if let top = node.lastActivatorArrival.max(by: { $0.value < $1.value }) {
+                    state.activatorItem = top.key
+                    state.activatorArrival = top.value
+                }
+                result.machines.append(state)
             case .loader, .cleaner:
                 result.sinks.append(FlowSimulator.SinkState(id: node.placed.id, name: node.def.name, consumed: node.consumed))
             case .generator:

@@ -140,8 +140,6 @@ struct FactoryLayoutView: View {
     // 其他
     @State private var showClearConfirm = false
     @State private var pendingMapSwitch: MapType? = nil
-    @State private var showRecipeSheet = false
-    @State private var showMaterialSheet = false
     @State private var pendingPreset: FactoryPreset? = nil
 
     private var usesSidePalette: Bool {
@@ -196,8 +194,9 @@ struct FactoryLayoutView: View {
                         if showBuildingPalette && !usesSidePalette {
                             buildingPalette
                                 .transition(.move(edge: .bottom).combined(with: .opacity))
-                        } else if let def = vm.selectedDefinition {
-                            selectedBuildingInfo(def)
+                        } else if !usesSidePalette, let placed = vm.selectedPlaced, let def = vm.selectedDefinition {
+                            BuildingDetailPanel(vm: vm, placed: placed, def: def, style: .bottom)
+                                .id(placed.id)
                                 .transition(.move(edge: .bottom).combined(with: .opacity))
                         }
                     }
@@ -207,6 +206,18 @@ struct FactoryLayoutView: View {
 
                 if showBuildingPalette && usesSidePalette {
                     sideBuildingPalette
+                } else if usesSidePalette, let placed = vm.selectedPlaced, let def = vm.selectedDefinition {
+                    HStack {
+                        Spacer()
+                        BuildingDetailPanel(vm: vm, placed: placed, def: def, style: .side)
+                            .id(placed.id)
+                            .frame(width: 360)
+                            .padding(.trailing, 18)
+                            .padding(.top, 64)
+                            .padding(.bottom, 18)
+                    }
+                    .transition(.move(edge: .trailing).combined(with: .opacity))
+                    .zIndex(3)
                 }
 
                 // 产能统计 overlay
@@ -587,317 +598,6 @@ struct FactoryLayoutView: View {
             .padding(.bottom, 80)   // 留出悬浮按钮空间
         }
         .transition(.opacity.combined(with: .scale(scale: 0.95, anchor: .bottomTrailing)))
-    }
-
-    // MARK: - 选中建筑信息面板
-    private func selectedBuildingInfo(_ def: BuildingDefinition) -> some View {
-        HStack(spacing: 14) {
-            ZStack {
-                Rectangle().fill(def.category.color.opacity(0.2)).frame(width: 44, height: 44)
-                Rectangle().stroke(def.category.color.opacity(0.6), lineWidth: 1.5).frame(width: 44, height: 44)
-                Image(systemName: def.category.icon).font(.system(size: 18))
-                    .foregroundColor(def.category.color)
-            }
-            VStack(alignment: .leading, spacing: 3) {
-                Text(def.name).font(.system(size: 14, weight: .bold)).foregroundColor(.white)
-                HStack(spacing: 10) {
-                    if def.powerUsage > 0 {
-                        Label(String(format: "耗电功率值 %.1fMW", def.powerUsage), systemImage: "bolt.fill")
-                            .font(.system(size: 10, design: .monospaced))
-                            .foregroundColor(Color(red: 0.9, green: 0.5, blue: 0.2))
-                    }
-                }
-                if def.isMultiRecipeMachine {
-                    multiRecipePicker(for: def)
-                } else {
-                    recipePicker(for: def)
-                }
-                outletMaterialPicker(for: def)
-                flowLimitControl(for: def)
-                machineStateLabel()
-            }
-            Spacer()
-            VStack(spacing: 6) {
-                Button { vm.rotateSelected() } label: {
-                    Image(systemName: "rotate.right").font(.system(size: 14))
-                        .foregroundColor(Color(red: 0.7, green: 0.5, blue: 0.9))
-                        .frame(width: 32, height: 32)
-                        .background(Color(red: 0.7, green: 0.5, blue: 0.9).opacity(0.15))
-                        .overlay(Rectangle().stroke(Color(red: 0.7, green: 0.5, blue: 0.9).opacity(0.4), lineWidth: 1))
-                }.buttonStyle(.plain)
-
-                Button { vm.deleteSelected() } label: {
-                    Image(systemName: "trash.fill").font(.system(size: 14))
-                        .foregroundColor(.red)
-                        .frame(width: 32, height: 32)
-                        .background(Color.red.opacity(0.15))
-                        .overlay(Rectangle().stroke(Color.red.opacity(0.4), lineWidth: 1))
-                }.buttonStyle(.plain)
-            }
-        }
-        .padding(.horizontal, 14).padding(.vertical, 10)
-        .background(Color(red: 0.10, green: 0.11, blue: 0.14))
-        .overlay(Rectangle().stroke(def.category.color.opacity(0.3), lineWidth: 1), alignment: .top)
-    }
-
-    /// 配方选择：机器有真实配方数据才显示，选完立即重新计算产能统计
-    @ViewBuilder
-    private func recipePicker(for def: BuildingDefinition) -> some View {
-        let recipes = vm.availableRecipes(for: def)
-        if !recipes.isEmpty, let placedID = vm.selectedBuildingID {
-            let currentID = vm.selectedPlaced?.selectedRecipeID
-            let current = recipes.first { $0.id == currentID }
-            Button {
-                showRecipeSheet = true
-            } label: {
-                HStack(spacing: 4) {
-                    if let output = current?.outputs.first {
-                        ItemIcon(name: output.name, size: 20)
-                    }
-                    Label(
-                    current?.outputs.first?.name ?? "配方一览",
-                    systemImage: "list.bullet.rectangle"
-                    )
-                }
-                .font(.system(size: 10, design: .monospaced))
-                .foregroundColor(Color(red: 0.4, green: 0.8, blue: 0.2))
-            }
-            .buttonStyle(.plain)
-            .sheet(isPresented: $showRecipeSheet) {
-                SearchablePickerSheet(
-                    title: "配方一览",
-                    items: recipes.map { recipe in
-                        let outputText = recipe.outputs.map { "\($0.name)×\($0.count)" }.joined(separator: " + ")
-                        let inputText = recipe.inputs.map { "\($0.name)×\($0.count)" }.joined(separator: " + ")
-                        return SearchablePickerItem(
-                            id: recipe.id,
-                            title: "\(outputText)（\(recipe.time)s）",
-                            subtitle: recipeSubtitle(inputText: inputText, env: recipe.requiredEnv),
-                            iconName: recipe.outputs.first?.name
-                        )
-                    },
-                    selectedID: currentID,
-                    clearTitle: "不设置配方",
-                    onSelect: { id in
-                        vm.selectRecipe(id, for: placedID)
-                    },
-                    filterChips: ingredientChips(for: recipes),
-                    chipsLabel: "按原料筛选（跟游戏一样先选吃什么）"
-                )
-            }
-        }
-    }
-
-    /// 反应池/扩容反应池：多选配方 + 自我供给分析 + 净产出的输出口手动指定
-    @ViewBuilder
-    private func multiRecipePicker(for def: BuildingDefinition) -> some View {
-        let recipes = vm.availableRecipes(for: def)
-        if !recipes.isEmpty, let placedID = vm.selectedBuildingID, let placed = vm.selectedPlaced {
-            let selectedIDs = placed.selectedRecipeIDs
-            VStack(alignment: .leading, spacing: 4) {
-                Button {
-                    showRecipeSheet = true
-                } label: {
-                    Label(selectedIDs.isEmpty ? "配方一览（可多选）" : "已勾选 \(selectedIDs.count) 条配方",
-                          systemImage: "list.bullet.rectangle.fill")
-                        .font(.system(size: 10, design: .monospaced))
-                        .foregroundColor(Color(red: 0.4, green: 0.8, blue: 0.2))
-                }
-                .buttonStyle(.plain)
-                .sheet(isPresented: $showRecipeSheet) {
-                    SearchablePickerSheet(
-                        title: "配方一览",
-                        items: recipes.map { recipe in
-                            let outputText = recipe.outputs.map { "\($0.name)×\($0.count)" }.joined(separator: " + ")
-                            let inputText = recipe.inputs.map { "\($0.name)×\($0.count)" }.joined(separator: " + ")
-                            return SearchablePickerItem(
-                                id: recipe.id,
-                                title: "\(outputText)（\(recipe.time)s）",
-                                subtitle: inputText.isEmpty ? nil : "原料：\(inputText)",
-                                iconName: recipe.outputs.first?.name
-                            )
-                        },
-                        multiSelect: true,
-                        selectedIDs: selectedIDs,
-                        onToggle: { id in
-                            vm.toggleRecipe(id, for: placedID)
-                        },
-                        filterChips: ingredientChips(for: recipes),
-                        chipsLabel: "按原料筛选（跟游戏一样先选吃什么，能多选配方）"
-                    )
-                }
-
-                if let analysis = vm.selfSupplyAnalysis(for: placed, definition: def) {
-                    selfSupplySummary(analysis, def: def, placedID: placedID)
-                }
-            }
-        }
-    }
-
-    @ViewBuilder
-    private func selfSupplySummary(_ analysis: FlowSimulator.SelfSupplyAnalysis, def: BuildingDefinition, placedID: UUID) -> some View {
-        VStack(alignment: .leading, spacing: 3) {
-            if let cap = def.multiRecipeItemCapacity {
-                Text("涉及物品 \(analysis.totalDistinctItems)/\(cap) 种")
-                    .font(.system(size: 9, design: .monospaced))
-                    .foregroundColor(analysis.exceedsCapacity ? .red : .white.opacity(0.5))
-            }
-            let internalItems = analysis.netItems.filter { abs($0.net) < 1e-9 }
-            if !internalItems.isEmpty {
-                HStack(spacing: 3) {
-                    ForEach(internalItems, id: \.name) { item in
-                        ItemIcon(name: item.name, size: 18)
-                    }
-                    Text("内部循环：\(internalItems.map { $0.name }.joined(separator: "、"))（不占外部口）")
-                }
-                    .font(.system(size: 9, design: .monospaced))
-                    .foregroundColor(Color(red: 0.4, green: 0.7, blue: 0.9))
-            }
-            if !analysis.externalInputs.isEmpty {
-                let text = analysis.externalInputs
-                    .map { "\($0.name) \(String(format: "%.0f", -$0.net * 60))/min" }
-                    .joined(separator: "、")
-                HStack(spacing: 3) {
-                    ForEach(analysis.externalInputs, id: \.name) { item in
-                        ItemIcon(name: item.name, size: 18)
-                    }
-                    Text("外部输入：\(text)")
-                }
-                    .font(.system(size: 9, design: .monospaced))
-                    .foregroundColor(.white.opacity(0.6))
-            }
-            ForEach(analysis.externalOutputs, id: \.name) { output in
-                outputAssignmentRow(item: output.name, rate: output.net, def: def, placedID: placedID)
-            }
-            if analysis.exceedsOutputCap {
-                Text("对外输出超限：同时最多 2 种液体 + 1 种固体，多出来的必须靠另一条配方内部消化掉")
-                    .font(.system(size: 9, weight: .bold, design: .monospaced))
-                    .foregroundColor(.red)
-            }
-        }
-    }
-
-    private func outputPortsOfKind(_ def: BuildingDefinition, isSolid: Bool) -> [Int] {
-        let kind: PortKind = isSolid ? .item : .pipe
-        return def.ports.enumerated()
-            .filter { $0.element.ioDirection == .output && $0.element.kind == kind }
-            .map { $0.offset }
-    }
-
-    /// 净产出的物品要不要手动指定输出口：只有同类型口有 2 个以上净产物时才需要选，只有 1 个净产物时用不着
-    @ViewBuilder
-    private func outputAssignmentRow(item: String, rate: Double, def: BuildingDefinition, placedID: UUID) -> some View {
-        let isSolid = ItemCatalog.isSolid(item)
-        let ports = outputPortsOfKind(def, isSolid: isSolid)
-        HStack(spacing: 6) {
-            ItemIcon(name: item, size: 18)
-            Text("输出：\(item) \(String(format: "%.0f", rate * 60))/min")
-                .font(.system(size: 9, design: .monospaced))
-                .foregroundColor(.white.opacity(0.7))
-            if ports.count > 1 {
-                let current = vm.selectedPlaced?.outputPortAssignments.first { $0.value == item }?.key
-                ForEach(Array(ports.enumerated()), id: \.element) { seq, portIdx in
-                    Button {
-                        vm.setOutputPortAssignment(item: item, portIndex: portIdx, for: placedID)
-                    } label: {
-                        Text("口\(seq + 1)")
-                            .font(.system(size: 9, weight: .bold, design: .monospaced))
-                            .padding(.horizontal, 6).padding(.vertical, 2)
-                            .background(current == portIdx ? Color(red: 0.4, green: 0.8, blue: 0.2) : Color.white.opacity(0.12))
-                            .foregroundColor(current == portIdx ? .black : .white.opacity(0.6))
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-        }
-    }
-
-    /// 这批配方里出现过的所有原料名（去重），给"先选原料再看配方"这个筛选条用
-    private func ingredientChips(for recipes: [Recipe]) -> [String] {
-        var seen = Set<String>()
-        var ordered: [String] = []
-        for recipe in recipes {
-            for input in recipe.inputs where !seen.contains(input.name) {
-                seen.insert(input.name)
-                ordered.append(input.name)
-            }
-        }
-        return ordered
-    }
-
-    private func recipeSubtitle(inputText: String, env: String?) -> String? {
-        var parts: [String] = []
-        if !inputText.isEmpty { parts.append("原料：\(inputText)") }
-        if let env { parts.append("需要\(env)环境") }
-        return parts.isEmpty ? nil : parts.joined(separator: " · ")
-    }
-
-    /// 物品准入口/管道准入口的限速：步长 6/min（游戏里滑条的步长），到带速/管速上限；关掉就是不额外限速
-    @ViewBuilder
-    private func flowLimitControl(for def: BuildingDefinition) -> some View {
-        if def.id == "log_conditioner" || def.id == "log_pipe_conditioner",
-           let placedID = vm.selectedBuildingID {
-            let maxPerMin = (def.id == "log_pipe_conditioner" ? FlowSimulator.pipeCapacity : FlowSimulator.beltCapacity) * 60
-            let current = vm.selectedPlaced?.flowLimitPerMin
-            HStack(spacing: 8) {
-                Image(systemName: "speedometer")
-                    .font(.system(size: 10))
-                Text(current.map { String(format: "限速 %.0f/min", $0) } ?? "不限速")
-                    .font(.system(size: 10, design: .monospaced))
-                Button {
-                    vm.setFlowLimit(max((current ?? maxPerMin) - 6, 0), for: placedID)
-                } label: { Image(systemName: "minus.circle") }
-                Button {
-                    let next = (current ?? maxPerMin) + 6
-                    vm.setFlowLimit(next >= maxPerMin ? nil : next, for: placedID)
-                } label: { Image(systemName: "plus.circle") }
-            }
-            .foregroundColor(Color(red: 0.4, green: 0.8, blue: 0.2))
-            .buttonStyle(.plain)
-        }
-    }
-
-    /// 选中机器当前的模拟状态（运行率/缺什么）
-    @ViewBuilder
-    private func machineStateLabel() -> some View {
-        if let id = vm.selectedBuildingID,
-           let state = vm.stats.machineStates.first(where: { $0.id == id }) {
-            let percent = Int((state.throttle * 100).rounded())
-            let detail = state.detail.map { " · " + $0 } ?? ""
-            Text("\(state.status.label) \(percent)%\(detail)")
-                .font(.system(size: 10, design: .monospaced))
-                .foregroundColor(state.status == .running ? Color(red: 0.4, green: 0.8, blue: 0.2) : Color(red: 0.9, green: 0.5, blue: 0.2))
-        }
-    }
-
-    /// 仓库取货口的材料选择：只对取货口显示（存货口是入口，接收任意材料，不用选），选完立即重新计算产能统计
-    @ViewBuilder
-    private func outletMaterialPicker(for def: BuildingDefinition) -> some View {
-        if def.id == BuildingDefinition.warehouseOutletID, let placedID = vm.selectedBuildingID {
-            let current = vm.selectedPlaced?.outletMaterialID.flatMap(ItemCatalog.name(for:))
-            Button {
-                showMaterialSheet = true
-            } label: {
-                HStack(spacing: 4) {
-                    if let current { ItemIcon(name: current, size: 20) }
-                    Label(current ?? "选择材料", systemImage: "shippingbox.fill")
-                }
-                    .font(.system(size: 10, design: .monospaced))
-                    .foregroundColor(Color(red: 0.4, green: 0.8, blue: 0.2))
-            }
-            .buttonStyle(.plain)
-            .sheet(isPresented: $showMaterialSheet) {
-                SearchablePickerSheet(
-                    title: "选择取货材料",
-                    items: vm.solidMaterials.map { SearchablePickerItem(id: $0.itemId, title: $0.name, iconName: $0.name) },
-                    selectedID: vm.selectedPlaced?.outletMaterialID,
-                    clearTitle: "未设置",
-                    onSelect: { material in
-                        vm.setOutletMaterial(material, for: placedID)
-                    }
-                )
-            }
-        }
     }
 
     // MARK: - 保存 Toast

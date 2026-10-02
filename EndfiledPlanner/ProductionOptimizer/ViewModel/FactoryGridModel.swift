@@ -244,7 +244,8 @@ class FactoryGridModel {
         let totalPowerGenerated: Double // 发电合计 (MW)：协议核心固定 200 + 各热能池按实际燃料算
         let hubPower: Double            // 其中协议核心的部分
         let generators: [FlowSimulator.GeneratorState]
-        let unpoweredCount: Int         // 需要供电但不在供电桩范围内的建筑数（不运行，也不计入耗电）
+        let unpoweredIDs: Set<UUID>     // 需要供电但不在供电桩范围内的建筑（不运行，也不计入耗电）
+        var unpoweredCount: Int { unpoweredIDs.count }
         var powerShortage: Double { max(0, totalPowerConsumed - totalPowerGenerated) }
         let buildingCount: Int
         let categoryBreakdown: [BuildingCategory: Int]
@@ -348,7 +349,7 @@ class FactoryGridModel {
             totalPowerGenerated: totalPowerGenerated,
             hubPower: hubPower,
             generators: sim.generators,
-            unpoweredCount: sim.unpoweredIDs.count,
+            unpoweredIDs: sim.unpoweredIDs,
             buildingCount: layout.buildings.count,
             categoryBreakdown: categoryBreakdown,
             bottleneck: bottleneck,

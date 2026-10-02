@@ -28,6 +28,9 @@ class FactoryViewModel: ObservableObject {
     @Published var beltStart: GridPoint? = nil          // 传送带起点
     @Published var pendingDropCell: GridPoint? = nil    // 拖拽放置落点
     @Published var showSaveConfirm = false
+    /// 详情面板点了"移动"后，下一次点网格就把这台建筑挪过去（点的格子是新的左上角）
+    @Published var movingBuildingID: UUID? = nil
+    @Published var moveFailedMessage: String? = nil
     @Published var stats: FactoryGridModel.ProductionStats
 
     // 配方数据：按建筑 id 分组，PlacedBuilding 记的是其中的配方 ID
@@ -179,6 +182,16 @@ class FactoryViewModel: ObservableObject {
     func handleTap(at cell: GridPoint) {
         switch editMode {
         case .select:
+            if let id = movingBuildingID {
+                if canReposition(id, to: cell) {
+                    commitReposition(id, to: cell)
+                    movingBuildingID = nil
+                    moveFailedMessage = nil
+                } else {
+                    moveFailedMessage = "这里放不下，换个位置（点的格子是建筑新的左上角）"
+                }
+                return
+            }
             selectBuilding(at: cell)
 
         case .place(let def):
@@ -218,6 +231,24 @@ class FactoryViewModel: ObservableObject {
             }
         }
         selectedBuildingID = nil
+    }
+
+    // MARK: - 开关 / 移动
+    /// 关掉的建筑不参与模拟、不耗电，网格上半透明显示
+    func toggleActive(_ id: UUID) {
+        guard let idx = layout.buildings.firstIndex(where: { $0.id == id }) else { return }
+        layout.buildings[idx].isActive.toggle()
+        refreshStats()
+    }
+
+    func startMoving(_ id: UUID) {
+        movingBuildingID = id
+        moveFailedMessage = nil
+    }
+
+    func cancelMoving() {
+        movingBuildingID = nil
+        moveFailedMessage = nil
     }
 
     // MARK: - 旋转已选建筑
@@ -653,6 +684,7 @@ class FactoryViewModel: ObservableObject {
         layout.buildings.removeAll { $0.id == id }
         for cell in cells { removeCellFromAllBelts(cell, lineType: nil) }
         selectedBuildingID = nil
+        cancelMoving()
         refreshStats()
     }
 
