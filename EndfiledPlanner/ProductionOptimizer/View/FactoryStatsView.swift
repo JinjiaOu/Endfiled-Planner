@@ -32,10 +32,10 @@ struct FactoryStatsView: View {
 
                     Spacer()
 
-                    // 净功率快速预览（耗电－发电）
-                    Text(String(format: "%.1f MW", stats.totalPower))
+                    // 电力余量快速预览（发电－耗电，正数=有富余，负数=不够）
+                    Text(String(format: "%+.1f MW", powerMargin))
                         .font(.system(size: 11, weight: .medium, design: .monospaced))
-                        .foregroundColor(Color(red: 0.9, green: 0.5, blue: 0.2))
+                        .foregroundColor(powerMarginColor)
 
                     Image(systemName: isExpanded ? "chevron.down" : "chevron.up")
                         .font(.system(size: 10, weight: .bold))
@@ -61,10 +61,17 @@ struct FactoryStatsView: View {
                         )
                         Divider().overlay(Color.white.opacity(0.1))
                         statBox(
-                            title: "净功率",
-                            value: String(format: "%.1f", stats.totalPower),
+                            title: "总发电量",
+                            value: String(format: "%.0f", stats.totalPowerGenerated),
                             unit: "MW",
-                            color: Color(red: 0.9, green: 0.5, blue: 0.2)
+                            color: Color(red: 1.0, green: 0.8, blue: 0.0)
+                        )
+                        Divider().overlay(Color.white.opacity(0.1))
+                        statBox(
+                            title: "用电量",
+                            value: String(format: "%.0f", stats.totalPowerConsumed),
+                            unit: "MW",
+                            color: powerMarginColor
                         )
                         Divider().overlay(Color.white.opacity(0.1))
                         statBox(
@@ -240,6 +247,12 @@ struct FactoryStatsView: View {
     }
 
     // MARK: - 子组件
+
+    /// 发电 − 耗电：正数表示还有富余，负数表示电不够
+    private var powerMargin: Double { stats.totalPowerGenerated - stats.totalPowerConsumed }
+    private var powerMarginColor: Color {
+        powerMargin >= 0 ? Color(red: 0.4, green: 0.8, blue: 0.2) : Color(red: 0.9, green: 0.3, blue: 0.2)
+    }
 
     private func powerText(_ stats: FactoryGridModel.ProductionStats) -> String {
         var parts: [String] = []

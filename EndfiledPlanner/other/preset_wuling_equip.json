@@ -1222,7 +1222,7 @@
    "definitionID": "power_diffuser_1",
    "origin": {
     "col": 51,
-    "row": 33
+    "row": 32
    },
    "rotation": 0,
    "isActive": true,
@@ -1522,18 +1522,6 @@
    "definitionID": "log_pipe_connector",
    "origin": {
     "col": 49,
-    "row": 32
-   },
-   "rotation": 0,
-   "isActive": true,
-   "selectedRecipeIDs": [],
-   "outputPortAssignments": {}
-  },
-  {
-   "id": "709ED83B-DAC1-5268-AF72-83F63E0129D9",
-   "definitionID": "log_pipe_connector",
-   "origin": {
-    "col": 49,
     "row": 33
    },
    "rotation": 0,
@@ -1542,7 +1530,7 @@
    "outputPortAssignments": {}
   },
   {
-   "id": "D3B6B358-2FD4-5AC3-8CB5-B758B85964F7",
+   "id": "709ED83B-DAC1-5268-AF72-83F63E0129D9",
    "definitionID": "log_pipe_connector",
    "origin": {
     "col": 51,
@@ -9148,73 +9136,73 @@
        "col": 56,
        "row": 37
       },
-      "axis": "vertical",
+      "axis": "horizontal",
       "fromDir": {
-       "col": 0,
-       "row": -1
+       "col": 1,
+       "row": 0
       },
       "toDir": {
-       "col": 0,
-       "row": -1
+       "col": 1,
+       "row": 0
       },
       "lineType": "pipe"
      },
      {
       "id": "A9C4ACC2-D276-5B72-BD68-096F3F6B366A",
       "cell": {
-       "col": 56,
-       "row": 36
+       "col": 57,
+       "row": 37
       },
-      "axis": "vertical",
+      "axis": "horizontal",
       "fromDir": {
-       "col": 0,
-       "row": -1
+       "col": 1,
+       "row": 0
       },
       "toDir": {
-       "col": 0,
-       "row": -1
+       "col": 1,
+       "row": 0
       },
       "lineType": "pipe"
      },
      {
       "id": "6690B1C1-7E3B-5A1D-8F5E-B753352CB8DE",
       "cell": {
-       "col": 56,
-       "row": 35
+       "col": 58,
+       "row": 37
       },
-      "axis": "vertical",
+      "axis": "horizontal",
       "fromDir": {
-       "col": 0,
-       "row": -1
+       "col": 1,
+       "row": 0
       },
       "toDir": {
-       "col": 0,
-       "row": -1
+       "col": 1,
+       "row": 0
       },
       "lineType": "pipe"
      },
      {
       "id": "99DD50CA-1A29-57DD-A4F6-7DE39342DE65",
       "cell": {
-       "col": 56,
-       "row": 34
+       "col": 59,
+       "row": 37
       },
-      "axis": "vertical",
+      "axis": "horizontal",
       "fromDir": {
-       "col": 0,
-       "row": -1
+       "col": 1,
+       "row": 0
       },
       "toDir": {
-       "col": 0,
-       "row": -1
+       "col": 1,
+       "row": 0
       },
       "lineType": "pipe"
      },
      {
       "id": "0A105C34-6AEF-5552-82F8-004604903B30",
       "cell": {
-       "col": 56,
-       "row": 33
+       "col": 60,
+       "row": 37
       },
       "axis": "vertical",
       "fromDir": {
@@ -9230,161 +9218,161 @@
      {
       "id": "A368823E-0B2F-5729-B088-81E7F1243E96",
       "cell": {
-       "col": 56,
-       "row": 32
+       "col": 60,
+       "row": 36
       },
-      "axis": "horizontal",
+      "axis": "vertical",
       "fromDir": {
-       "col": -1,
-       "row": 0
+       "col": 0,
+       "row": -1
       },
       "toDir": {
-       "col": -1,
-       "row": 0
+       "col": 0,
+       "row": -1
       },
       "lineType": "pipe"
      },
      {
       "id": "48DA6017-2CB6-513E-B016-5919E232E30C",
       "cell": {
-       "col": 55,
-       "row": 32
+       "col": 60,
+       "row": 35
       },
-      "axis": "horizontal",
+      "axis": "vertical",
       "fromDir": {
-       "col": -1,
-       "row": 0
+       "col": 0,
+       "row": -1
       },
       "toDir": {
-       "col": -1,
-       "row": 0
+       "col": 0,
+       "row": -1
       },
       "lineType": "pipe"
      },
      {
       "id": "5D14899E-B9DF-59AF-B144-8261163D9318",
       "cell": {
-       "col": 54,
-       "row": 32
+       "col": 60,
+       "row": 34
       },
-      "axis": "horizontal",
+      "axis": "vertical",
       "fromDir": {
-       "col": -1,
-       "row": 0
+       "col": 0,
+       "row": -1
       },
       "toDir": {
-       "col": -1,
-       "row": 0
+       "col": 0,
+       "row": -1
       },
       "lineType": "pipe"
      },
      {
       "id": "B2752772-B984-5FBA-8F62-9270D7019633",
       "cell": {
-       "col": 53,
-       "row": 32
+       "col": 60,
+       "row": 33
       },
-      "axis": "horizontal",
+      "axis": "vertical",
       "fromDir": {
-       "col": -1,
-       "row": 0
+       "col": 0,
+       "row": -1
       },
       "toDir": {
-       "col": -1,
-       "row": 0
+       "col": 0,
+       "row": -1
       },
       "lineType": "pipe"
      },
      {
       "id": "A0098978-3507-557A-B342-4DCCD2D51AE8",
       "cell": {
-       "col": 52,
+       "col": 60,
        "row": 32
       },
-      "axis": "horizontal",
+      "axis": "vertical",
       "fromDir": {
-       "col": -1,
-       "row": 0
+       "col": 0,
+       "row": -1
       },
       "toDir": {
-       "col": -1,
-       "row": 0
+       "col": 0,
+       "row": -1
       },
       "lineType": "pipe"
      },
      {
       "id": "09CFEA1D-D02B-5C1C-831E-C3282BA4BB2E",
       "cell": {
-       "col": 51,
-       "row": 32
+       "col": 60,
+       "row": 31
       },
-      "axis": "horizontal",
+      "axis": "vertical",
       "fromDir": {
-       "col": -1,
-       "row": 0
+       "col": 0,
+       "row": -1
       },
       "toDir": {
-       "col": -1,
-       "row": 0
+       "col": 0,
+       "row": -1
       },
       "lineType": "pipe"
      },
      {
       "id": "2878785A-0E43-5EA9-8C7A-8A3235BCBB46",
       "cell": {
-       "col": 50,
-       "row": 32
+       "col": 60,
+       "row": 30
       },
-      "axis": "horizontal",
+      "axis": "vertical",
       "fromDir": {
-       "col": -1,
-       "row": 0
+       "col": 0,
+       "row": -1
       },
       "toDir": {
-       "col": -1,
-       "row": 0
+       "col": 0,
+       "row": -1
       },
       "lineType": "pipe"
      },
      {
       "id": "433CA7FF-E41C-5FC1-BEE7-6B250C16B06A",
       "cell": {
-       "col": 49,
-       "row": 32
+       "col": 60,
+       "row": 29
       },
-      "axis": "horizontal",
+      "axis": "vertical",
       "fromDir": {
-       "col": -1,
-       "row": 0
+       "col": 0,
+       "row": -1
       },
       "toDir": {
-       "col": -1,
-       "row": 0
+       "col": 0,
+       "row": -1
       },
       "lineType": "pipe"
      },
      {
       "id": "EC621DD5-543D-5DD6-9857-DDF8EFC64209",
       "cell": {
-       "col": 48,
-       "row": 32
+       "col": 60,
+       "row": 28
       },
-      "axis": "horizontal",
+      "axis": "vertical",
       "fromDir": {
-       "col": -1,
-       "row": 0
+       "col": 0,
+       "row": -1
       },
       "toDir": {
-       "col": -1,
-       "row": 0
+       "col": 0,
+       "row": -1
       },
       "lineType": "pipe"
      },
      {
       "id": "60FA54B5-0A4C-57CD-BEAF-077B7C62CBA8",
       "cell": {
-       "col": 47,
-       "row": 32
+       "col": 60,
+       "row": 27
       },
       "axis": "vertical",
       "fromDir": {
@@ -9400,8 +9388,8 @@
      {
       "id": "65489C25-ADD3-5E12-9D89-A96B56A0332C",
       "cell": {
-       "col": 47,
-       "row": 31
+       "col": 60,
+       "row": 26
       },
       "axis": "vertical",
       "fromDir": {
@@ -9417,8 +9405,8 @@
      {
       "id": "3F5EED4E-DB92-5EA0-9F87-A576CE4C99D5",
       "cell": {
-       "col": 47,
-       "row": 30
+       "col": 60,
+       "row": 25
       },
       "axis": "vertical",
       "fromDir": {
@@ -9434,8 +9422,8 @@
      {
       "id": "59033D14-B424-5788-9E45-AA15D76F0810",
       "cell": {
-       "col": 47,
-       "row": 29
+       "col": 60,
+       "row": 24
       },
       "axis": "vertical",
       "fromDir": {
@@ -9451,8 +9439,8 @@
      {
       "id": "22E4E27F-E867-5AD7-AC8A-FD946EEEDEA4",
       "cell": {
-       "col": 47,
-       "row": 28
+       "col": 60,
+       "row": 23
       },
       "axis": "vertical",
       "fromDir": {
@@ -9468,8 +9456,8 @@
      {
       "id": "E3054C6C-7436-5676-9EBE-F6CB2D5B5F42",
       "cell": {
-       "col": 47,
-       "row": 27
+       "col": 60,
+       "row": 22
       },
       "axis": "vertical",
       "fromDir": {
@@ -9485,8 +9473,8 @@
      {
       "id": "2ED406EB-D890-5FC7-953B-750D108AAF8B",
       "cell": {
-       "col": 47,
-       "row": 26
+       "col": 60,
+       "row": 21
       },
       "axis": "vertical",
       "fromDir": {
@@ -9502,8 +9490,8 @@
      {
       "id": "199B8909-1A66-5692-9501-7F19CE01EB90",
       "cell": {
-       "col": 47,
-       "row": 25
+       "col": 60,
+       "row": 20
       },
       "axis": "vertical",
       "fromDir": {
@@ -9519,8 +9507,8 @@
      {
       "id": "C353827E-637D-58B4-B4F5-FA636E4623CF",
       "cell": {
-       "col": 47,
-       "row": 24
+       "col": 60,
+       "row": 19
       },
       "axis": "vertical",
       "fromDir": {
@@ -9536,8 +9524,8 @@
      {
       "id": "F84A7E99-949C-5C3B-BCE8-A19D8DF8FE49",
       "cell": {
-       "col": 47,
-       "row": 23
+       "col": 60,
+       "row": 18
       },
       "axis": "vertical",
       "fromDir": {
@@ -9553,90 +9541,226 @@
      {
       "id": "EA3DDB2F-0E54-5F31-988F-C0CFBF83A4A4",
       "cell": {
-       "col": 47,
-       "row": 22
+       "col": 60,
+       "row": 17
       },
-      "axis": "vertical",
+      "axis": "horizontal",
       "fromDir": {
-       "col": 0,
-       "row": -1
+       "col": -1,
+       "row": 0
       },
       "toDir": {
-       "col": 0,
-       "row": -1
+       "col": -1,
+       "row": 0
       },
       "lineType": "pipe"
      },
      {
       "id": "46292A64-E20A-5F24-8CBF-4EB6EBFC0D8A",
       "cell": {
-       "col": 47,
-       "row": 21
+       "col": 59,
+       "row": 17
       },
-      "axis": "vertical",
+      "axis": "horizontal",
       "fromDir": {
-       "col": 0,
-       "row": -1
+       "col": -1,
+       "row": 0
       },
       "toDir": {
-       "col": 0,
-       "row": -1
+       "col": -1,
+       "row": 0
       },
       "lineType": "pipe"
      },
      {
       "id": "C8FE36E7-0B3B-5791-89E6-DC4867A7F229",
       "cell": {
-       "col": 47,
-       "row": 20
+       "col": 58,
+       "row": 17
       },
-      "axis": "vertical",
+      "axis": "horizontal",
       "fromDir": {
-       "col": 0,
-       "row": -1
+       "col": -1,
+       "row": 0
       },
       "toDir": {
-       "col": 0,
-       "row": -1
+       "col": -1,
+       "row": 0
       },
       "lineType": "pipe"
      },
      {
       "id": "C33BA6B7-CC18-53FE-8289-39A04ACCE6A9",
       "cell": {
-       "col": 47,
-       "row": 19
+       "col": 57,
+       "row": 17
       },
-      "axis": "vertical",
+      "axis": "horizontal",
       "fromDir": {
-       "col": 0,
-       "row": -1
+       "col": -1,
+       "row": 0
       },
       "toDir": {
-       "col": 0,
-       "row": -1
+       "col": -1,
+       "row": 0
       },
       "lineType": "pipe"
      },
      {
       "id": "59EBC46F-1299-51FF-B2B9-B2789A6DAE99",
       "cell": {
-       "col": 47,
-       "row": 18
+       "col": 56,
+       "row": 17
       },
-      "axis": "vertical",
+      "axis": "horizontal",
       "fromDir": {
-       "col": 0,
-       "row": -1
+       "col": -1,
+       "row": 0
       },
       "toDir": {
-       "col": 0,
-       "row": -1
+       "col": -1,
+       "row": 0
       },
       "lineType": "pipe"
      },
      {
       "id": "07AA0092-3FBF-54CA-A628-CFAF38575564",
+      "cell": {
+       "col": 55,
+       "row": 17
+      },
+      "axis": "horizontal",
+      "fromDir": {
+       "col": -1,
+       "row": 0
+      },
+      "toDir": {
+       "col": -1,
+       "row": 0
+      },
+      "lineType": "pipe"
+     },
+     {
+      "id": "57ADFCB2-7AF0-5CBF-BE18-495DB8ECE6F2",
+      "cell": {
+       "col": 54,
+       "row": 17
+      },
+      "axis": "horizontal",
+      "fromDir": {
+       "col": -1,
+       "row": 0
+      },
+      "toDir": {
+       "col": -1,
+       "row": 0
+      },
+      "lineType": "pipe"
+     },
+     {
+      "id": "693350C2-6FA1-58A1-AF80-8604E5672989",
+      "cell": {
+       "col": 53,
+       "row": 17
+      },
+      "axis": "horizontal",
+      "fromDir": {
+       "col": -1,
+       "row": 0
+      },
+      "toDir": {
+       "col": -1,
+       "row": 0
+      },
+      "lineType": "pipe"
+     },
+     {
+      "id": "8F9D5794-2B70-5EDA-9158-C6EAC0F43A90",
+      "cell": {
+       "col": 52,
+       "row": 17
+      },
+      "axis": "horizontal",
+      "fromDir": {
+       "col": -1,
+       "row": 0
+      },
+      "toDir": {
+       "col": -1,
+       "row": 0
+      },
+      "lineType": "pipe"
+     },
+     {
+      "id": "063C0FF8-0D08-568E-BAA9-1ECBC6687AA3",
+      "cell": {
+       "col": 51,
+       "row": 17
+      },
+      "axis": "horizontal",
+      "fromDir": {
+       "col": -1,
+       "row": 0
+      },
+      "toDir": {
+       "col": -1,
+       "row": 0
+      },
+      "lineType": "pipe"
+     },
+     {
+      "id": "BEB83FA3-18D2-5BAA-AA43-8F209AB69745",
+      "cell": {
+       "col": 50,
+       "row": 17
+      },
+      "axis": "horizontal",
+      "fromDir": {
+       "col": -1,
+       "row": 0
+      },
+      "toDir": {
+       "col": -1,
+       "row": 0
+      },
+      "lineType": "pipe"
+     },
+     {
+      "id": "AA0227AE-9671-5611-B5F3-FD1F26B7F639",
+      "cell": {
+       "col": 49,
+       "row": 17
+      },
+      "axis": "horizontal",
+      "fromDir": {
+       "col": -1,
+       "row": 0
+      },
+      "toDir": {
+       "col": -1,
+       "row": 0
+      },
+      "lineType": "pipe"
+     },
+     {
+      "id": "F7F27DD0-E5F7-55B6-B03E-2DC0B924D30F",
+      "cell": {
+       "col": 48,
+       "row": 17
+      },
+      "axis": "horizontal",
+      "fromDir": {
+       "col": -1,
+       "row": 0
+      },
+      "toDir": {
+       "col": -1,
+       "row": 0
+      },
+      "lineType": "pipe"
+     },
+     {
+      "id": "FC7906DD-96C1-51F3-B193-EA96C8B7C364",
       "cell": {
        "col": 47,
        "row": 17

@@ -15,7 +15,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 OTHER = ROOT / 'EndfiledPlanner' / 'other'
 
-GRID_COLS, GRID_ROWS = 60, 48
+GRID_COLS, GRID_ROWS = 80, 80
 UP, RIGHT, DOWN, LEFT = 0, 1, 2, 3
 OFFSET = {UP: (0, -1), RIGHT: (1, 0), DOWN: (0, 1), LEFT: (-1, 0)}
 DIR_NAME = {UP: '上', RIGHT: '右', DOWN: '下', LEFT: '左'}

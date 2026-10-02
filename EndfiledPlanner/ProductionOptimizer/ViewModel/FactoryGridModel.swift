@@ -73,8 +73,8 @@ enum LegacyRecipeIndex {
 // MARK: - 网格模型
 class FactoryGridModel {
 
-    static let gridCols = 60
-    static let gridRows = 48
+    static let gridCols = 80
+    static let gridRows = 80
 
     // MARK: - 保存/读取（UserDefaults）
     private static let saveKey = "factory_layout_v1"
