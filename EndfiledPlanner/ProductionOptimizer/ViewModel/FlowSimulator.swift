@@ -98,6 +98,8 @@ enum FlowSimulator {
         let detail: String?
         /// 实际产出（个/秒）
         let outputs: [String: Double]
+        /// 实际消耗（个/秒），含激活口/散布机吃掉的气体或液体
+        let inputs: [String: Double]
         /// 仓库取货口不算产线
         let isWarehouseOutlet: Bool
     }
@@ -699,15 +701,21 @@ private final class Engine {
                 }
                 var outputs: [String: Double] = [:]
                 for product in node.products { outputs[product.name] = product.rate * node.throttle }
+                var inputs: [String: Double] = [:]
+                for ingredient in node.ingredients { inputs[ingredient.name, default: 0] += ingredient.rate * node.throttle }
+                if let item = node.activatorItem, node.throttle > 1e-9 {
+                    inputs[item, default: 0] += FlowSimulator.activatorNeed
+                }
                 result.machines.append(FlowSimulator.MachineState(
                     id: node.placed.id, name: node.def.name, status: status, throttle: node.throttle,
-                    detail: detail, outputs: outputs, isWarehouseOutlet: isOutlet))
+                    detail: detail, outputs: outputs, inputs: inputs, isWarehouseOutlet: isOutlet))
             case .vaporizer:
                 let active = node.activeEnv != nil
+                let gas = node.activeEnv.flatMap { env in FlowSimulator.vaporizerGases.first { $0.value == env }?.key }
                 result.machines.append(FlowSimulator.MachineState(
                     id: node.placed.id, name: node.def.name, status: active ? .running : .inactive,
                     throttle: active ? 1 : 0, detail: node.activeEnv.map { "\($0)环境" } ?? node.gateNote,
-                    outputs: [:], isWarehouseOutlet: false))
+                    outputs: [:], inputs: gas.map { [$0: FlowSimulator.activatorNeed] } ?? [:], isWarehouseOutlet: false))
             case .loader, .cleaner:
                 result.sinks.append(FlowSimulator.SinkState(id: node.placed.id, name: node.def.name, consumed: node.consumed))
             default:

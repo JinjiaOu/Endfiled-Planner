@@ -196,6 +196,30 @@ struct FactoryStatsView: View {
                             }
                         }
                     }
+
+                    // 消耗列表
+                    if !stats.consumptionLines.isEmpty {
+                        VStack(alignment: .leading, spacing: 0) {
+                            HStack {
+                                Rectangle()
+                                    .fill(Color(red: 0.9, green: 0.5, blue: 0.2))
+                                    .frame(width: 3, height: 12)
+
+                                Text("消耗统计")
+                                    .font(.system(size: 9, weight: .bold, design: .monospaced))
+                                    .foregroundColor(.white.opacity(0.6))
+
+                                Spacer()
+                            }
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 8)
+                            .background(Color(red: 0.08, green: 0.09, blue: 0.12))
+
+                            ForEach(stats.consumptionLines, id: \.output) { line in
+                                productionLineRow(line: line, color: Color(red: 0.9, green: 0.5, blue: 0.2))
+                            }
+                        }
+                    }
                 }
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
@@ -280,10 +304,11 @@ struct FactoryStatsView: View {
         .padding(.vertical, 4)
     }
 
-    private func productionLineRow(line: FactoryGridModel.ProductionLine) -> some View {
+    private func productionLineRow(line: FactoryGridModel.ProductionLine,
+                                   color: Color = Color(red: 0.4, green: 0.8, blue: 0.2)) -> some View {
         HStack(spacing: 8) {
             Circle()
-                .fill(Color(red: 0.4, green: 0.8, blue: 0.2).opacity(0.6))
+                .fill(color.opacity(0.6))
                 .frame(width: 6, height: 6)
 
             ItemIcon(name: line.output, size: 24)
@@ -296,7 +321,7 @@ struct FactoryStatsView: View {
 
             Text(String(format: "%.0f/min", line.ratePerMin))
                 .font(.system(size: 11, weight: .bold, design: .monospaced))
-                .foregroundColor(Color(red: 0.4, green: 0.8, blue: 0.2))
+                .foregroundColor(color)
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 6)

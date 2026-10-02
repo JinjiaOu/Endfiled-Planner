@@ -246,6 +246,8 @@ class FactoryGridModel {
         let categoryBreakdown: [BuildingCategory: Int]
         let bottleneck: String?         // 瓶颈建筑（节流系数最低的那台）
         let productionLines: [ProductionLine]
+        /// 消耗汇总：机器吃掉的原料（含激活/散布用的气体液体）+ 废水处理机处理掉的废液；存货口是入库，不算
+        let consumptionLines: [ProductionLine]
         let passthroughCount: Int       // 分流器/汇流器/物流桥这类直通节点数量（不产不耗，不算进产线）
         let outletMaterials: [String]   // 每个取线出口当前设置的材料（未设置显示"未设置"）
         let machineStates: [FlowSimulator.MachineState]
@@ -300,6 +302,25 @@ class FactoryGridModel {
                            buildingNames: value.buildings.sorted { $0.key < $1.key }.map { "\($0.key) ×\($0.value)" })
         }.sorted { $0.ratePerMin > $1.ratePerMin }
 
+        var inputRates: [String: (rate: Double, buildings: [String: Int])] = [:]
+        func addConsumption(_ item: String, _ perSecond: Double, by name: String) {
+            guard perSecond > 1e-9 else { return }
+            var entry = inputRates[item] ?? (rate: 0, buildings: [:])
+            entry.rate += perSecond * 60
+            entry.buildings[name, default: 0] += 1
+            inputRates[item] = entry
+        }
+        for machine in sim.machines {
+            for (item, perSecond) in machine.inputs { addConsumption(item, perSecond, by: machine.name) }
+        }
+        for sink in sim.sinks where sink.name != BuildingDefinition.find(BuildingDefinition.warehouseInletID)?.name {
+            for (item, perSecond) in sink.consumed { addConsumption(item, perSecond, by: sink.name) }
+        }
+        let consumption = inputRates.map { key, value in
+            ProductionLine(output: key, ratePerMin: value.rate,
+                           buildingNames: value.buildings.sorted { $0.key < $1.key }.map { "\($0.key) ×\($0.value)" })
+        }.sorted { $0.ratePerMin > $1.ratePerMin }
+
         let worst = sim.machines
             .filter { $0.status == .starved || $0.status == .blocked || $0.status == .inactive }
             .min { $0.throttle < $1.throttle }
@@ -317,6 +338,7 @@ class FactoryGridModel {
             categoryBreakdown: categoryBreakdown,
             bottleneck: bottleneck,
             productionLines: lines,
+            consumptionLines: consumption,
             passthroughCount: passthroughCount,
             outletMaterials: outletMaterials,
             machineStates: sim.machines,
