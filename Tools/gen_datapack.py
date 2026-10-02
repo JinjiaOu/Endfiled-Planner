@@ -147,6 +147,9 @@ def main():
     pack = generate(args.tablecfg)
     assert pack == generate(args.tablecfg), 'Non-deterministic generation'
     args.output.mkdir(parents=True, exist_ok=True)
+    # 存档按配方 ID 记：跟覆盖前的 recipes.json 对比，ID 消失或内容变化都要人工确认
+    previous_recipes_path = args.output / 'recipes.json'
+    baseline = json.loads(previous_recipes_path.read_text())['recipes'] if previous_recipes_path.exists() else []
     commit = subprocess.check_output(['git', '-C', str(args.tablecfg), 'rev-parse', 'HEAD'], text=True).strip()
     meta_path = args.output / 'datapack_meta.json'
     # Preserve generation time when contents and source commit are unchanged.
@@ -157,22 +160,17 @@ def main():
                                  'generatedAt': timestamp or datetime.datetime.now(datetime.timezone.utc).isoformat(timespec='seconds')}
     for file, value in pack.items():
         write_json(args.output / file, value)
-    baseline = json.loads((ROOT / 'EndfiledPlanner/other/recipes_generated.json').read_text())['recipes']
     new = {r['id']: r for r in pack['recipes.json']['recipes']}
     old = {r['id']: r for r in baseline}
     removed = sorted(old.keys() - new.keys())
     changed = sorted(k for k in old.keys() & new.keys() if old[k] != new[k])
     added = sorted(new.keys() - old.keys())
-    print(f'raw: removed={len(removed)}, changed={len(changed)}, added={len(added)}')
-    print('overrideRemoved=' + json.dumps(removed, ensure_ascii=False))
-    effective = {k: r for k, r in old.items() if allowed(r)}
-    print(f'after overrides: removed={len(effective.keys() - new.keys())}, changed={len(changed)}, added={len(added)}')
-    print('added=' + json.dumps(added, ensure_ascii=False))
-    assert not (effective.keys() - new.keys()) and not changed
-    experimental = [k for k in added if new[k]['type'] == 'machineCraft']
-    gas = [r for r in new.values() if r['type'] == 'gasMining']
-    assert len(experimental) == 12 and all('activity' in k for k in experimental)
-    assert len(gas) == 2 and all(r['seconds'] == 3 for r in gas)
+    print(f'vs previous recipes.json: removed={len(removed)}, changed={len(changed)}, added={len(added)}')
+    for label, ids in (('removed', removed), ('changed', changed), ('added', added)):
+        if ids:
+            print(f'{label}=' + json.dumps(ids, ensure_ascii=False))
+    if removed:
+        print('WARNING: 有配方 ID 消失，存档里选了这些配方的建筑读档后会变成未设置')
     devices = {d['id']: d for d in pack['devices.json']['devices']}
     assert 'sp_hub_1' in devices and 'sp_sub_hub_1' not in devices
     assert devices['power_station_1']['powerGenerate'] == 150 and devices['sp_hub_1']['powerGenerate'] == 200

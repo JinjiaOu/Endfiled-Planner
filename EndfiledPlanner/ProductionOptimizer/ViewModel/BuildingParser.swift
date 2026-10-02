@@ -7,7 +7,7 @@
 
 import Foundation
 
-/// 解析 devices_generated.json（游戏解包数据转换而来，字段结构见该文件本身），
+/// 解析 devices.json（Tools/gen_datapack.py 从游戏解包数据生成，字段结构见该文件本身），
 /// 产出真实的 BuildingDefinition 列表，替代原来手写的 mock 数据。
 enum BuildingParser {
 
@@ -58,8 +58,8 @@ enum BuildingParser {
     ]
 
     static func loadAll() -> [BuildingDefinition] {
-        guard let url = Bundle.main.url(forResource: "devices_generated", withExtension: "json") else {
-            print("未找到 devices_generated.json")
+        guard let url = Bundle.main.url(forResource: "devices", withExtension: "json") else {
+            print("未找到 devices.json")
             return []
         }
         do {

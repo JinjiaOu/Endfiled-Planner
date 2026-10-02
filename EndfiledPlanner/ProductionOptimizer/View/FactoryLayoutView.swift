@@ -12,8 +12,7 @@ import SwiftUI
 private struct FactoryAlertsModifier: ViewModifier {
     @ObservedObject var vm: FactoryViewModel
     @Binding var showClearConfirm: Bool
-    @Binding var showPresetConfirm: Bool
-    @Binding var showWulingPresetConfirm: Bool
+    @Binding var pendingPreset: FactoryPreset?
     @Binding var pendingMapSwitch: MapType?
 
     func body(content: Content) -> some View {
@@ -24,17 +23,21 @@ private struct FactoryAlertsModifier: ViewModifier {
             } message: {
                 Text("将删除所有建筑和传送带，此操作不可撤销。")
             }
-            .alert("加载测试产线", isPresented: $showPresetConfirm) {
-                Button("取消", role: .cancel) {}
-                Button("加载", role: .destructive) { vm.loadTestPreset() }
-            } message: {
-                Text("将切换到四号谷地并替换当前布局（不会自动保存），用于测试。")
-            }
-            .alert("加载测试产线", isPresented: $showWulingPresetConfirm) {
-                Button("取消", role: .cancel) {}
-                Button("加载", role: .destructive) { vm.loadWulingSelfSupplyPreset() }
-            } message: {
-                Text("将切换到武陵并替换当前布局（不会自动保存）。两个场景对比上游机组数量对下游负载的影响，坐标是手推的没跑过，出问题请看控制台报错。")
+            .alert(
+                "加载预设产线",
+                isPresented: Binding(
+                    get: { pendingPreset != nil },
+                    set: { if !$0 { pendingPreset = nil } }
+                ),
+                presenting: pendingPreset
+            ) { preset in
+                Button("取消", role: .cancel) { pendingPreset = nil }
+                Button("加载", role: .destructive) {
+                    vm.loadPreset(preset)
+                    pendingPreset = nil
+                }
+            } message: { preset in
+                Text(preset.summary)
             }
             // 切换地图确认
             .alert(
@@ -139,8 +142,7 @@ struct FactoryLayoutView: View {
     @State private var pendingMapSwitch: MapType? = nil
     @State private var showRecipeSheet = false
     @State private var showMaterialSheet = false
-    @State private var showPresetConfirm = false
-    @State private var showWulingPresetConfirm = false
+    @State private var pendingPreset: FactoryPreset? = nil
 
     private var usesSidePalette: Bool {
         horizontalSizeClass == .regular
@@ -249,11 +251,10 @@ struct FactoryLayoutView: View {
                         } label: {
                             Label("切换地图（当前：\(vm.layout.mapType.displayName)）", systemImage: "map")
                         }
-                        Button { showPresetConfirm = true } label: {
-                            Label("加载测试产线（四号谷地）", systemImage: "wand.and.stars")
-                        }
-                        Button { showWulingPresetConfirm = true } label: {
-                            Label("加载测试产线（武陵·重息壤对比）", systemImage: "wand.and.stars.inverse")
+                        ForEach(FactoryPreset.allCases) { preset in
+                            Button { pendingPreset = preset } label: {
+                                Label(preset.menuTitle, systemImage: "wand.and.stars")
+                            }
                         }
                         Button(role: .destructive) { showClearConfirm = true } label: {
                             Label("清空布局", systemImage: "trash")
@@ -267,8 +268,7 @@ struct FactoryLayoutView: View {
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbarBackground(Color(red: 0.08, green: 0.09, blue: 0.12), for: .navigationBar)
             .modifier(FactoryAlertsModifier(vm: vm, showClearConfirm: $showClearConfirm,
-                                           showPresetConfirm: $showPresetConfirm,
-                                           showWulingPresetConfirm: $showWulingPresetConfirm,
+                                           pendingPreset: $pendingPreset,
                                            pendingMapSwitch: $pendingMapSwitch))
         }
     }
@@ -645,17 +645,17 @@ struct FactoryLayoutView: View {
     private func recipePicker(for def: BuildingDefinition) -> some View {
         let recipes = vm.availableRecipes(for: def)
         if !recipes.isEmpty, let placedID = vm.selectedBuildingID {
-            let currentIndex = vm.selectedPlaced?.selectedRecipeIndex
+            let currentID = vm.selectedPlaced?.selectedRecipeID
+            let current = recipes.first { $0.id == currentID }
             Button {
                 showRecipeSheet = true
             } label: {
                 HStack(spacing: 4) {
-                    if let currentIndex, recipes.indices.contains(currentIndex),
-                       let output = recipes[currentIndex].outputs.first {
+                    if let output = current?.outputs.first {
                         ItemIcon(name: output.name, size: 20)
                     }
                     Label(
-                    currentIndex.flatMap { recipes.indices.contains($0) ? recipes[$0].outputs.first?.name : nil } ?? "配方一览",
+                    current?.outputs.first?.name ?? "配方一览",
                     systemImage: "list.bullet.rectangle"
                     )
                 }
@@ -666,20 +666,20 @@ struct FactoryLayoutView: View {
             .sheet(isPresented: $showRecipeSheet) {
                 SearchablePickerSheet(
                     title: "配方一览",
-                    items: recipes.enumerated().map { idx, recipe in
+                    items: recipes.map { recipe in
                         let outputText = recipe.outputs.map { "\($0.name)×\($0.count)" }.joined(separator: " + ")
                         let inputText = recipe.inputs.map { "\($0.name)×\($0.count)" }.joined(separator: " + ")
                         return SearchablePickerItem(
-                            id: String(idx),
+                            id: recipe.id,
                             title: "\(outputText)（\(recipe.time)s）",
                             subtitle: recipeSubtitle(inputText: inputText, env: recipe.requiredEnv),
                             iconName: recipe.outputs.first?.name
                         )
                     },
-                    selectedID: currentIndex.map(String.init),
+                    selectedID: currentID,
                     clearTitle: "不设置配方",
                     onSelect: { id in
-                        vm.selectRecipe(id.flatMap(Int.init), for: placedID)
+                        vm.selectRecipe(id, for: placedID)
                     },
                     filterChips: ingredientChips(for: recipes),
                     chipsLabel: "按原料筛选（跟游戏一样先选吃什么）"
@@ -693,12 +693,12 @@ struct FactoryLayoutView: View {
     private func multiRecipePicker(for def: BuildingDefinition) -> some View {
         let recipes = vm.availableRecipes(for: def)
         if !recipes.isEmpty, let placedID = vm.selectedBuildingID, let placed = vm.selectedPlaced {
-            let selectedIndices = placed.selectedRecipeIndices
+            let selectedIDs = placed.selectedRecipeIDs
             VStack(alignment: .leading, spacing: 4) {
                 Button {
                     showRecipeSheet = true
                 } label: {
-                    Label(selectedIndices.isEmpty ? "配方一览（可多选）" : "已勾选 \(selectedIndices.count) 条配方",
+                    Label(selectedIDs.isEmpty ? "配方一览（可多选）" : "已勾选 \(selectedIDs.count) 条配方",
                           systemImage: "list.bullet.rectangle.fill")
                         .font(.system(size: 10, design: .monospaced))
                         .foregroundColor(Color(red: 0.4, green: 0.8, blue: 0.2))
@@ -707,20 +707,20 @@ struct FactoryLayoutView: View {
                 .sheet(isPresented: $showRecipeSheet) {
                     SearchablePickerSheet(
                         title: "配方一览",
-                        items: recipes.enumerated().map { idx, recipe in
+                        items: recipes.map { recipe in
                             let outputText = recipe.outputs.map { "\($0.name)×\($0.count)" }.joined(separator: " + ")
                             let inputText = recipe.inputs.map { "\($0.name)×\($0.count)" }.joined(separator: " + ")
                             return SearchablePickerItem(
-                                id: String(idx),
+                                id: recipe.id,
                                 title: "\(outputText)（\(recipe.time)s）",
                                 subtitle: inputText.isEmpty ? nil : "原料：\(inputText)",
                                 iconName: recipe.outputs.first?.name
                             )
                         },
                         multiSelect: true,
-                        selectedIDs: Set(selectedIndices.map(String.init)),
+                        selectedIDs: selectedIDs,
                         onToggle: { id in
-                            if let idx = Int(id) { vm.toggleRecipe(idx, for: placedID) }
+                            vm.toggleRecipe(id, for: placedID)
                         },
                         filterChips: ingredientChips(for: recipes),
                         chipsLabel: "按原料筛选（跟游戏一样先选吃什么，能多选配方）"
@@ -787,7 +787,7 @@ struct FactoryLayoutView: View {
     /// 净产出的物品要不要手动指定输出口：只有同类型口有 2 个以上净产物时才需要选，只有 1 个净产物时用不着
     @ViewBuilder
     private func outputAssignmentRow(item: String, rate: Double, def: BuildingDefinition, placedID: UUID) -> some View {
-        let isSolid = RecipeViewModel.isLikelySolid(item)
+        let isSolid = ItemCatalog.isSolid(item)
         let ports = outputPortsOfKind(def, isSolid: isSolid)
         HStack(spacing: 6) {
             ItemIcon(name: item, size: 18)
@@ -874,7 +874,7 @@ struct FactoryLayoutView: View {
     @ViewBuilder
     private func outletMaterialPicker(for def: BuildingDefinition) -> some View {
         if def.id == BuildingDefinition.warehouseOutletID, let placedID = vm.selectedBuildingID {
-            let current = vm.selectedPlaced?.outletMaterial
+            let current = vm.selectedPlaced?.outletMaterialID.flatMap(ItemCatalog.name(for:))
             Button {
                 showMaterialSheet = true
             } label: {
@@ -889,8 +889,8 @@ struct FactoryLayoutView: View {
             .sheet(isPresented: $showMaterialSheet) {
                 SearchablePickerSheet(
                     title: "选择取货材料",
-                    items: vm.solidMaterials.map { SearchablePickerItem(id: $0, title: $0, iconName: $0) },
-                    selectedID: current,
+                    items: vm.solidMaterials.map { SearchablePickerItem(id: $0.itemId, title: $0.name, iconName: $0.name) },
+                    selectedID: vm.selectedPlaced?.outletMaterialID,
                     clearTitle: "未设置",
                     onSelect: { material in
                         vm.setOutletMaterial(material, for: placedID)

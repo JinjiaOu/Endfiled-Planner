@@ -7,27 +7,31 @@
 
 import Foundation
 
+struct RecipeItem {
+    let itemId: String
+    let name: String
+    let count: Int
+}
+
 struct Recipe {
+    /// recipes.json 里的配方 ID，存档按这个记，不再按列表下标
+    let id: String
+    /// 对应 devices.json 的建筑 id，生产规划按这个给建筑挑配方
+    let machineId: String
+    /// 展示用的机器名，需要气体环境的配方带"（稳定环境）"这类后缀，跟原来 recipes.txt 的写法一致
     let machine: String
     let time: Int
-    let inputs: [(name: String, count: Int)]
-    let outputs: [(name: String, count: Int)]
+    /// 运行需要的气体环境（"稳定环境"等），不需要时为 nil
+    let gasEnvName: String?
+    let inputs: [RecipeItem]
+    let outputs: [RecipeItem]
 
-    /// 机器名带"（稳定环境）"这类后缀的配方，需要附近有对应气体环境才能运行，返回"稳定"这样的环境名
+    /// 环境名去掉"环境"二字（"稳定环境"→"稳定"），跟 FlowSimulator.vaporizerGases 的取值对齐
     var requiredEnv: String? {
-        guard let start = machine.range(of: "（"),
-              let end = machine.range(of: "环境）", range: start.upperBound..<machine.endIndex)
-        else { return nil }
-        return String(machine[start.upperBound..<end.lowerBound])
+        guard let gasEnvName else { return nil }
+        return gasEnvName.hasSuffix("环境") ? String(gasEnvName.dropLast(2)) : gasEnvName
     }
 
     var outputCount: Int { outputs.first?.count ?? 1 }
     var outputName: String { outputs.first?.name ?? "" }
-
-    /// 用来在"同一个配方按不同产物存了好几份"的情况下去重（tuple 数组不能直接 Equatable）
-    var signature: String {
-        let i = inputs.map { "\($0.name)x\($0.count)" }.joined(separator: "+")
-        let o = outputs.map { "\($0.name)x\($0.count)" }.joined(separator: "+")
-        return "\(machine)|\(time)|\(i)->\(o)"
-    }
 }

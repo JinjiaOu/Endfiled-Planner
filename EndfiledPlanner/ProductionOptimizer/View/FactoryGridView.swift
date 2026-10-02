@@ -386,9 +386,9 @@ struct FactoryGridView: View {
                             .font(.system(size: min(w, h) * 0.32, weight: .bold, design: .monospaced))
                             .foregroundColor(.white).lineLimit(1)
                         if def.id == BuildingDefinition.warehouseOutletID {
-                            Text(placed.outletMaterial ?? "未设置")
+                            Text(placed.outletMaterialID.flatMap(ItemCatalog.name(for:)) ?? "未设置")
                                 .font(.system(size: min(w, h) * 0.26, design: .monospaced))
-                                .foregroundColor(placed.outletMaterial == nil
+                                .foregroundColor(placed.outletMaterialID == nil
                                                  ? .white.opacity(0.35)
                                                  : Color(red: 0.4, green: 0.8, blue: 0.2))
                                 .lineLimit(1)
@@ -409,9 +409,9 @@ struct FactoryGridView: View {
                         .font(.system(size: min(w, h) * 0.16, weight: .bold, design: .monospaced))
                         .foregroundColor(.white).lineLimit(1)
                     if def.id == BuildingDefinition.warehouseOutletID {
-                        Text(placed.outletMaterial ?? "未设置")
+                        Text(placed.outletMaterialID.flatMap(ItemCatalog.name(for:)) ?? "未设置")
                             .font(.system(size: min(w, h) * 0.14, design: .monospaced))
-                            .foregroundColor(placed.outletMaterial == nil
+                            .foregroundColor(placed.outletMaterialID == nil
                                              ? .white.opacity(0.35)
                                              : Color(red: 0.4, green: 0.8, blue: 0.2))
                             .lineLimit(1)

@@ -9,10 +9,14 @@ import Foundation
 
 // MARK: - 布局快照（用于序列化）
 struct FactoryLayout: Codable {
+    /// 存档数据版本：1 = 配方按列表下标、取货材料按中文名存（旧 recipes.txt 时代）；2 = 配方 ID + itemId
+    static let currentDataVersion = 2
+
     var buildings: [PlacedBuilding]
     var beltNetwork: BeltNetwork
     var savedAt: Date
     var mapType: MapType
+    var dataVersion: Int
 
     static let empty = FactoryLayout(buildings: [], beltNetwork: BeltNetwork(), savedAt: .now, mapType: .valley4)
 
@@ -21,19 +25,48 @@ struct FactoryLayout: Codable {
         self.beltNetwork = beltNetwork
         self.savedAt = savedAt
         self.mapType = mapType
+        self.dataVersion = FactoryLayout.currentDataVersion
     }
 
     private enum CodingKeys: String, CodingKey {
-        case buildings, beltNetwork, savedAt, mapType
+        case buildings, beltNetwork, savedAt, mapType, dataVersion
     }
 
-    // 旧存档没有 mapType 字段，缺省当四号谷地处理，不然老存档会直接读取失败被清空
+    // 旧存档没有 mapType 字段，缺省当四号谷地处理，不然老存档会直接读取失败被清空。
+    // 旧版本的配方下标在 PlacedBuilding 解码时就已经迁移成配方 ID，读完即是当前版本
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         buildings = try c.decode([PlacedBuilding].self, forKey: .buildings)
         beltNetwork = try c.decode(BeltNetwork.self, forKey: .beltNetwork)
         savedAt = try c.decode(Date.self, forKey: .savedAt)
         mapType = try c.decodeIfPresent(MapType.self, forKey: .mapType) ?? .valley4
+        let stored = try c.decodeIfPresent(Int.self, forKey: .dataVersion) ?? 1
+        if stored < FactoryLayout.currentDataVersion {
+            print("存档从数据版本 \(stored) 迁移到 \(FactoryLayout.currentDataVersion)")
+        }
+        dataVersion = FactoryLayout.currentDataVersion
+    }
+}
+
+// MARK: - 旧存档迁移：配方列表下标 → 配方 ID
+/// legacy_recipe_index.json 由 Tools/gen_legacy_recipe_index.py 按旧 recipes.txt 的排序规则一次性生成，
+/// 键是建筑 id，数组下标就是旧存档里的 selectedRecipeIndex。
+/// 拆解机、精炼炉里第一个产物同名的几条配方，旧版本身每次启动顺序就可能不同，这几条只能尽量对上
+enum LegacyRecipeIndex {
+    private static let table: [String: [String?]] = {
+        guard let url = Bundle.main.url(forResource: "legacy_recipe_index", withExtension: "json"),
+              let data = try? Data(contentsOf: url),
+              let table = try? JSONDecoder().decode([String: [String?]].self, from: data)
+        else {
+            print("未找到 legacy_recipe_index.json，旧存档的配方选择无法迁移")
+            return [:]
+        }
+        return table
+    }()
+
+    static func recipeID(machineID: String, index: Int) -> String? {
+        guard let list = table[machineID], list.indices.contains(index) else { return nil }
+        return list[index]
     }
 }
 
@@ -226,16 +259,12 @@ class FactoryGridModel {
         let buildingNames: [String]
     }
 
-    /// 某台建筑可选的配方：本机器名的配方在前，"（xx环境）"这类后缀变体接在后面
-    /// （只往后追加，已保存的 selectedRecipeIndex 不会错位）
+    /// 某台建筑可选的配方（machineRecipes 按建筑 id 分组）
     static func recipes(for def: BuildingDefinition, in machineRecipes: [String: [Recipe]]) -> [Recipe] {
-        var result = machineRecipes[def.name] ?? []
-        let variantKeys = machineRecipes.keys.filter { $0.hasPrefix(def.name + "（") }.sorted()
-        for key in variantKeys { result += machineRecipes[key] ?? [] }
-        return result
+        machineRecipes[def.id] ?? []
     }
 
-    /// - Parameter machineRecipes: 按机器名分组去重的配方表（RecipeViewModel.recipesByMachine()）
+    /// - Parameter machineRecipes: 按建筑 id 分组的配方表（RecipeViewModel.recipesByMachine()）
     static func analyze(layout: FactoryLayout, machineRecipes: [String: [Recipe]]) -> ProductionStats {
         var totalPowerConsumed = 0.0
         var totalPowerGenerated = 0.0
@@ -250,7 +279,7 @@ class FactoryGridModel {
             categoryBreakdown[def.category, default: 0] += 1
 
             if def.id == BuildingDefinition.warehouseOutletID {
-                outletMaterials.append(placed.outletMaterial ?? "未设置")
+                outletMaterials.append(placed.outletMaterialID.flatMap(ItemCatalog.name(for:)) ?? "未设置")
             }
             if def.category == .logistics { passthroughCount += 1 }
         }

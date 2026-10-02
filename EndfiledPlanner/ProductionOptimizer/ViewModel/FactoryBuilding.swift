@@ -205,14 +205,14 @@ struct PlacedBuilding: Identifiable, Codable {
     var origin: GridPoint       // 左上角坐标
     var rotation: BuildingRotation
     var isActive: Bool
-    /// 这台机器有多个配方时，用户选的是哪一个（下标对应 RecipeViewModel.recipesByMachine() 里该机器的配方列表）
-    var selectedRecipeIndex: Int? = nil
-    /// 仅取线出口用：当前设置的取货材料，未设置时不产出
-    var outletMaterial: String? = nil
+    /// 这台机器选的配方（recipes.json 的配方 ID）
+    var selectedRecipeID: String? = nil
+    /// 仅取线出口用：当前设置的取货材料（items.json 的 itemId），未设置时不产出
+    var outletMaterialID: String? = nil
     /// 仅物品/管道准入口用：用户设置的最大流速（个/分钟），nil = 不额外限速（跑满带速/管速）
     var flowLimitPerMin: Double? = nil
-    /// 仅反应池/扩容反应池用：同时勾选运行的配方下标集合（下标含义同 selectedRecipeIndex）
-    var selectedRecipeIndices: Set<Int> = []
+    /// 仅反应池/扩容反应池用：同时勾选运行的配方 ID 集合
+    var selectedRecipeIDs: Set<String> = []
     /// 仅反应池/扩容反应池用：净产出的物品 → 走哪个物理输出口（下标对应 BuildingDefinition.ports 数组，只在同一物品口/管道口不止一个净产物时才需要手动指定）
     var outputPortAssignments: [Int: String] = [:]
 
@@ -222,6 +222,44 @@ struct PlacedBuilding: Identifiable, Codable {
         self.origin = origin
         self.rotation = rotation
         self.isActive = true
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case id, definitionID, origin, rotation, isActive
+        case selectedRecipeID, outletMaterialID, flowLimitPerMin, selectedRecipeIDs, outputPortAssignments
+    }
+
+    /// 旧存档（FactoryLayout.dataVersion 1）记的是配方列表下标和材料中文名，读取时一次性换成配方 ID / itemId
+    private enum LegacyKeys: String, CodingKey {
+        case selectedRecipeIndex, selectedRecipeIndices, outletMaterial
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(UUID.self, forKey: .id)
+        definitionID = try c.decode(String.self, forKey: .definitionID)
+        origin = try c.decode(GridPoint.self, forKey: .origin)
+        rotation = try c.decode(BuildingRotation.self, forKey: .rotation)
+        isActive = try c.decodeIfPresent(Bool.self, forKey: .isActive) ?? true
+        flowLimitPerMin = try c.decodeIfPresent(Double.self, forKey: .flowLimitPerMin)
+        outputPortAssignments = try c.decodeIfPresent([Int: String].self, forKey: .outputPortAssignments) ?? [:]
+
+        let legacy = try decoder.container(keyedBy: LegacyKeys.self)
+        if let recipeID = try c.decodeIfPresent(String.self, forKey: .selectedRecipeID) {
+            selectedRecipeID = recipeID
+        } else if let index = try legacy.decodeIfPresent(Int.self, forKey: .selectedRecipeIndex) {
+            selectedRecipeID = LegacyRecipeIndex.recipeID(machineID: definitionID, index: index)
+        }
+        if let recipeIDs = try c.decodeIfPresent(Set<String>.self, forKey: .selectedRecipeIDs) {
+            selectedRecipeIDs = recipeIDs
+        } else if let indices = try legacy.decodeIfPresent(Set<Int>.self, forKey: .selectedRecipeIndices) {
+            selectedRecipeIDs = Set(indices.compactMap { LegacyRecipeIndex.recipeID(machineID: definitionID, index: $0) })
+        }
+        if let materialID = try c.decodeIfPresent(String.self, forKey: .outletMaterialID) {
+            outletMaterialID = materialID
+        } else if let name = try legacy.decodeIfPresent(String.self, forKey: .outletMaterial) {
+            outletMaterialID = ItemCatalog.itemId(for: name)
+        }
     }
 
     /// 根据旋转计算实际占用尺寸
@@ -379,10 +417,10 @@ struct BeltNetwork: Codable {
 
 // MARK: - 仓库取线机制
 // "仓库取货口"(unloader_1)/"仓库存货口"(loader_1)/"仓库存取线源桩"(log_hongs_bus_source)/
-// "仓库存取线基段"(log_hongs_bus) 都已经在 devices_generated.json 的仓储存取分类里了，不用手写；
+// "仓库存取线基段"(log_hongs_bus) 都已经在 devices.json 的仓储存取分类里了，不用手写；
 // 只是 JSON 本身不知道"源桩/基段是武陵专属机制"这件事，需要手动覆盖它们的 allowedMaps
 extension BuildingDefinition {
-    /// 仓库取货口：只出，取货具体是什么材料由 PlacedBuilding.outletMaterial 决定
+    /// 仓库取货口：只出，取货具体是什么材料由 PlacedBuilding.outletMaterialID 决定
     static let warehouseOutletID = "unloader_1"
     /// 仓库存货口：只入，接收传送带送来的任意材料存进仓库，不需要额外配置
     static let warehouseInletID = "loader_1"
@@ -403,7 +441,7 @@ extension BuildingDefinition {
 
 // MARK: - 协议核心：每张地图必有且只有一个的中心仓库
 // sp_sub_hub_1（其他小地图/副本专属的协议核心）跟本项目支持的四号谷地/武陵无关，
-// 一开始就没有导入进 devices_generated.json，不需要在这里再单独过滤
+// 数据生成脚本里就没有导出到 devices.json，不需要在这里再单独过滤
 extension BuildingDefinition {
     static let protocolCoreID = "sp_hub_1"
     var isProtocolCore: Bool { id == BuildingDefinition.protocolCoreID }
@@ -434,7 +472,7 @@ extension BuildingDefinition {
     static let multiRecipeMaxExternalSolidOutputs = 1
 }
 
-// MARK: - 建筑库（从 devices_generated.json 解析，叠加地图限定覆盖）
+// MARK: - 建筑库（从 devices.json 解析，叠加地图限定覆盖）
 extension BuildingDefinition {
     static let all: [BuildingDefinition] = BuildingParser.loadAll().map { def in
         guard let override = mapOverrides[def.id] else { return def }

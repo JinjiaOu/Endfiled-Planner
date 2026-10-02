@@ -50,7 +50,7 @@ enum FlowSimulator {
             for input in recipe.inputs { net[input.name, default: 0] -= Double(input.count) / seconds }
             for output in recipe.outputs { net[output.name, default: 0] += Double(output.count) / seconds }
         }
-        return net.map { NetItem(name: $0.key, net: $0.value, isSolid: RecipeViewModel.isLikelySolid($0.key)) }
+        return net.map { NetItem(name: $0.key, net: $0.value, isSolid: ItemCatalog.isSolid($0.key)) }
     }
 
     struct SelfSupplyAnalysis {
@@ -271,17 +271,15 @@ private final class Engine {
         case .machine:
             let recipes = recipesFor(node.def)
             if node.def.isMultiRecipeMachine {
-                let selected = node.placed.selectedRecipeIndices.sorted().compactMap {
-                    recipes.indices.contains($0) ? recipes[$0] : nil
-                }
+                let selected = recipes.filter { node.placed.selectedRecipeIDs.contains($0.id) }
                 if !selected.isEmpty {
                     node.hasRecipeConfigured = true
                     let net = FlowSimulator.computeNetFlows(selected)
                     node.ingredients = net.filter { $0.net < -1e-9 }.map { ($0.name, -$0.net) }
                     node.products = net.filter { $0.net > 1e-9 }.map { ($0.name, $0.net) }
                 }
-            } else if let idx = node.placed.selectedRecipeIndex, recipes.indices.contains(idx) {
-                let recipe = recipes[idx]
+            } else if let recipeID = node.placed.selectedRecipeID,
+                      let recipe = recipes.first(where: { $0.id == recipeID }) {
                 let seconds = Double(max(recipe.time, 1))
                 node.recipe = recipe
                 node.hasRecipeConfigured = true
@@ -298,7 +296,7 @@ private final class Engine {
         case .vaporizer:
             node.activatorPort = node.ports.firstIndex { $0.isInput && $0.port.kind == .pipe }
         case .unloader:
-            if let material = node.placed.outletMaterial {
+            if let materialID = node.placed.outletMaterialID, let material = ItemCatalog.name(for: materialID) {
                 node.products = [(material, FlowSimulator.beltCapacity)]
             }
         case .conditioner:
@@ -417,7 +415,7 @@ private final class Engine {
     // MARK: 工具
 
     private func portKind(for item: String) -> PortKind {
-        RecipeViewModel.isLikelySolid(item) ? .item : .pipe
+        ItemCatalog.isSolid(item) ? .item : .pipe
     }
 
     private func inputLinks(_ node: Node) -> [Int] {

@@ -30,41 +30,41 @@ class FactoryViewModel: ObservableObject {
     @Published var showSaveConfirm = false
     @Published var stats: FactoryGridModel.ProductionStats
 
-    // 配方数据：按机器名分组去重，PlacedBuilding.selectedRecipeIndex 就是这份列表里的下标
+    // 配方数据：按建筑 id 分组，PlacedBuilding 记的是其中的配方 ID
     let machineRecipes: [String: [Recipe]]
-    // 取线出口能选的材料：recipes.txt 里所有固体产物
-    let solidMaterials: [String]
+    // 取线出口能选的材料：配方产物里所有固体
+    let solidMaterials: [ItemInfo]
 
     init() {
         let recipeVM = RecipeViewModel()
         machineRecipes = recipeVM.recipesByMachine()
-        solidMaterials = recipeVM.solidOutputNames()
+        solidMaterials = recipeVM.solidOutputs()
         var loaded = FactoryGridModel.load()
         FactoryGridModel.ensureProtocolCore(in: &loaded)
         layout = loaded
         stats = FactoryGridModel.analyze(layout: loaded, machineRecipes: machineRecipes)
     }
 
-    /// 这台建筑（按 name 匹配）可选的配方列表
+    /// 这台建筑可选的配方列表
     func availableRecipes(for def: BuildingDefinition) -> [Recipe] {
         FactoryGridModel.recipes(for: def, in: machineRecipes)
     }
 
     /// 设置/切换某台已放置建筑使用的配方
-    func selectRecipe(_ index: Int?, for buildingID: UUID) {
+    func selectRecipe(_ recipeID: String?, for buildingID: UUID) {
         guard let idx = layout.buildings.firstIndex(where: { $0.id == buildingID }) else { return }
-        layout.buildings[idx].selectedRecipeIndex = index
+        layout.buildings[idx].selectedRecipeID = recipeID
         refreshStats()
     }
 
     // MARK: - 反应池 / 扩容反应池：多配方 + 自我供给
     /// 勾选/取消某条配方（多选，反应池/扩容反应池专用）
-    func toggleRecipe(_ index: Int, for buildingID: UUID) {
+    func toggleRecipe(_ recipeID: String, for buildingID: UUID) {
         guard let idx = layout.buildings.firstIndex(where: { $0.id == buildingID }) else { return }
-        if layout.buildings[idx].selectedRecipeIndices.contains(index) {
-            layout.buildings[idx].selectedRecipeIndices.remove(index)
+        if layout.buildings[idx].selectedRecipeIDs.contains(recipeID) {
+            layout.buildings[idx].selectedRecipeIDs.remove(recipeID)
         } else {
-            layout.buildings[idx].selectedRecipeIndices.insert(index)
+            layout.buildings[idx].selectedRecipeIDs.insert(recipeID)
         }
         refreshStats()
     }
@@ -90,7 +90,7 @@ class FactoryViewModel: ObservableObject {
     func selfSupplyAnalysis(for placed: PlacedBuilding, definition: BuildingDefinition) -> FlowSimulator.SelfSupplyAnalysis? {
         guard definition.isMultiRecipeMachine else { return nil }
         let recipes = availableRecipes(for: definition)
-        let selected = placed.selectedRecipeIndices.sorted().compactMap { recipes.indices.contains($0) ? recipes[$0] : nil }
+        let selected = recipes.filter { placed.selectedRecipeIDs.contains($0.id) }
         guard !selected.isEmpty else { return nil }
         return FlowSimulator.analyzeSelfSupply(recipes: selected, capacity: definition.multiRecipeItemCapacity)
     }
@@ -168,10 +168,10 @@ class FactoryViewModel: ObservableObject {
     }
 
     // MARK: - 取线出口
-    /// 设置/清空某个取线出口当前取货的材料
-    func setOutletMaterial(_ material: String?, for buildingID: UUID) {
+    /// 设置/清空某个取线出口当前取货的材料（itemId）
+    func setOutletMaterial(_ itemID: String?, for buildingID: UUID) {
         guard let idx = layout.buildings.firstIndex(where: { $0.id == buildingID }) else { return }
-        layout.buildings[idx].outletMaterial = material
+        layout.buildings[idx].outletMaterialID = itemID
         refreshStats()
     }
 

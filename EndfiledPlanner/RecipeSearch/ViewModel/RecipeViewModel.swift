@@ -10,99 +10,71 @@ import Combine
 
 class RecipeViewModel: ObservableObject {
     
+    /// 按产物名分组（多产物配方在每个产物下各出现一次），配方查询页用
     @Published var recipes: [String: [Recipe]] = [:]
     @Published var rootNode: RecipeNode?
-    
+    /// recipes.json 原始顺序的全部配方
+    private(set) var allRecipes: [Recipe] = []
+
     init() {
         loadRecipes()
     }
-    
+
+    // MARK: - recipes.json 原始结构
+    private struct RecipesFile: Decodable {
+        let recipes: [RecipeRecord]
+    }
+
+    private struct RecipeRecord: Decodable {
+        let id: String
+        let machineId: String
+        let machineName: String
+        let seconds: Double
+        let gasEnvName: String?
+        let ingredients: [ItemRecord]
+        let outcomes: [ItemRecord]
+    }
+
+    private struct ItemRecord: Decodable {
+        let itemId: String
+        let name: String
+        let count: Int
+    }
+
     func loadRecipes() {
-        guard let url = Bundle.main.url(forResource: "recipes", withExtension: "txt") else {
-            print("未找到 recipes.txt")
+        guard let url = Bundle.main.url(forResource: "recipes", withExtension: "json") else {
+            print("未找到 recipes.json")
             return
         }
         do {
-            let content = try String(contentsOf: url)
-            parseRecipes(content)
-            print("已加载配方数量:", recipes.count)
+            let file = try JSONDecoder().decode(RecipesFile.self, from: Data(contentsOf: url))
+            allRecipes = file.recipes.compactMap(makeRecipe)
+            var grouped: [String: [Recipe]] = [:]
+            for recipe in allRecipes {
+                for output in recipe.outputs {
+                    grouped[output.name, default: []].append(recipe)
+                }
+            }
+            recipes = grouped
+            print("已加载配方数量:", allRecipes.count)
         } catch {
             print("读取失败:", error)
         }
     }
-    
-    private func parseRecipes(_ text: String) {
-        let normalized = text
-            .replacingOccurrences(of: "\r\n", with: "\n")
-            .replacingOccurrences(of: "\r", with: "\n")
-        
-        let blocks = normalized.components(separatedBy: "\n\n")
-        
-        for block in blocks {
-            let lines = block
-                .components(separatedBy: "\n")
-                .map { $0.trimmingCharacters(in: .whitespaces) }
-                .filter { !$0.isEmpty }
-            
-            guard lines.count > 1 else { continue }
-            
-            for line in lines.dropFirst() {
-                if let recipe = parseRecipeLine(line) {
-                    for output in recipe.outputs {
-                        recipes[output.name, default: []].append(recipe)
-                    }
-                }
-            }
-        }
-    }
-    
-    private func parseRecipeLine(_ line: String) -> Recipe? {
-        guard let pipeIndex = line.firstIndex(of: "|") else { return nil }
-        
-        let left = String(line[..<pipeIndex]).trimmingCharacters(in: .whitespaces)
-        let right = String(line[line.index(after: pipeIndex)...]).trimmingCharacters(in: .whitespaces)
-        
-        let leftParts = left.components(separatedBy: " ")
-        guard leftParts.count >= 2 else { return nil }
-        
-        guard let timeString = leftParts.last?.replacingOccurrences(of: "s", with: ""),
-              let time = Int(timeString) else { return nil }
-        
-        let machine = leftParts.dropLast().joined(separator: " ")
-        
-        let components = right.components(separatedBy: "->")
-        guard components.count == 2 else { return nil }
-        
-        let inputPart = components[0].trimmingCharacters(in: .whitespaces)
-        let outputPart = components[1].trimmingCharacters(in: .whitespaces)
-        
-        // 解析输入
-        var inputs: [(name: String, count: Int)] = []
-        if !inputPart.isEmpty {
-            for mat in inputPart.components(separatedBy: "+") {
-                let trimmed = mat.trimmingCharacters(in: .whitespaces)
-                if trimmed.isEmpty { continue }
-                let parts = trimmed.components(separatedBy: "x")
-                let name = parts[0].trimmingCharacters(in: .whitespaces)
-                let count = parts.count > 1 ? Int(parts[1].trimmingCharacters(in: .whitespaces)) ?? 1 : 1
-                inputs.append((name, count))
-            }
-        }
-        
-        // 解析多输出
-        var outputs: [(name: String, count: Int)] = []
-        for out in outputPart.components(separatedBy: "+") {
-            let trimmed = out.trimmingCharacters(in: .whitespaces)
-            if trimmed.isEmpty { continue }
-            let parts = trimmed.components(separatedBy: "x")
-            let name = parts[0].trimmingCharacters(in: .whitespaces)
-            let count = parts.count > 1 ? Int(parts[1].trimmingCharacters(in: .whitespaces)) ?? 1 : 1
-            outputs.append((name, count))
-        }
-        
-        guard !outputs.isEmpty else { return nil }
-        
-        return Recipe(machine: machine, time: time, inputs: inputs, outputs: outputs)
+
+    private func makeRecipe(_ record: RecipeRecord) -> Recipe? {
+        guard !record.outcomes.isEmpty else { return nil }
+        let env = record.gasEnvName.flatMap { $0.isEmpty ? nil : $0 }
+        let toItems = { (items: [ItemRecord]) in items.map { RecipeItem(itemId: $0.itemId, name: $0.name, count: $0.count) } }
+        return Recipe(
+            id: record.id,
+            machineId: record.machineId,
+            machine: env.map { "\(record.machineName)（\($0)）" } ?? record.machineName,
+            time: Int(record.seconds.rounded()),
+            gasEnvName: env,
+            inputs: toItems(record.ingredients),
+            outputs: toItems(record.outcomes)
+        )
     }
     
     func buildTree(target: String, amount: Int = 1) {
@@ -121,42 +93,20 @@ class RecipeViewModel: ObservableObject {
         }
     }
     
-    /// 按机器名分组去重后的配方表，供生产优化模块给某台放置的建筑挑选配方用
-    /// 顺序按第一个产物名排序，保证同一份数据每次算出来的下标都一样
+    /// 按建筑 id（machineId）分组的配方表，供生产优化模块给某台放置的建筑挑选配方用。
+    /// 存档记的是配方 ID，这里的顺序只影响列表展示：按第一个产物名、再按 ID 排，保证每次一样。
+    /// 水泵只能抽清水这类数据修正已经在 Tools/gen_datapack.py 里做掉了
     func recipesByMachine() -> [String: [Recipe]] {
-        var seen = Set<String>()
-        var result: [String: [Recipe]] = [:]
-        for list in recipes.values {
-            for r in list {
-                guard !seen.contains(r.signature) else { continue }
-                seen.insert(r.signature)
-                result[r.machine, default: []].append(r)
-            }
-        }
+        var result = Dictionary(grouping: allRecipes, by: \.machineId)
         for key in result.keys {
-            result[key]?.sort { ($0.outputs.first?.name ?? "") < ($1.outputs.first?.name ?? "") }
+            result[key]?.sort { ($0.outputName, $0.id) < ($1.outputName, $1.id) }
         }
-        // 水泵实际只能抽清水，recipes.txt 里列的液化息壤/污水/沉积酸等其它配方是二型耐酸水泵专属，
-        // 水泵那边是数据源自带的噪音，这里按实际游戏表现砍掉，只留清水
-        result["水泵"] = result["水泵"]?.filter { $0.outputs.first?.name == "清水" }
         return result
     }
 
-    /// recipes.txt 没有直接标注物品形态，这里用命名规律近似判断是不是固体（能走传送带）——
-    /// 液化/气态开头，或者气/水/酸/溶液/废液/蒸气结尾的算非固体。已经拿全部产物名核对过，
-    /// 唯一需要注意的是"...耐压罐（已盛装水蒸气）"这类瓶装容器本身是固体，用 hasSuffix 而不是
-    /// contains 就不会被"蒸气"这种中间词误伤
-    static func isLikelySolid(_ name: String) -> Bool {
-        let nonSolidPrefixes = ["液化", "气态"]
-        let nonSolidSuffixes = ["气", "水", "酸", "溶液", "废液", "蒸气"]
-        if nonSolidPrefixes.contains(where: { name.hasPrefix($0) }) { return false }
-        if nonSolidSuffixes.contains(where: { name.hasSuffix($0) }) { return false }
-        return true
-    }
-
-    /// 取线出口的材料选择列表：recipes.txt 里出现过的所有固体产物名
-    func solidOutputNames() -> [String] {
-        recipes.keys.filter { RecipeViewModel.isLikelySolid($0) }.sorted()
+    /// 取线出口的材料选择列表：配方产物里所有固体，按名字排序
+    func solidOutputs() -> [ItemInfo] {
+        recipes.keys.compactMap { ItemCatalog.byName[$0] }.filter { $0.phase == .solid }.sorted { $0.name < $1.name }
     }
 
     static func isMiningMachine(_ machine: String) -> Bool {
