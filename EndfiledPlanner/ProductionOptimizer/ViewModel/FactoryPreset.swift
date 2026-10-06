@@ -54,7 +54,7 @@ extension FactoryViewModel {
         selectedBuildingID = nil
         beltStart = nil
         beltPreviewSegments = []
-        pendingEraseBeltIDs = []
+        clearSelection()
         refreshStats()
     }
 }

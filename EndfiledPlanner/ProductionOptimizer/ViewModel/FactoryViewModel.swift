@@ -20,9 +20,27 @@ enum FactoryEditMode: Equatable {
 class FactoryViewModel: ObservableObject {
 
     // MARK: - 状态
-    @Published var layout: FactoryLayout = FactoryGridModel.load()
+    @Published var layout: FactoryLayout = FactoryGridModel.load() {
+        didSet { recordUndo(previous: oldValue) }
+    }
     @Published var editMode: FactoryEditMode = .select
-    @Published var selectedBuildingID: UUID? = nil
+    @Published var selectedBuildingID: UUID? = nil {
+        didSet { if selectedBuildingID != nil { selectedBeltID = nil } }
+    }
+    /// 选中的传送带/管道（跟 selectedBuildingID 互斥），selectedBeltCell 是点中的那一格（删"这一格"用）
+    @Published var selectedBeltID: UUID? = nil {
+        didSet { if selectedBeltID != nil { selectedBuildingID = nil } }
+    }
+    @Published var selectedBeltCell: GridPoint? = nil
+
+    // MARK: - 撤销 / 重做
+    // 布局每次改动都记一份改动前的快照；同一次操作里连续好几步赋值（比如删建筑顺带删线）
+    // 只在这一轮 runloop 结束时合并成一步
+    @Published private(set) var undoStack: [FactoryLayout] = []
+    @Published private(set) var redoStack: [FactoryLayout] = []
+    private var pendingUndoSnapshot: FactoryLayout? = nil
+    private var isRestoringHistory = false
+    private static let undoLimit = 60
     @Published var hoverCell: GridPoint? = nil          // 当前悬停格（放置预览）
     @Published var pendingRotation: BuildingRotation = .up
     @Published var beltStart: GridPoint? = nil          // 传送带起点
@@ -38,6 +56,56 @@ class FactoryViewModel: ObservableObject {
     // 取线出口能选的材料：配方产物里所有固体
     let solidMaterials: [ItemInfo]
 
+    /// >0 时（比如删除工具按住划过的整个过程）所有改动合并成一步，endUndoGroup 时才入栈
+    private var undoGroupDepth = 0
+
+    private func recordUndo(previous: FactoryLayout) {
+        guard !isRestoringHistory, pendingUndoSnapshot == nil else { return }
+        pendingUndoSnapshot = previous
+        guard undoGroupDepth == 0 else { return }
+        DispatchQueue.main.async { [weak self] in self?.commitPendingUndo() }
+    }
+
+    private func commitPendingUndo() {
+        guard undoGroupDepth == 0, let snapshot = pendingUndoSnapshot else { return }
+        pendingUndoSnapshot = nil
+        undoStack.append(snapshot)
+        if undoStack.count > Self.undoLimit { undoStack.removeFirst() }
+        redoStack.removeAll()
+    }
+
+    func beginUndoGroup() { undoGroupDepth += 1 }
+
+    func endUndoGroup() {
+        undoGroupDepth = max(0, undoGroupDepth - 1)
+        commitPendingUndo()
+    }
+
+    var canUndo: Bool { !undoStack.isEmpty }
+    var canRedo: Bool { !redoStack.isEmpty }
+
+    func undo() {
+        guard let previous = undoStack.popLast() else { return }
+        redoStack.append(layout)
+        restore(previous)
+    }
+
+    func redo() {
+        guard let next = redoStack.popLast() else { return }
+        undoStack.append(layout)
+        restore(next)
+    }
+
+    private func restore(_ snapshot: FactoryLayout) {
+        isRestoringHistory = true
+        layout = snapshot
+        isRestoringHistory = false
+        if let id = selectedBuildingID, !layout.buildings.contains(where: { $0.id == id }) { selectedBuildingID = nil }
+        if let id = selectedBeltID, !layout.beltNetwork.belts.contains(where: { $0.id == id }) { clearBeltSelection() }
+        cancelMoving()
+        refreshStats()
+    }
+
     init() {
         let recipeVM = RecipeViewModel()
         machineRecipes = recipeVM.recipesByMachine()
@@ -46,6 +114,11 @@ class FactoryViewModel: ObservableObject {
         FactoryGridModel.ensureProtocolCore(in: &loaded)
         layout = loaded
         stats = FactoryGridModel.analyze(layout: loaded, machineRecipes: machineRecipes)
+        // 启动时读档那一下不算一步操作
+        DispatchQueue.main.async { [weak self] in
+            self?.pendingUndoSnapshot = nil
+            self?.undoStack.removeAll()
+        }
     }
 
     /// 这台建筑可选的配方列表
@@ -108,7 +181,7 @@ class FactoryViewModel: ObservableObject {
         selectedBuildingID = nil
         beltStart = nil
         beltPreviewSegments = []
-        pendingEraseBeltIDs = []
+        clearSelection()
         FactoryGridModel.clear()
         refreshStats()
     }
@@ -179,30 +252,77 @@ class FactoryViewModel: ObservableObject {
     }
 
     // MARK: - 网格点击处理
-    func handleTap(at cell: GridPoint) {
-        switch editMode {
-        case .select:
-            if let id = movingBuildingID {
-                if canReposition(id, to: cell) {
-                    commitReposition(id, to: cell)
-                    movingBuildingID = nil
-                    moveFailedMessage = nil
-                } else {
-                    moveFailedMessage = "这里放不下，换个位置（点的格子是建筑新的左上角）"
-                }
-                return
+    /// 点击：slop 是格子缩得很小时额外放宽的命中范围（格数），保证手指至少有 ~44pt 的可点区域
+    func handleTap(at cell: GridPoint, slop: Int = 0) {
+        if let id = movingBuildingID {
+            if canReposition(id, to: cell) {
+                commitReposition(id, to: cell)
+                movingBuildingID = nil
+                moveFailedMessage = nil
+            } else {
+                moveFailedMessage = "这里放不下，换个位置（点的格子是建筑新的左上角）"
             }
-            selectBuilding(at: cell)
-
-        case .place(let def):
-            placeBuilding(def, at: cell)
-
-        case .belt, .pipe:
-            break   // 由拖拽手势处理，点击不响应
-
+            return
+        }
+        switch editMode {
         case .erase:
             eraseAt(cell: cell)
+        case .place(let def):
+            // 点到已有的建筑/线就选中它，点空地才放建筑
+            if !select(at: cell, slop: 0) { placeBuilding(def, at: cell) }
+        case .select, .belt, .pipe:
+            // 画线模式下轻点（不拖）也算选中
+            if !select(at: cell, slop: slop) { clearSelection() }
         }
+    }
+
+    func clearSelection() {
+        selectedBuildingID = nil
+        clearBeltSelection()
+    }
+
+    func clearBeltSelection() {
+        selectedBeltID = nil
+        selectedBeltCell = nil
+    }
+
+    /// 先找建筑，再找线；同一格有好几条线（十字交叉/传送带管道同格）时，连点会轮流选中下一条。
+    /// 点的格子上什么都没有时，在 slop 格范围内找最近的
+    @discardableResult
+    func select(at cell: GridPoint, slop: Int) -> Bool {
+        for radius in 0...max(0, slop) {
+            let cells = radius == 0 ? [cell] : ring(around: cell, radius: radius)
+            for c in cells {
+                if let hit = building(at: c) {
+                    selectedBuildingID = hit.placed.id
+                    return true
+                }
+            }
+            for c in cells {
+                let ids = layout.beltNetwork.beltIDs(at: c)
+                guard !ids.isEmpty else { continue }
+                let next: UUID
+                if let current = selectedBeltID, let idx = ids.firstIndex(of: current), selectedBeltCell == c {
+                    next = ids[(idx + 1) % ids.count]
+                } else {
+                    next = ids[0]
+                }
+                selectedBeltID = next
+                selectedBeltCell = c
+                return true
+            }
+        }
+        return false
+    }
+
+    private func ring(around cell: GridPoint, radius r: Int) -> [GridPoint] {
+        var out: [GridPoint] = []
+        for dr in -r...r {
+            for dc in -r...r where max(abs(dr), abs(dc)) == r {
+                out.append(GridPoint(col: cell.col + dc, row: cell.row + dr))
+            }
+        }
+        return out.sorted { abs($0.col - cell.col) + abs($0.row - cell.row) < abs($1.col - cell.col) + abs($1.row - cell.row) }
     }
 
     // MARK: - 放置建筑
@@ -218,19 +338,6 @@ class FactoryViewModel: ObservableObject {
         let placed = PlacedBuilding(definitionID: def.id, origin: cell, rotation: pendingRotation)
         layout.buildings.append(placed)
         refreshStats()
-    }
-
-    // MARK: - 选择建筑
-    func selectBuilding(at cell: GridPoint) {
-        for placed in layout.buildings {
-            guard let def = BuildingDefinition.find(placed.definitionID) else { continue }
-            let cells = placed.occupiedCells(definition: def)
-            if cells.contains(cell) {
-                selectedBuildingID = placed.id
-                return
-            }
-        }
-        selectedBuildingID = nil
     }
 
     // MARK: - 开关 / 移动
@@ -260,7 +367,11 @@ class FactoryViewModel: ObservableObject {
             pendingRotation = pendingRotation.next
             return
         }
+        let old = layout.buildings[idx]
         layout.buildings[idx].rotation = layout.buildings[idx].rotation.next
+        if let def = BuildingDefinition.find(old.definitionID) {
+            reattachLines(old: old, new: layout.buildings[idx], def: def)
+        }
         refreshStats()
     }
 
@@ -548,85 +659,54 @@ class FactoryViewModel: ObservableObject {
         })
     }
 
-    // MARK: - 删除（带确认弹窗）
-    @Published var pendingEraseBuilding: (placed: PlacedBuilding, def: BuildingDefinition)? = nil
-    @Published var pendingEraseCell: GridPoint? = nil
-    // 十字格可能属于多条带，记录所有候选带 ID
-    @Published var pendingEraseBeltIDs: [UUID] = []
-    /// 协议核心不让删，点了给个提示而不是弹确认框
+    // MARK: - 删除
+    /// 协议核心不让删，点了给个提示
     @Published var eraseBlockedMessage: String? = nil
 
+    /// 删除工具：建筑直接收纳、线直接删这一格，不弹确认（可以撤销）。按住划过去时每进一格调一次
     func eraseAt(cell: GridPoint) {
-        // 优先检测建筑
-        for placed in layout.buildings {
-            guard let def = BuildingDefinition.find(placed.definitionID) else { continue }
-            if placed.occupiedCells(definition: def).contains(cell) {
-                if def.isProtocolCore {
-                    eraseBlockedMessage = "协议核心是地图必需的核心仓库，不能删除"
-                    return
-                }
-                pendingEraseBuilding = (placed, def)
+        if let hit = building(at: cell) {
+            if hit.def.isProtocolCore {
+                eraseBlockedMessage = "协议核心是地图必需的核心仓库，不能删除"
                 return
             }
-        }
-        // 检测传送带/管道
-        let ids = layout.beltNetwork.beltIDs(at: cell)
-        if !ids.isEmpty {
-            pendingEraseCell = cell
-            pendingEraseBeltIDs = ids
-        }
-    }
-
-    /// 这一格上实际有哪些线路类型（传送带/管道各自同格共存时会有两种）
-    var pendingEraseLineTypes: [LineType] {
-        guard let cell = pendingEraseCell else { return [] }
-        let types = Set(layout.beltNetwork.allSegments
-            .filter { $0.cell.col == cell.col && $0.cell.row == cell.row }
-            .map { $0.lineType })
-        return LineType.allCases.filter { types.contains($0) }
-    }
-
-    /// 确认删除建筑（同时移除其格子上的所有传送带段）
-    func confirmEraseBuilding() {
-        guard let target = pendingEraseBuilding else { return }
-        guard !target.def.isProtocolCore else {
-            pendingEraseBuilding = nil
-            eraseBlockedMessage = "协议核心是地图必需的核心仓库，不能删除"
+            removeBuilding(hit.placed, def: hit.def)
             return
         }
-        let cells = target.placed.occupiedCells(definition: target.def)
-        layout.buildings.removeAll { $0.id == target.placed.id }
+        guard !layout.beltNetwork.beltIDs(at: cell).isEmpty else { return }
+        removeCellFromAllBelts(cell, lineType: nil)
+        refreshStats()
+    }
+
+    private func removeBuilding(_ placed: PlacedBuilding, def: BuildingDefinition) {
+        let cells = placed.occupiedCells(definition: def)
+        layout.buildings.removeAll { $0.id == placed.id }
         for cell in cells { removeCellFromAllBelts(cell, lineType: nil) }
-        pendingEraseBuilding = nil
+        if selectedBuildingID == placed.id { selectedBuildingID = nil }
+        if movingBuildingID == placed.id { cancelMoving() }
         refreshStats()
     }
 
-    /// 确认删除这一格（lineType 为 nil 就是"两个都删"，指定类型就只删那一种）
-    func confirmEraseCell(lineType: LineType? = nil) {
-        guard let cell = pendingEraseCell else { return }
-        removeCellFromAllBelts(cell, lineType: lineType)
-        pendingEraseCell = nil
-        pendingEraseBeltIDs = []
+    // MARK: - 选中的线：删整条 / 删这一格（整条要确认，在界面上弹）
+    var selectedBelt: Belt? {
+        layout.beltNetwork.belts.first { $0.id == selectedBeltID }
+    }
+
+    func deleteSelectedBelt() {
+        guard let id = selectedBeltID else { return }
+        layout.beltNetwork.belts.removeAll { $0.id == id }
+        clearBeltSelection()
         refreshStats()
     }
 
-    /// 确认删除整条带（按 Belt ID 精确删，不影响十字穿插/同格共存的其他带；
-    /// lineType 为 nil 就是这一格命中的带全删，指定类型就只删那一种）
-    func confirmEraseWholeBelt(lineType: LineType? = nil) {
-        guard !pendingEraseBeltIDs.isEmpty else { return }
-        let ids = Set(pendingEraseBeltIDs)
-        layout.beltNetwork.belts.removeAll {
-            ids.contains($0.id) && (lineType == nil || $0.lineType == lineType)
-        }
-        pendingEraseCell = nil
-        pendingEraseBeltIDs = []
+    func deleteSelectedBeltCell() {
+        guard let belt = selectedBelt, let cell = selectedBeltCell else { return }
+        let remaining = belt.segments.filter { $0.cell != cell }
+        let pieces = splitIntoSubBelts(remaining)
+        layout.beltNetwork.belts.removeAll { $0.id == belt.id }
+        layout.beltNetwork.belts.append(contentsOf: pieces)
+        clearBeltSelection()
         refreshStats()
-    }
-
-    func cancelErase() {
-        pendingEraseBuilding = nil
-        pendingEraseCell = nil
-        pendingEraseBeltIDs = []
     }
 
     /// 从所有带中移除某格的段（可选只针对某一种线路类型），带若因此断裂则分裂成子带
@@ -640,6 +720,11 @@ class FactoryViewModel: ObservableObject {
             }
             let remaining = belt.segments.filter {
                 !($0.cell.col == cell.col && $0.cell.row == cell.row)
+            }
+            // 没删到这条就原样保留（ID 不变，选中状态才跟得住）
+            if remaining.count == belt.segments.count {
+                newBelts.append(belt)
+                continue
             }
             // 把 remaining 按连续性分裂成子带
             let subBelts = splitIntoSubBelts(remaining)
@@ -671,21 +756,12 @@ class FactoryViewModel: ObservableObject {
     }
 
     func deleteSelected() {
-        guard let id = selectedBuildingID,
-              let placed = layout.buildings.first(where: { $0.id == id }),
-              let def = BuildingDefinition.find(placed.definitionID)
-        else { return }
+        guard let placed = selectedPlaced, let def = selectedDefinition else { return }
         guard !def.isProtocolCore else {
             eraseBlockedMessage = "协议核心是地图必需的核心仓库，不能删除"
             return
         }
-
-        let cells = placed.occupiedCells(definition: def)
-        layout.buildings.removeAll { $0.id == id }
-        for cell in cells { removeCellFromAllBelts(cell, lineType: nil) }
-        selectedBuildingID = nil
-        cancelMoving()
-        refreshStats()
+        removeBuilding(placed, def: def)
     }
 
     // MARK: - 保存/清空
@@ -702,7 +778,7 @@ class FactoryViewModel: ObservableObject {
         selectedBuildingID = nil
         beltStart = nil
         beltPreviewSegments = []
-        pendingEraseBeltIDs = []
+        clearSelection()
         FactoryGridModel.clear()
         refreshStats()
     }
@@ -745,8 +821,78 @@ class FactoryViewModel: ObservableObject {
         guard canReposition(id, to: origin),
               let idx = layout.buildings.firstIndex(where: { $0.id == id })
         else { return }
+        let old = layout.buildings[idx]
         layout.buildings[idx].origin = origin
+        if let def = BuildingDefinition.find(old.definitionID) {
+            reattachLines(old: old, new: layout.buildings[idx], def: def)
+        }
         refreshStats()
+    }
+
+    // MARK: - 建筑挪动/旋转后，线跟着走
+    /// 走不通被断开的线数量提示
+    @Published var lineReattachMessage: String? = nil
+
+    /// 原来线头/线尾落在这台建筑某个口外面那一格上的线，改接到口的新位置：
+    /// 另一端不动，中间按 L 形重新走（两种拐法都试，避开建筑），都走不通就把这条线删掉并提示
+    private func reattachLines(old: PlacedBuilding, new: PlacedBuilding, def: BuildingDefinition) {
+        struct Attach { let beltID: UUID; let atHead: Bool; let port: BuildingPort }
+        var attaches: [Attach] = []
+        for port in def.ports {
+            let (cell, facing) = port.resolvedPosition(placed: old, definition: def)
+            let ext = cell + facing.outputOffset
+            let kind: LineType = port.kind == .item ? .belt : .pipe
+            for belt in layout.beltNetwork.belts where belt.lineType == kind {
+                if port.ioDirection == .output, belt.headCell == ext {
+                    attaches.append(Attach(beltID: belt.id, atHead: true, port: port))
+                }
+                if port.ioDirection == .input, belt.tailCell == ext {
+                    attaches.append(Attach(beltID: belt.id, atHead: false, port: port))
+                }
+            }
+        }
+        guard !attaches.isEmpty else { return }
+        var broken = 0
+        for (beltID, list) in Dictionary(grouping: attaches, by: \.beltID) {
+            guard let idx = layout.beltNetwork.belts.firstIndex(where: { $0.id == beltID }),
+                  var start = layout.beltNetwork.belts[idx].headCell,
+                  var end = layout.beltNetwork.belts[idx].tailCell,
+                  var finalDir = layout.beltNetwork.belts[idx].segments.last?.toDir
+            else { continue }
+            let lineType = layout.beltNetwork.belts[idx].lineType
+            for a in list {
+                let (cell, facing) = a.port.resolvedPosition(placed: new, definition: def)
+                let ext = cell + facing.outputOffset
+                if a.atHead {
+                    start = ext
+                } else {
+                    end = ext
+                    finalDir = facing.opposite.outputOffset
+                }
+            }
+            if let segs = routeLine(from: start, to: end, finalDir: finalDir, lineType: lineType) {
+                layout.beltNetwork.belts[idx].segments = segs
+            } else {
+                layout.beltNetwork.belts.remove(at: idx)
+                broken += 1
+            }
+        }
+        if broken > 0 {
+            lineReattachMessage = "有 \(broken) 条线在新位置走不通，已经断开，需要重新接"
+        }
+    }
+
+    /// start → end 的 L 形线（end 那一格朝 finalDir），先横后竖、先竖后横都试，挑不压建筑的
+    private func routeLine(from start: GridPoint, to end: GridPoint, finalDir: GridPoint, lineType: LineType) -> [BeltSegment]? {
+        let axis: BeltAxis = finalDir.col == 0 ? .vertical : .horizontal
+        let last = BeltSegment(cell: end, axis: axis, fromDir: finalDir, toDir: finalDir, lineType: lineType)
+        if start == end { return [last] }
+        let blocking = lineBlockingCellKeys()
+        for hint in [CGPoint(x: 1, y: 0), CGPoint(x: 0, y: 1)] {
+            let segs = buildBeltSegments(from: start, to: end, currentPoint: hint, lineType: lineType) + [last]
+            if !segs.contains(where: { blocking.contains("\($0.cell.col),\($0.cell.row)") }) { return segs }
+        }
+        return nil
     }
 
     var selectedPlaced: PlacedBuilding? {

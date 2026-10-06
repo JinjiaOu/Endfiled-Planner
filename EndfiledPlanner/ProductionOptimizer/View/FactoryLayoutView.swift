@@ -21,7 +21,7 @@ private struct FactoryAlertsModifier: ViewModifier {
                 Button("取消", role: .cancel) {}
                 Button("清空", role: .destructive) { vm.clearLayout() }
             } message: {
-                Text("将删除所有建筑和传送带，此操作不可撤销。")
+                Text("将删除所有建筑和传送带（可以撤销）。")
             }
             .alert(
                 "加载预设产线",
@@ -53,20 +53,19 @@ private struct FactoryAlertsModifier: ViewModifier {
                     pendingMapSwitch = nil
                 }
             } message: {
-                Text("两张地图的仓库取线规则不一样，切换会清空当前所有建筑和传送带，此操作不可撤销。")
+                Text("两张地图的仓库取线规则不一样，切换会清空当前所有建筑和传送带（可以撤销）。")
             }
-            // 删除建筑确认
+            // 挪动/旋转建筑后有线走不通被断开
             .alert(
-                vm.pendingEraseBuilding.map { "收纳 \($0.def.name)？" } ?? "收纳",
+                "线路已断开",
                 isPresented: Binding(
-                    get: { vm.pendingEraseBuilding != nil },
-                    set: { if !$0 { vm.cancelErase() } }
+                    get: { vm.lineReattachMessage != nil },
+                    set: { if !$0 { vm.lineReattachMessage = nil } }
                 )
             ) {
-                Button("取消", role: .cancel) { vm.cancelErase() }
-                Button("收纳", role: .destructive) { vm.confirmEraseBuilding() }
+                Button("知道了", role: .cancel) { vm.lineReattachMessage = nil }
             } message: {
-                Text("此操作不可撤销。")
+                Text(vm.lineReattachMessage ?? "")
             }
             // 协议核心不让删的提示
             .alert(
@@ -79,38 +78,6 @@ private struct FactoryAlertsModifier: ViewModifier {
                 Button("知道了", role: .cancel) { vm.eraseBlockedMessage = nil }
             } message: {
                 Text(vm.eraseBlockedMessage ?? "")
-            }
-            // 删除传送带/管道确认（单格 or 整条；同格共存/十字交叉时可能同时命中传送带和管道，
-            // 这种情况下拆开显示"只删传送带/只删管道/两者都删"，避免删一个把另一个也带走）
-            .confirmationDialog(
-                "删除线路",
-                isPresented: Binding(
-                    get: { vm.pendingEraseCell != nil },
-                    set: { if !$0 { vm.cancelErase() } }
-                ),
-                titleVisibility: .visible
-            ) {
-                let types = vm.pendingEraseLineTypes
-                if types.count > 1 {
-                    ForEach(types, id: \.self) { type in
-                        Button("只删\(type.displayName)（这一格）", role: .destructive) {
-                            vm.confirmEraseCell(lineType: type)
-                        }
-                    }
-                    Button("两者都删（这一格）", role: .destructive) { vm.confirmEraseCell() }
-                    ForEach(types, id: \.self) { type in
-                        Button("只删\(type.displayName)（整条）", role: .destructive) {
-                            vm.confirmEraseWholeBelt(lineType: type)
-                        }
-                    }
-                    Button("两者都删（整条）", role: .destructive) { vm.confirmEraseWholeBelt() }
-                } else {
-                    Button("删除这一格", role: .destructive) { vm.confirmEraseCell() }
-                    Button("删除整条线路", role: .destructive) { vm.confirmEraseWholeBelt() }
-                }
-                Button("取消", role: .cancel) { vm.cancelErase() }
-            } message: {
-                Text("请选择删除范围")
             }
     }
 }
@@ -198,10 +165,15 @@ struct FactoryLayoutView: View {
                             BuildingDetailPanel(vm: vm, placed: placed, def: def, style: .bottom)
                                 .id(placed.id)
                                 .transition(.move(edge: .bottom).combined(with: .opacity))
+                        } else if !usesSidePalette, let belt = vm.selectedBelt {
+                            BeltDetailPanel(vm: vm, belt: belt, style: .bottom)
+                                .id(belt.id)
+                                .transition(.move(edge: .bottom).combined(with: .opacity))
                         }
                     }
                     .animation(.spring(response: 0.3), value: showBuildingPalette)
                     .animation(.spring(response: 0.3), value: vm.selectedBuildingID)
+                    .animation(.spring(response: 0.3), value: vm.selectedBeltID)
                 }
 
                 if showBuildingPalette && usesSidePalette {
@@ -216,6 +188,20 @@ struct FactoryLayoutView: View {
                             .padding(.top, 64)
                             .padding(.bottom, 18)
                     }
+                    .transition(.move(edge: .trailing).combined(with: .opacity))
+                    .zIndex(3)
+                } else if usesSidePalette, let belt = vm.selectedBelt {
+                    HStack {
+                        Spacer()
+                        BeltDetailPanel(vm: vm, belt: belt, style: .side)
+                            .id(belt.id)
+                            .frame(width: 360)
+                            .frame(maxHeight: 420, alignment: .top)
+                            .padding(.trailing, 18)
+                            .padding(.top, 64)
+                        Spacer().frame(width: 0)
+                    }
+                    .frame(maxHeight: .infinity, alignment: .top)
                     .transition(.move(edge: .trailing).combined(with: .opacity))
                     .zIndex(3)
                 }
@@ -386,6 +372,22 @@ struct FactoryLayoutView: View {
                 vm.editMode = .erase
                 showBuildingPalette = false
             }
+            Divider().overlay(Color.white.opacity(0.1))
+            toolButton(icon: "arrow.uturn.backward", label: "撤销",
+                       isActive: false,
+                       color: .white) {
+                vm.undo()
+            }
+            .disabled(!vm.canUndo)
+            .opacity(vm.canUndo ? 1 : 0.35)
+            Divider().overlay(Color.white.opacity(0.1))
+            toolButton(icon: "arrow.uturn.forward", label: "重做",
+                       isActive: false,
+                       color: .white) {
+                vm.redo()
+            }
+            .disabled(!vm.canRedo)
+            .opacity(vm.canRedo ? 1 : 0.35)
         }
         .frame(height: 52)
         .background(Color(red: 0.10, green: 0.11, blue: 0.14))

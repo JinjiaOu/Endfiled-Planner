@@ -25,6 +25,9 @@ struct FactoryGridView: View {
     // gestureOverlay，这样滚动/点选其它地方完全不受影响，只有摸到选中建筑本体才会触发挪动
     @State private var repositionOriginalOrigin: GridPoint? = nil
     @State private var repositionCandidateOrigin: GridPoint? = nil
+    /// 删除工具按住划过时上一次删的格子，避免同一格重复触发
+    @State private var lastErasedCell: GridPoint? = nil
+    @State private var eraseDragActive = false
 
     private var cols: Int { FactoryGridModel.gridCols }
     private var rows: Int { FactoryGridModel.gridRows }
@@ -87,6 +90,7 @@ struct FactoryGridView: View {
     }
 
     // 橙色传送带主色 / 蓝色管道主色
+    private let selectionColor = Color(red: 1.0, green: 0.8, blue: 0.0)
     private let beltColor      = Color(red: 1.0, green: 0.55, blue: 0.1)
     private let pipeColor      = Color(red: 0.3, green: 0.7, blue: 1.0)
     private let beltBlockedColor = Color.red
@@ -139,6 +143,18 @@ struct FactoryGridView: View {
                              sharedKeys: sharedKeys,
                              blockedSet: previewBlockedSet,
                              isPreview: true, context: &context)
+            }
+
+            // 选中的线：沿中心线叠一条黄线，点中的那一格加框
+            if let selected = vm.selectedBelt {
+                let style = StrokeStyle(lineWidth: max(2, cellSize * 0.16), lineCap: .round, lineJoin: .round)
+                drawChain(selected.segments, color: selectionColor, blockedColor: selectionColor,
+                          blockedSet: [], style: style, radius: cellSize * 0.38, context: &context)
+                if let cell = vm.selectedBeltCell {
+                    let rect = CGRect(x: CGFloat(cell.col) * cellSize, y: CGFloat(cell.row) * cellSize,
+                                      width: cellSize, height: cellSize)
+                    context.stroke(Path(rect), with: .color(selectionColor), lineWidth: max(2, cellSize * 0.06))
+                }
             }
 
             // 起点光标：整格高亮边框
@@ -423,14 +439,10 @@ struct FactoryGridView: View {
                 }.padding(4)
             }
             if isSelected {
-                VStack {
-                    HStack {
-                        Circle().fill(Color(red: 1.0, green: 0.8, blue: 0.0))
-                            .frame(width: 8, height: 8).padding(4)
-                        Spacer()
-                    }
-                    Spacer()
-                }
+                // 选中框：整圈黄色粗边，缩小看全图时也一眼能找到
+                Rectangle()
+                    .stroke(Color(red: 1.0, green: 0.8, blue: 0.0), lineWidth: max(2, cellSize * 0.08))
+                    .allowsHitTesting(false)
             }
         }
         .frame(width: w, height: h)
@@ -652,15 +664,27 @@ struct FactoryGridView: View {
     @ViewBuilder
     private var gestureOverlay: some View {
         GeometryReader { geo in
-            if vm.editMode == .belt || vm.editMode == .pipe {
-                // Belt/Pipe 专用：拦截单指拖拽，双指捏合由父层 simultaneousGesture 处理
+            if vm.editMode == .belt || vm.editMode == .pipe || vm.editMode == .erase {
+                // 画线 / 删除：拦截单指拖拽（画线跟着手指走、删除按住划过去连删），
+                // 轻点（不拖）照样算点击；双指捏合由父层 simultaneousGesture 处理
                 Color.clear
                     .contentShape(Rectangle())
                     .gesture(
                         DragGesture(minimumDistance: 2)
                             .onChanged { v in
                                 let cell = cellAt(point: v.location)
-                                // 传入相对于起点的像素偏移，用于判断先走哪个轴
+                                if vm.editMode == .erase {
+                                    if !eraseDragActive {
+                                        eraseDragActive = true
+                                        vm.beginUndoGroup()
+                                    }
+                                    if cell != lastErasedCell {
+                                        lastErasedCell = cell
+                                        vm.eraseAt(cell: cell)
+                                    }
+                                    return
+                                }
+                                // 传入相对于起点的像素偏移，跳格时决定先走哪个轴
                                 let startCell = vm.beltStart ?? cell
                                 let startCenter = cellCenter(startCell)
                                 let offset = CGPoint(
@@ -670,20 +694,26 @@ struct FactoryGridView: View {
                                 vm.handleBeltDragChanged(at: cell, point: offset)
                             }
                             .onEnded { v in
-                                vm.handleBeltDragEnded(at: cellAt(point: v.location))
+                                if eraseDragActive {
+                                    eraseDragActive = false
+                                    lastErasedCell = nil
+                                    vm.endUndoGroup()
+                                } else {
+                                    vm.handleBeltDragEnded(at: cellAt(point: v.location))
+                                }
                             }
+                    )
+                    .simultaneousGesture(
+                        SpatialTapGesture().onEnded { tap in
+                            vm.handleTap(at: cellAt(point: tap.location), slop: tapSlop)
+                        }
                     )
             } else {
                 // 非 belt：只用 onTapGesture，不干扰 ScrollView 单指滚动
                 Color.clear
                     .contentShape(Rectangle())
                     .onTapGesture { location in
-                        switch vm.editMode {
-                        case .select, .erase:
-                            vm.handleTap(at: cellAt(point: location))
-                        default:
-                            break
-                        }
+                        vm.handleTap(at: cellAt(point: location), slop: tapSlop)
                     }
                     .onChange(of: dragLocationInGrid) { globalPt in
                         guard let globalPt, draggingDef != nil else {
@@ -714,6 +744,11 @@ struct FactoryGridView: View {
     }
 
     // MARK: - 辅助
+    /// 格子缩到比 44pt 小时，点击额外往外找几格，保证手指的可点范围
+    private var tapSlop: Int {
+        cellSize >= 44 ? 0 : Int(ceil((44 - cellSize) / 2 / cellSize))
+    }
+
     func cellAt(point: CGPoint) -> GridPoint {
         GridPoint(
             col: max(0, min(cols - 1, Int(point.x / cellSize))),

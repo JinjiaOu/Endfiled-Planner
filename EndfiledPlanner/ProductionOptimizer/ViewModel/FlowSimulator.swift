@@ -17,7 +17,7 @@ enum FlowSimulator {
 
     // MARK: - 常量（单位：个/秒）
     static let beltCapacity = 0.5
-    /// 管道上限：表里 msPerRound=500,volume=1 推算是 2/s，但游戏里管道准入口滑条只到 1/s，尚未确认
+    /// 管道上限：表里 msPerRound=500,volume=1 推算是 2/s，用户 2026-10-02 确认就是 2/s
     static let pipeCapacity = 2.0
     /// 转化机/气体散布机的激活消耗：最低 6/min，低于就整台停机
     static let activatorNeed = 0.1
@@ -117,6 +117,21 @@ enum FlowSimulator {
         let consumed: [String: Double]
     }
 
+    /// 一条传送带/管道的流量
+    struct BeltFlow {
+        /// 实际流量（个/秒），按物品
+        let flow: [String: Double]
+        /// 上限（个/秒）
+        let capacity: Double
+        /// 上游想塞进来的量超过上限（被限流）
+        let isOverCapacity: Bool
+        let fromName: String
+        /// nil = 线尾没接到任何入口，货送不出去
+        let toName: String?
+
+        var total: Double { flow.values.reduce(0, +) }
+    }
+
     /// 热能池：按实际到货的燃料算发电量
     struct GeneratorState: Identifiable {
         let id: UUID
@@ -135,6 +150,8 @@ enum FlowSimulator {
         var generators: [GeneratorState] = []
         /// 需要供电但不在任何供电桩范围内的建筑
         var unpoweredIDs: Set<UUID> = []
+        /// 每条传送带/管道的实际流量（只有线头接在某个出口上的线才有）
+        var beltFlows: [UUID: BeltFlow] = [:]
         var converged = true
         var iterations = 0
 
@@ -230,6 +247,8 @@ private final class Link {
     let capacity: Double
     var fromNode = -1
     var toNode = -1          // -1 = 末端没接到任何口，流量过不去
+    /// 由哪条传送带/管道形成的连接；建筑口直接贴口的连接没有
+    var beltID: UUID? = nil
     var offer: [String: Double] = [:]
     var flow: [String: Double] = [:]
     var capScale = 1.0
@@ -373,8 +392,9 @@ private final class Engine {
             }
         }
 
-        func connect(kind: PortKind, from: (node: Int, port: Int), to: (node: Int, port: Int)?) {
+        func connect(kind: PortKind, from: (node: Int, port: Int), to: (node: Int, port: Int)?, beltID: UUID? = nil) {
             let link = Link(kind: kind)
+            link.beltID = beltID
             let index = links.count
             link.fromNode = from.node
             nodes[from.node].ports[from.port].linkIndex = index
@@ -392,7 +412,7 @@ private final class Engine {
             guard let from = outputByExternal[portKey(head, kind)],
                   nodes[from.node].ports[from.port].linkIndex == nil
             else { continue }
-            connect(kind: kind, from: from, to: inputByExternal[portKey(tail, kind)])
+            connect(kind: kind, from: from, to: inputByExternal[portKey(tail, kind)], beltID: belt.id)
         }
 
         // 建筑口直接贴口（中间没有线）：输出口外面那格正好是对方输入口所在格，对方输入口外面那格也正好是我的口
@@ -758,6 +778,14 @@ private final class Engine {
     private func makeResult() -> FlowSimulator.Result {
         var result = FlowSimulator.Result()
         result.unpoweredIDs = Set(nodes.filter { $0.unpowered }.map { $0.placed.id })
+        for link in links {
+            guard let id = link.beltID else { continue }
+            let offered = link.offer.values.reduce(0, +)
+            result.beltFlows[id] = FlowSimulator.BeltFlow(
+                flow: link.flow, capacity: link.capacity, isOverCapacity: offered > link.capacity + 1e-9,
+                fromName: nodes[link.fromNode].def.name,
+                toName: link.toNode >= 0 ? nodes[link.toNode].def.name : nil)
+        }
         for node in nodes {
             switch node.kind {
             case .machine, .unloader:

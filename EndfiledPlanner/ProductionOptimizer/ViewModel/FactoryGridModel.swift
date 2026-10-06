@@ -245,6 +245,7 @@ class FactoryGridModel {
         let hubPower: Double            // 其中协议核心的部分
         let generators: [FlowSimulator.GeneratorState]
         let unpoweredIDs: Set<UUID>     // 需要供电但不在供电桩范围内的建筑（不运行，也不计入耗电）
+        let beltFlows: [UUID: FlowSimulator.BeltFlow]
         var unpoweredCount: Int { unpoweredIDs.count }
         var powerShortage: Double { max(0, totalPowerConsumed - totalPowerGenerated) }
         let buildingCount: Int
@@ -350,6 +351,7 @@ class FactoryGridModel {
             hubPower: hubPower,
             generators: sim.generators,
             unpoweredIDs: sim.unpoweredIDs,
+            beltFlows: sim.beltFlows,
             buildingCount: layout.buildings.count,
             categoryBreakdown: categoryBreakdown,
             bottleneck: bottleneck,
