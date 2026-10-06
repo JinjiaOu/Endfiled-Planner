@@ -111,7 +111,7 @@ Claude 只看 `git diff --stat` 和验收输出，必要时抽查具体 hunk；�
 - 热能池 `power_station_1` 发电，发电量取决于烧什么燃料，不是固定的 150。
 
 解包数据（`TableCfg`）：
-- `FactoryPowerPoleTable.json`：两种供电桩都是 `rangeExtend {x:5, z:5}`。**假设**：覆盖范围是供电桩 2×2 本体向四周各扩 5 格（12×12），实现后请在游戏里核对一次。
+- `FactoryPowerPoleTable.json`：两种供电桩都是 `rangeExtend {x:5, z:5}`。覆盖范围是供电桩 2×2 本体向四周各扩 5 格（12×12），用户 2026-10-06 在游戏里核对无误。
 - `FactoryFuelItemTable.json`（`powerProvide` 是烧该燃料时的发电量，`progressRound` 是每个燃料烧多少秒）：
 
   | 燃料 | 发电 | 每个烧 | 每台耗燃料 |
