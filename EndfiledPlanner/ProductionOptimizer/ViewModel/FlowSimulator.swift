@@ -9,7 +9,7 @@ import Foundation
 
 /// 顺着传送带/管道网络算"理论稳定吞吐量"：
 /// 每台生产设备有一个节流系数 t（0~1），从 t=1 开始反复迭代——
-/// 前向传播算出各口到货量（受带速/管速、分流均分、汇流上限、准入口限速约束），
+/// 前向传播算出各口到货量（受带速/管速、分流均分（堵住的一路匀给其它路）、汇流上限、准入口限速约束），
 /// 终点消耗方给出"到货里实际被吃掉的比例"，再沿网络反推回上游设备的出货通畅度，
 /// 用 t = min(原料满足度, t × 出货通畅度) 更新，直到数字不再变化（有最大迭代次数兜底）。
 /// 只算理论稳态：不管仓库存量/原料耗尽/启动时的死锁。
@@ -221,6 +221,9 @@ private final class Node {
     var limitingItem: String? = nil
     var gateNote: String? = nil
     var conditionerScale = 1.0
+    /// 分流器：出口线 → 物品 → 这一路最多能收多少（个/秒）。某一路堵过才有记录，
+    /// 只往下调不往回放，避免"给少了就不堵 → 放开又堵"来回震荡
+    var splitterCaps: [Int: [String: Double]] = [:]
     var activeEnv: String? = nil
     var consumed: [String: Double] = [:]
     /// 需要供电但不在供电桩范围内：不运行
@@ -275,6 +278,8 @@ private final class Engine {
     var vaporizers: [Int] = []
     var terminals: [Int] = []
     var iterations = 0
+    /// 这一轮分流器各路上限变了多少，也算进收敛判断
+    private var capDelta = 0.0
 
     init(layout: FactoryLayout, recipesFor: (BuildingDefinition) -> [Recipe]) {
         buildNodes(layout: layout, recipesFor: recipesFor)
@@ -518,6 +523,7 @@ private final class Engine {
             link.offer = [:]; link.flow = [:]; link.capScale = 1; link.passFlow = [:]
         }
         for node in nodes { node.consumed = [:]; node.gateNote = nil }
+        capDelta = 0
 
         for i in producers { push(nodes[i]) }
         for i in routerOrder { forward(nodes[i]) }
@@ -540,7 +546,7 @@ private final class Engine {
             maxDelta = max(maxDelta, abs(newThrottle - node.throttle))
             node.throttle = newThrottle
         }
-        return maxDelta
+        return max(maxDelta, capDelta)
     }
 
     private func push(_ node: Node) {
@@ -561,7 +567,10 @@ private final class Engine {
             guard let inL = ins.first, !outs.isEmpty else { return }
             finalize(inL)
             for (item, value) in links[inL].flow {
-                for o in outs { links[o].offer[item, default: 0] += value / Double(outs.count) }
+                let caps = outs.map { node.splitterCaps[$0]?[item] }
+                for (o, amount) in zip(outs, Engine.splitShares(value, caps: caps)) {
+                    links[o].offer[item, default: 0] += amount
+                }
             }
         case .converger:
             guard let outL = outs.first else { return }
@@ -590,14 +599,50 @@ private final class Engine {
         for o in outs { finalize(o) }
     }
 
+    /// 分流器把 total 平均分给各路；有上限的路分不满就只给上限，剩下的再平均分给其它路。
+    /// 所有路都到上限时多出来的送不出去（总和小于 total，上游会被堵）
+    static func splitShares(_ total: Double, caps: [Double?]) -> [Double] {
+        var shares = Array(repeating: 0.0, count: caps.count)
+        var open = Array(caps.indices)
+        var remaining = total
+        while !open.isEmpty {
+            let share = remaining / Double(open.count)
+            let tight = open.filter { caps[$0].map { $0 < share } ?? false }
+            if tight.isEmpty {
+                for i in open { shares[i] = share }
+                break
+            }
+            for i in tight {
+                shares[i] = caps[i]!
+                remaining -= caps[i]!
+            }
+            open.removeAll { tight.contains($0) }
+        }
+        return shares
+    }
+
     private func backward(_ node: Node) {
         let ins = inputLinks(node)
         let outs = outputLinks(node)
         switch node.kind {
         case .splitter:
             guard let inL = ins.first, !outs.isEmpty else { return }
-            for item in links[inL].flow.keys {
-                links[inL].passFlow[item] = outs.map { links[$0].passOffer(item) }.reduce(0, +) / Double(outs.count)
+            for (item, value) in links[inL].flow {
+                var accepted = 0.0
+                for o in outs {
+                    let sent = links[o].offer[item] ?? 0
+                    let pass = links[o].passOffer(item)
+                    accepted += sent * pass
+                    // 这一路吃不下全部：记下它实际收了多少，下一轮多出来的匀给别的路
+                    guard sent > 1e-12, pass < 1 - 1e-6 else { continue }
+                    let old = node.splitterCaps[o]?[item]
+                    let cap = min(old ?? .infinity, sent * pass)
+                    node.splitterCaps[o, default: [:]][item] = cap
+                    capDelta = max(capDelta, (old ?? sent) - cap)
+                }
+                links[inL].passFlow[item] = value > 1e-12
+                    ? accepted / value
+                    : outs.map { links[$0].passOffer(item) }.max() ?? 0
             }
         case .converger:
             guard let outL = outs.first else { return }

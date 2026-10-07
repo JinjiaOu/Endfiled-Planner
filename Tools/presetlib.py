@@ -564,6 +564,7 @@ class _Node:
         self.throttle, self.t_in, self.r_min = 1.0, 1.0, 1.0
         self.limiting, self.gate_note = None, None
         self.conditioner_scale = 1.0
+        self.splitter_caps = {}  # 出口线 → 物品 → 这一路最多收多少；只往下调，同 App
         self.active_env = None
         self.consumed = {}
         self.unpowered = False
@@ -604,6 +605,25 @@ def _overlap(a, e, b):
 
 def covered(layout, b):
     return any(_overlap(d.bounds(), d.device.power_range, b.bounds()) for d in layout.buildings if d.device.power_range)
+
+
+def split_shares(total, caps):
+    """同 App 的 splitShares：平均分，有上限的路分不满就给上限，剩下的再匀给其它路"""
+    shares = [0.0] * len(caps)
+    open_ = list(range(len(caps)))
+    remaining = total
+    while open_:
+        share = remaining / len(open_)
+        tight = [i for i in open_ if caps[i] is not None and caps[i] < share]
+        if not tight:
+            for i in open_:
+                shares[i] = share
+            break
+        for i in tight:
+            shares[i] = caps[i]
+            remaining -= caps[i]
+        open_ = [i for i in open_ if i not in tight]
+    return shares
 
 
 def simulate(layout, max_iter=400, eps=1e-7):
@@ -805,11 +825,14 @@ def simulate(layout, max_iter=400, eps=1e-7):
                 else:
                     l.pass_flow[item] = 0
 
+    cap_delta = [0.0]
+
     def step():
         for l in links:
             l.offer, l.flow, l.cap_scale, l.pass_flow = {}, {}, 1.0, {}
         for n in nodes:
             n.consumed, n.gate_note = {}, None
+        cap_delta[0] = 0.0
         for i in producers:
             n = nodes[i]
             for name, rate in n.products:
@@ -827,8 +850,9 @@ def simulate(layout, max_iter=400, eps=1e-7):
                 if ins and outs:
                     finalize(ins[0])
                     for item, v in links[ins[0]].flow.items():
-                        for o in outs:
-                            links[o].offer[item] = links[o].offer.get(item, 0) + v / len(outs)
+                        caps = [n.splitter_caps.get(o, {}).get(item) for o in outs]
+                        for o, amount in zip(outs, split_shares(v, caps)):
+                            links[o].offer[item] = links[o].offer.get(item, 0) + amount
             elif n.kind == 'converger':
                 if outs:
                     for il in ins:
@@ -912,8 +936,19 @@ def simulate(layout, max_iter=400, eps=1e-7):
             ins, outs = in_links(n), out_links(n)
             if n.kind == 'splitter':
                 if ins and outs:
-                    for item in links[ins[0]].flow:
-                        links[ins[0]].pass_flow[item] = sum(links[o].pass_offer(item) for o in outs) / len(outs)
+                    for item, v in links[ins[0]].flow.items():
+                        accepted = 0.0
+                        for o in outs:
+                            sent = links[o].offer.get(item, 0)
+                            pas = links[o].pass_offer(item)
+                            accepted += sent * pas
+                            if sent <= 1e-12 or pas >= 1 - 1e-6:
+                                continue
+                            old = n.splitter_caps.get(o, {}).get(item)
+                            cap = min(old if old is not None else float('inf'), sent * pas)
+                            n.splitter_caps.setdefault(o, {})[item] = cap
+                            cap_delta[0] = max(cap_delta[0], (old if old is not None else sent) - cap)
+                        links[ins[0]].pass_flow[item] = accepted / v if v > 1e-12 else max(links[o].pass_offer(item) for o in outs)
             elif n.kind == 'converger':
                 if outs:
                     for il in ins:
@@ -946,7 +981,7 @@ def simulate(layout, max_iter=400, eps=1e-7):
             new = max(0, min(n.throttle, n.t_in, n.throttle * r))
             delta = max(delta, abs(new - n.throttle))
             n.throttle = new
-        return delta
+        return max(delta, cap_delta[0])
 
     converged = False
     for _ in range(max_iter):
