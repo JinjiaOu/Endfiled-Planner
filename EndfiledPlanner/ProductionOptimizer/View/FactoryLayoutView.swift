@@ -442,7 +442,7 @@ struct FactoryLayoutView: View {
                 Image(systemName: "hand.draw.fill")
                     .font(.system(size: 10))
                     .foregroundColor(.white.opacity(0.3))
-                Text("拖拽建筑到网格放置 · 双指缩放")
+                Text("按住建筑再拖到网格放置 · 双指缩放")
                     .font(.system(size: 10, design: .monospaced))
                     .foregroundColor(.white.opacity(0.3))
             }
@@ -475,7 +475,7 @@ struct FactoryLayoutView: View {
         }.buttonStyle(.plain)
     }
 
-    /// 建筑卡片：长按/拖拽开始时激活拖拽状态，松手时在网格对应位置放置
+    /// 建筑卡片：按住再拖时激活拖拽状态，松手时在网格对应位置放置
     private func draggableBuildingChip(_ def: BuildingDefinition) -> some View {
         VStack(spacing: 6) {
             ZStack {
@@ -492,26 +492,23 @@ struct FactoryLayoutView: View {
         .frame(width: 72)
         .scaleEffect(draggingDef?.id == def.id ? 1.08 : 1.0)
         .animation(.spring(response: 0.2), value: draggingDef?.id)
-        // 用 simultaneousGesture 而不是 gesture：普通的 .gesture 会独占这次触摸，
-        // ScrollView 自己的横向滚动手势完全拿不到事件，怎么都滑不动。
-        // simultaneousGesture 让两边都能收到触摸，这里再按“整体位移是不是明显偏纵向”
-        // 来判断——明显往上拖才当成"拿建筑去放置"，左右滑动交给 ScrollView 正常滚动
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 12, coordinateSpace: .global)
+        // 先按住 0.2 秒再拖才算"拿建筑去放置"：手指一按下就滑动时长按会失败，滑动交还给外面的 ScrollView。
+        // 之前直接挂 DragGesture（哪怕是 simultaneousGesture），在新版 iOS 上会把卡片区域的列表滑动吃掉，
+        // 只能在卡片上下的空白里才滑得动。原来长按弹出的"旋转"菜单会跟这个长按冲突，去掉了，
+        // 放置前旋转用工具栏的旋转按钮
+        .gesture(
+            LongPressGesture(minimumDuration: 0.2)
+                .sequenced(before: DragGesture(minimumDistance: 0, coordinateSpace: .global))
                 .onChanged { value in
-                    let isVerticalDrag = abs(value.translation.height) > abs(value.translation.width) * 1.2
-                    guard isVerticalDrag || draggingDef != nil else { return }
+                    guard case .second(true, let drag) = value else { return }
                     if draggingDef == nil {
                         draggingDef = def
                         vm.editMode = .place(def)
                     }
-                    // 将全局坐标转换为网格内坐标（近似：减去网格左上角偏移）
-                    // 网格左上角约在屏幕 (0 + toolbar, 0)，用 global 坐标传过去
-                    // FactoryGridView 通过 coordinateSpace 无法直接获取，这里用全局坐标暂存
-                    // 由 FactoryGridView 的 GeometryReader 在父层做坐标转换
-                    dragLocationInGrid = value.location
+                    // 全局坐标，由 FactoryGridView 的 GeometryReader 换算成网格内坐标
+                    if let drag { dragLocationInGrid = drag.location }
                 }
-                .onEnded { value in
+                .onEnded { _ in
                     if draggingDef != nil, let cell = vm.pendingDropCell {
                         vm.placeBuilding(def, at: cell)
                     }
@@ -520,12 +517,6 @@ struct FactoryLayoutView: View {
                     vm.pendingDropCell = nil
                 }
         )
-        // 旋转按钮
-        .contextMenu {
-            Button { vm.pendingRotation = vm.pendingRotation.next } label: {
-                Label("旋转", systemImage: "rotate.right")
-            }
-        }
     }
 
     // MARK: - 悬浮产能按钮
