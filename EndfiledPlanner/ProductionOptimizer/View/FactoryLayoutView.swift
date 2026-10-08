@@ -184,12 +184,16 @@ struct FactoryLayoutView: View {
                             // 悬浮产能按钮（右下角）
                             VStack {
                                 Spacer()
-                                HStack {
+                                HStack(alignment: .bottom, spacing: 10) {
                                     Spacer()
-                                    statsFloatingButton
-                                        .padding(.trailing, 16)
-                                        .padding(.bottom, 16)
+                                    if vm.showUtilization { utilizationLegend }
+                                    VStack(spacing: 10) {
+                                        utilizationButton
+                                        statsFloatingButton
+                                    }
+                                    .padding(.trailing, 16)
                                 }
+                                .padding(.bottom, 16)
                             }
                         }
                     }
@@ -710,6 +714,57 @@ struct FactoryLayoutView: View {
             .background(Color(red: 0.10, green: 0.11, blue: 0.14).opacity(0.92))
             .overlay(Rectangle().stroke(red.opacity(0.6), lineWidth: 1))
             .transition(.move(edge: .top).combined(with: .opacity))
+        }
+    }
+
+    // MARK: - 利用率视图开关 + 图例
+    private var utilizationButton: some View {
+        let on = vm.showUtilization
+        let color = Color(red: 0.35, green: 0.95, blue: 0.45)
+        return Button {
+            withAnimation(.spring(response: 0.3)) { vm.showUtilization.toggle() }
+        } label: {
+            ZStack {
+                Circle()
+                    .fill(on ? color.opacity(0.22) : Color(red: 0.10, green: 0.11, blue: 0.14))
+                    .frame(width: 44, height: 44)
+                Circle()
+                    .stroke(color.opacity(on ? 0.9 : 0.45), lineWidth: 1.5)
+                    .frame(width: 44, height: 44)
+                VStack(spacing: 0) {
+                    Image(systemName: "gauge.with.dots.needle.50percent")
+                        .font(.system(size: 15))
+                    Text("利用率")
+                        .font(.system(size: 8, weight: .bold))
+                }
+                .foregroundColor(on ? color : .white.opacity(0.6))
+            }
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(on ? "关闭利用率视图" : "打开利用率视图")
+    }
+
+    private var utilizationLegend: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            Text("线的利用率").font(.system(size: 10, weight: .bold)).foregroundColor(.white.opacity(0.8))
+            legendRow(swatch: AnyView(Capsule().fill(FactoryGridView.utilizationFullColor)), text: "跑满")
+            legendRow(swatch: AnyView(Text("60%").font(.system(size: 8, weight: .heavy, design: .monospaced))
+                                        .foregroundColor(.white).padding(.horizontal, 2).background(Color.black.opacity(0.7))),
+                      text: "没跑满（标百分比）")
+            legendRow(swatch: AnyView(Capsule().fill(Color(red: 1.0, green: 0.55, blue: 0.1).opacity(0.25))), text: "空闲（变暗）")
+            legendRow(swatch: AnyView(Capsule().fill(FactoryGridView.utilizationOverColor)), text: "被限流（瓶颈）")
+        }
+        .padding(10)
+        .background(Color(red: 0.10, green: 0.11, blue: 0.14).opacity(0.95))
+        .overlay(Rectangle().stroke(Color.white.opacity(0.15), lineWidth: 1))
+        .transition(.opacity)
+        .allowsHitTesting(false)
+    }
+
+    private func legendRow(swatch: AnyView, text: String) -> some View {
+        HStack(spacing: 6) {
+            swatch.frame(width: 26, height: 8)
+            Text(text).font(.system(size: 10)).foregroundColor(.white.opacity(0.75))
         }
     }
 

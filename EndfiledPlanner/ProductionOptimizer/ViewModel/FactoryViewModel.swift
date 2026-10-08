@@ -61,6 +61,8 @@ class FactoryViewModel: ObservableObject {
     @Published var beltStart: GridPoint? = nil          // 传送带起点
     @Published var pendingDropCell: GridPoint? = nil    // 拖拽放置落点
     @Published var showSaveConfirm = false
+    /// 利用率视图：线按 实际流量/上限 分档上色（空闲变暗、跑满绿线、被限流红线、其余标百分比）
+    @Published var showUtilization = false
     /// 保存提示条上的文字（保存画布 / 存为我的布局共用一个提示条）
     @Published var toastText = "画布已保存"
     /// 详情面板点了"移动"后，下一次点网格就把这台建筑挪过去（点的格子是新的左上角）

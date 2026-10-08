@@ -144,11 +144,14 @@ struct FactoryGridView: View {
             let sharedKeys = sharedAxisKeys(allSegs + vm.beltPreviewSegments)
 
             // 传送带先画（打底），管道后画（叠在上面），保证共存时管道细线始终可见
-            for belt in vm.layout.beltNetwork.belts where belt.lineType == .belt {
-                drawOneBelt(belt, occupied: occupied, sharedKeys: sharedKeys, isPreview: false, context: &context)
-            }
-            for belt in vm.layout.beltNetwork.belts where belt.lineType == .pipe {
-                drawOneBelt(belt, occupied: occupied, sharedKeys: sharedKeys, isPreview: false, context: &context)
+            let utilization = vm.showUtilization
+            for type in [LineType.belt, .pipe] {
+                for belt in vm.layout.beltNetwork.belts where belt.lineType == type {
+                    let level = utilization ? utilizationLevel(of: belt) : nil
+                    drawOneBelt(belt, occupied: occupied, sharedKeys: sharedKeys, isPreview: false,
+                                alphaScale: level == .idle ? 0.25 : 1, context: &context)
+                    if let level { drawUtilization(level, on: belt, context: &context) }
+                }
             }
 
             // 拖拽预览
@@ -208,13 +211,57 @@ struct FactoryGridView: View {
     }
 
     private func drawOneBelt(_ belt: Belt, occupied: Set<String>, sharedKeys: Set<String>,
-                             isPreview: Bool, context: inout GraphicsContext) {
+                             isPreview: Bool, alphaScale: Double = 1, context: inout GraphicsContext) {
         let blockedSet = Set(belt.segments
             .filter { occupied.contains("\($0.cell.col),\($0.cell.row)") }
             .map { "\($0.cell.col),\($0.cell.row)" })
         drawBeltPath(segments: belt.segments, lineType: belt.lineType,
                      sharedKeys: sharedKeys, blockedSet: blockedSet,
-                     isPreview: isPreview, context: &context)
+                     isPreview: isPreview, alphaScale: alphaScale, context: &context)
+    }
+
+    // MARK: - 利用率视图
+    enum UtilizationLevel: Equatable {
+        case idle                 // 没东西走（包括线头没接出口的线）
+        case partial(Double)      // 没跑满，带百分比
+        case full                 // 跑满
+        case overCapacity         // 上游想塞的比上限多，被限流（瓶颈）
+    }
+
+    private func utilizationLevel(of belt: Belt) -> UtilizationLevel {
+        guard let flow = vm.stats.beltFlows[belt.id], flow.total > 1e-6, flow.capacity > 0 else { return .idle }
+        if flow.isOverCapacity { return .overCapacity }
+        let ratio = flow.total / flow.capacity
+        return ratio >= 0.995 ? .full : .partial(ratio)
+    }
+
+    static let utilizationFullColor = Color(red: 0.35, green: 0.95, blue: 0.45)
+    static let utilizationOverColor = Color(red: 1.0, green: 0.25, blue: 0.2)
+
+    /// 跑满：沿中心线叠一条绿线；被限流：红线；没跑满：在线中间那格标百分比（格子太小就不标）
+    private func drawUtilization(_ level: UtilizationLevel, on belt: Belt, context: inout GraphicsContext) {
+        let style = StrokeStyle(lineWidth: max(2, cellSize * 0.2), lineCap: .round, lineJoin: .round)
+        switch level {
+        case .full:
+            drawChain(belt.segments, color: Self.utilizationFullColor, blockedColor: Self.utilizationFullColor,
+                      blockedSet: [], style: style, radius: cellSize * 0.38, context: &context)
+        case .overCapacity:
+            drawChain(belt.segments, color: Self.utilizationOverColor, blockedColor: Self.utilizationOverColor,
+                      blockedSet: [], style: style, radius: cellSize * 0.38, context: &context)
+        case .partial(let ratio):
+            guard cellSize >= 16, !belt.segments.isEmpty else { return }
+            let mid = belt.segments[belt.segments.count / 2].cell
+            let text = Text("\(Int((ratio * 100).rounded()))%")
+                .font(.system(size: max(8, min(cellSize * 0.32, 14)), weight: .heavy, design: .monospaced))
+                .foregroundColor(.white)
+            let center = cellCenter(mid)
+            let box = CGRect(x: center.x - cellSize * 0.55, y: center.y - cellSize * 0.24,
+                             width: cellSize * 1.1, height: cellSize * 0.48)
+            context.fill(Path(roundedRect: box, cornerRadius: 3), with: .color(.black.opacity(0.7)))
+            context.draw(text, at: center)
+        case .idle:
+            break
+        }
     }
 
     /// 传送带/管道渲染：Belt.segments 本身已有序，直接画圆角折线，不需要重新串链
@@ -223,6 +270,7 @@ struct FactoryGridView: View {
                               sharedKeys: Set<String>,
                               blockedSet: Set<String>,
                               isPreview: Bool,
+                              alphaScale: Double = 1,
                               context: inout GraphicsContext) {
         guard !segments.isEmpty else { return }
 
@@ -235,7 +283,7 @@ struct FactoryGridView: View {
 
         let lineW  = cellSize * widthScale
         let radius = cellSize * 0.38 * widthScale
-        let alpha: Double = isPreview ? 0.45 : 1.0
+        let alpha: Double = (isPreview ? 0.45 : 1.0) * alphaScale
         let dashPattern: [CGFloat] = isPreview ? [cellSize * 0.7, cellSize * 0.3] : []
 
         // 背景层：暗色
