@@ -11,12 +11,14 @@ struct FactoryStatsView: View {
 
     let stats: FactoryGridModel.ProductionStats
     @Binding var isExpanded: Bool
+    /// 外面已经有标题栏时（产能统计浮层）不再显示这里的折叠标题，免得"产能统计"出现两行
+    var showsHeader = true
 
     var body: some View {
         VStack(spacing: 0) {
 
             // 折叠标题栏
-            Button {
+            if showsHeader { Button {
                 withAnimation(.spring(response: 0.3)) {
                     isExpanded.toggle()
                 }
@@ -46,7 +48,7 @@ struct FactoryStatsView: View {
                 .padding(.vertical, 10)
                 .background(Color(red: 0.08, green: 0.09, blue: 0.12))
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.plain) }
 
             if isExpanded {
                 VStack(spacing: 0) {

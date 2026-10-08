@@ -204,7 +204,7 @@ struct FactoryLayoutView: View {
                             PlacementPanel(vm: vm)
                                 .transition(.move(edge: .bottom).combined(with: .opacity))
                         } else if showBuildingPalette && !usesSidePalette {
-                            buildingPalette
+                            buildingPalette(vertical: false)
                                 .transition(.move(edge: .bottom).combined(with: .opacity))
                         } else if !usesSidePalette, vm.editMode == .boxSelect {
                             GroupSelectionPanel(vm: vm, style: .bottom, onSaveAs: promptSaveGroup)
@@ -395,7 +395,7 @@ struct FactoryLayoutView: View {
                 .padding(.vertical, 10)
                 .background(Color(red: 0.08, green: 0.09, blue: 0.12))
 
-                buildingPalette
+                buildingPalette(vertical: true)
             }
             .frame(width: 380)
             .background(Color(red: 0.10, green: 0.11, blue: 0.14))
@@ -515,30 +515,56 @@ struct FactoryLayoutView: View {
     }
 
     // MARK: - 建筑选择板（拖拽放置）
-    private var buildingPalette: some View {
+    /// vertical：iPad 右侧面板用竖向网格（分类标签换行、建筑每行 4 个上下滑）；手机底部用横向一排
+    @ViewBuilder
+    private func buildingPalette(vertical: Bool) -> some View {
         VStack(spacing: 0) {
             // 分类筛选
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 8) {
+            if vertical {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 76), spacing: 8)], alignment: .leading, spacing: 8) {
                     categoryChip(category: nil, label: "全部")
                     ForEach(BuildingCategory.allCases, id: \.self) { cat in
                         categoryChip(category: cat, label: cat.rawValue)
                     }
                 }
-                .padding(.horizontal, 14).padding(.vertical, 8)
-            }
-            .background(Color(red: 0.10, green: 0.11, blue: 0.14))
-
-            // 建筑列表（每个卡片支持 DragGesture 拖入网格）
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 10) {
-                    ForEach(filteredBuildings) { def in
-                        draggableBuildingChip(def)
-                    }
-                }
                 .padding(.horizontal, 14).padding(.vertical, 10)
+                .background(Color(red: 0.10, green: 0.11, blue: 0.14))
+            } else {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        categoryChip(category: nil, label: "全部")
+                        ForEach(BuildingCategory.allCases, id: \.self) { cat in
+                            categoryChip(category: cat, label: cat.rawValue)
+                        }
+                    }
+                    .padding(.horizontal, 14).padding(.vertical, 8)
+                }
+                .background(Color(red: 0.10, green: 0.11, blue: 0.14))
             }
-            .background(Color(red: 0.12, green: 0.13, blue: 0.16))
+
+            // 建筑列表（按住卡片再拖进网格）
+            if vertical {
+                ScrollView(.vertical, showsIndicators: true) {
+                    LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 4), spacing: 14) {
+                        ForEach(filteredBuildings) { def in
+                            draggableBuildingChip(def)
+                        }
+                    }
+                    .padding(.horizontal, 14).padding(.vertical, 12)
+                }
+                .frame(maxHeight: .infinity)
+                .background(Color(red: 0.12, green: 0.13, blue: 0.16))
+            } else {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 10) {
+                        ForEach(filteredBuildings) { def in
+                            draggableBuildingChip(def)
+                        }
+                    }
+                    .padding(.horizontal, 14).padding(.vertical, 10)
+                }
+                .background(Color(red: 0.12, green: 0.13, blue: 0.16))
+            }
 
             // 拖拽提示
             HStack(spacing: 6) {
@@ -815,6 +841,12 @@ struct FactoryLayoutView: View {
                         .font(.system(size: 12, weight: .bold, design: .monospaced))
                         .foregroundColor(.white)
                     Spacer()
+                    // 电力余量（发电－耗电，正数=有富余，负数=不够）
+                    let margin = vm.stats.totalPowerGenerated - vm.stats.totalPowerConsumed
+                    Text(String(format: "%+.1f MW", margin))
+                        .font(.system(size: 11, weight: .medium, design: .monospaced))
+                        .foregroundColor(margin >= 0 ? Color(red: 0.4, green: 0.8, blue: 0.2) : Color(red: 0.9, green: 0.3, blue: 0.2))
+                        .padding(.trailing, 8)
                     Button {
                         withAnimation(.spring(response: 0.3)) { showStats = false }
                     } label: {
@@ -829,13 +861,14 @@ struct FactoryLayoutView: View {
                 // 内容可能很长（建筑一多，"没正常运行的机器"这类提示行会刷很多条），
                 // 之前没套 ScrollView 会直接顶出屏幕、连最上面的功率数字都划不到
                 ScrollView {
-                    FactoryStatsView(stats: vm.stats, isExpanded: .constant(true))
+                    FactoryStatsView(stats: vm.stats, isExpanded: .constant(true), showsHeader: false)
                 }
             }
             .background(Color(red: 0.10, green: 0.11, blue: 0.14))
             .overlay(Rectangle().stroke(Color(red: 0.4, green: 0.8, blue: 0.2).opacity(0.4), lineWidth: 1))
-            .frame(maxWidth: 340)
-            .frame(maxHeight: 480)
+            // iPad 宽屏放大一些，一屏多看几行
+            .frame(maxWidth: usesSidePalette ? 460 : 340)
+            .frame(maxHeight: usesSidePalette ? 680 : 480)
             .padding(.trailing, 16)
             .padding(.bottom, 80)   // 留出悬浮按钮空间
         }

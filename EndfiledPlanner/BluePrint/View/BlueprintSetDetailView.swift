@@ -167,6 +167,9 @@ struct BlueprintSetDetailView: View {
                         Spacer(minLength: 20)
                     }
                     .padding(.top, 20)
+                    // iPad 宽屏不拉满整屏，居中限宽
+                    .frame(maxWidth: 760)
+                    .frame(maxWidth: .infinity)
                 }
             }
             .navigationTitle("")

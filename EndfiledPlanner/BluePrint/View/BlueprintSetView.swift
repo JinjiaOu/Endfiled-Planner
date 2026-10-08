@@ -11,6 +11,14 @@ struct BlueprintSetView: View {
     
     @StateObject private var viewModel = BlueprintSetViewModel()
     @State private var selectedSet: BlueprintSet?
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
+    /// 手机一列；iPad 等宽屏按屏宽自动排 2~3 列（每列至少 360 宽）
+    private var listColumns: [GridItem] {
+        horizontalSizeClass == .regular
+            ? [GridItem(.adaptive(minimum: 360), spacing: 12, alignment: .top)]
+            : [GridItem(.flexible())]
+    }
     
     // 免责声明相关状态
     @AppStorage("hasAcceptedBlueprintDisclaimer") private var hasAccepted = false
@@ -88,7 +96,7 @@ struct BlueprintSetView: View {
                                 .padding(.top, 60)
                         } else {
                             // 蓝图列表
-                            LazyVStack(spacing: 12) {
+                            LazyVGrid(columns: listColumns, spacing: 12) {
                                 ForEach(viewModel.filteredSets) { set in
                                     BlueprintSetCard(blueprintSet: set)
                                         .onTapGesture {
