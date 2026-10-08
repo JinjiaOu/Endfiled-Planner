@@ -15,6 +15,8 @@ struct FactoryGridView: View {
     // 从建筑板拖入时的状态（由父视图控制）
     @Binding var draggingDef: BuildingDefinition?
     @Binding var dragLocationInGrid: CGPoint?
+    /// 框选拉框/拖整组时手指的全局坐标，父视图据此在手指靠近画面边缘时自动滚动；没在拖时为 nil
+    @Binding var autoScrollFinger: CGPoint?
 
     @State private var beltAnimPhase: CGFloat = 0
     // dragLocationInGrid 是父视图传来的"手指全局坐标"，这里换算成网格本地坐标用来画预览——
@@ -28,6 +30,20 @@ struct FactoryGridView: View {
     /// 删除工具按住划过时上一次删的格子，避免同一格重复触发
     @State private var lastErasedCell: GridPoint? = nil
     @State private var eraseDragActive = false
+    /// 框选模式：这次拖动是在拉框还是在拖整组（按下的那格是选中的建筑就是拖整组）
+    private enum BoxDragKind { case box, group }
+    @State private var boxDragKind: BoxDragKind? = nil
+    @State private var boxDragStart: GridPoint? = nil
+    @State private var boxDragCurrent: GridPoint? = nil
+    @State private var groupDragDelta: GridPoint? = nil
+    /// 拖动起点（网格坐标）和手指最近一次的全局坐标：画布自动滚动时手指不动，
+    /// 要靠网格自己的全局位置变化重新换算手指落在哪一格
+    @State private var boxDragStartLocal: CGPoint? = nil
+    @State private var boxDragFingerGlobal: CGPoint? = nil
+    /// 网格在屏幕上的位置：滚动时每帧都变，放在引用类型里改，不触发重新计算视图
+    @State private var gridFrameBox = GridFrameBox()
+    private var gridGlobalFrame: CGRect { gridFrameBox.frame }
+    private let groupColor = Color(red: 0.3, green: 0.85, blue: 0.95)
 
     private var cols: Int { vm.layout.mapType.rules.gridCols }
     private var rows: Int { vm.layout.mapType.rules.gridRows }
@@ -42,10 +58,15 @@ struct FactoryGridView: View {
             dragPreview
             beltStartMarker
             portSnapHighlight
+            boxSelectionOverlay
             gestureOverlay
             repositionHandle
         }
         .frame(width: CGFloat(cols) * cellSize, height: CGFloat(rows) * cellSize)
+        .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { frame in
+            gridFrameBox.frame = frame
+            if boxDragKind != nil { updateBoxDrag() }
+        }
         .onAppear {
             withAnimation(.linear(duration: 1.2).repeatForever(autoreverses: false)) {
                 beltAnimPhase = 20
@@ -154,6 +175,15 @@ struct FactoryGridView: View {
                     let rect = CGRect(x: CGFloat(cell.col) * cellSize, y: CGFloat(cell.row) * cellSize,
                                       width: cellSize, height: cellSize)
                     context.stroke(Path(rect), with: .color(selectionColor), lineWidth: max(2, cellSize * 0.06))
+                }
+            }
+
+            // 框选选中的线：沿中心线叠一条青线
+            if !vm.groupBeltSelection.isEmpty {
+                let style = StrokeStyle(lineWidth: max(2, cellSize * 0.16), lineCap: .round, lineJoin: .round)
+                for belt in vm.layout.beltNetwork.belts where vm.groupBeltSelection.contains(belt.id) {
+                    drawChain(belt.segments, color: groupColor, blockedColor: groupColor,
+                              blockedSet: [], style: style, radius: cellSize * 0.38, context: &context)
                 }
             }
 
@@ -375,6 +405,7 @@ struct FactoryGridView: View {
         let x = CGFloat(placed.origin.col) * cellSize
         let y = CGFloat(placed.origin.row) * cellSize
         let isSelected = placed.id == vm.selectedBuildingID
+        let isGroupMember = vm.groupSelection.contains(placed.id)
         let machineStatus = vm.stats.machineStates.first { $0.id == placed.id }?.status
         let displayedStatus = placed.isActive ? machineStatus : .inactive
 
@@ -458,6 +489,13 @@ struct FactoryGridView: View {
                 // 选中框：整圈黄色粗边，缩小看全图时也一眼能找到
                 Rectangle()
                     .stroke(Color(red: 1.0, green: 0.8, blue: 0.0), lineWidth: max(2, cellSize * 0.08))
+                    .allowsHitTesting(false)
+            }
+            if isGroupMember {
+                // 框选选中：青色粗边 + 淡青填充，跟单选的黄色区分开
+                Rectangle().fill(groupColor.opacity(0.18)).allowsHitTesting(false)
+                Rectangle()
+                    .stroke(groupColor, lineWidth: max(2, cellSize * 0.08))
                     .allowsHitTesting(false)
             }
         }
@@ -640,6 +678,54 @@ struct FactoryGridView: View {
         }
     }
 
+    // MARK: - 框选：拉框的虚线框 + 拖整组时跟手的预览（绿 = 能放，红 = 出界或压到组外建筑）
+    @ViewBuilder
+    private var boxSelectionOverlay: some View {
+        if vm.editMode == .boxSelect {
+            if let a = boxDragStart, let b = boxDragCurrent, boxDragKind == .box {
+                let minC = min(a.col, b.col), minR = min(a.row, b.row)
+                let w = CGFloat(abs(a.col - b.col) + 1) * cellSize
+                let h = CGFloat(abs(a.row - b.row) + 1) * cellSize
+                ZStack {
+                    Rectangle().fill(groupColor.opacity(0.10))
+                    Rectangle().stroke(groupColor, style: StrokeStyle(lineWidth: 2, dash: [6, 4]))
+                }
+                .frame(width: w, height: h)
+                .offset(x: CGFloat(minC) * cellSize, y: CGFloat(minR) * cellSize)
+                .allowsHitTesting(false)
+            }
+            if let delta = groupDragDelta, delta != GridPoint(col: 0, row: 0) {
+                let ok = vm.canMoveGroup(by: delta)
+                let color = ok ? Color(red: 0.4, green: 0.9, blue: 0.4) : Color.red
+                let moving = vm.beltsMovingWithGroup()
+                Canvas { context, _ in
+                    let style = StrokeStyle(lineWidth: max(2, cellSize * 0.3), lineCap: .round, lineJoin: .round,
+                                            dash: [cellSize * 0.5, cellSize * 0.25])
+                    for belt in vm.layout.beltNetwork.belts where moving.contains(belt.id) {
+                        var shifted = belt.segments
+                        for i in shifted.indices { shifted[i].cell = shifted[i].cell + delta }
+                        drawChain(shifted, color: color.opacity(0.8), blockedColor: color.opacity(0.8),
+                                  blockedSet: [], style: style, radius: cellSize * 0.38, context: &context)
+                    }
+                }
+                .allowsHitTesting(false)
+                ForEach(vm.groupBuildings) { placed in
+                    if let def = BuildingDefinition.find(placed.definitionID) {
+                        let size = placed.effectiveSize(definition: def)
+                        ZStack {
+                            Rectangle().fill(color.opacity(0.3))
+                            Rectangle().stroke(color, style: StrokeStyle(lineWidth: 2, dash: [6, 3]))
+                        }
+                        .frame(width: CGFloat(size.width) * cellSize, height: CGFloat(size.height) * cellSize)
+                        .offset(x: CGFloat(placed.origin.col + delta.col) * cellSize,
+                                y: CGFloat(placed.origin.row + delta.row) * cellSize)
+                        .allowsHitTesting(false)
+                    }
+                }
+            }
+        }
+    }
+
     // MARK: - 传送带起点标记
     @ViewBuilder
     private var beltStartMarker: some View {
@@ -680,7 +766,49 @@ struct FactoryGridView: View {
     @ViewBuilder
     private var gestureOverlay: some View {
         GeometryReader { geo in
-            if vm.editMode == .belt || vm.editMode == .pipe || vm.editMode == .erase {
+            if vm.editMode == .boxSelect {
+                // 框选：单指拖动在空地上是拉框，按在选中的建筑上是拖整组；轻点是加入/移出单个建筑
+                Color.clear
+                    .contentShape(Rectangle())
+                    .gesture(
+                        // 用全局坐标：画布自动滚动时靠 gridGlobalFrame 的变化重新换算手指所在格
+                        DragGesture(minimumDistance: 4, coordinateSpace: .global)
+                            .onChanged { v in
+                                if boxDragKind == nil {
+                                    let startLocal = toLocal(v.startLocation)
+                                    let startCell = cellAt(point: startLocal)
+                                    boxDragKind = isGroupMember(at: startCell) ? .group : .box
+                                    boxDragStart = startCell
+                                    boxDragStartLocal = startLocal
+                                }
+                                boxDragFingerGlobal = v.location
+                                autoScrollFinger = v.location
+                                updateBoxDrag()
+                            }
+                            .onEnded { _ in
+                                autoScrollFinger = nil
+                                switch boxDragKind {
+                                case .group:
+                                    if let delta = groupDragDelta { vm.moveGroup(by: delta) }
+                                case .box:
+                                    if let a = boxDragStart, let b = boxDragCurrent { vm.boxSelect(from: a, to: b) }
+                                case nil:
+                                    break
+                                }
+                                boxDragKind = nil
+                                boxDragStart = nil
+                                boxDragCurrent = nil
+                                groupDragDelta = nil
+                                boxDragStartLocal = nil
+                                boxDragFingerGlobal = nil
+                            }
+                    )
+                    .simultaneousGesture(
+                        SpatialTapGesture().onEnded { tap in
+                            vm.handleTap(at: cellAt(point: tap.location), slop: tapSlop)
+                        }
+                    )
+            } else if vm.editMode == .belt || vm.editMode == .pipe || vm.editMode == .erase {
                 // 画线 / 删除：拦截单指拖拽（画线跟着手指走、删除按住划过去连删），
                 // 轻点（不拖）照样算点击；双指捏合由父层 simultaneousGesture 处理
                 Color.clear
@@ -760,6 +888,32 @@ struct FactoryGridView: View {
     }
 
     // MARK: - 辅助
+    private func toLocal(_ global: CGPoint) -> CGPoint {
+        CGPoint(x: global.x - gridGlobalFrame.minX, y: global.y - gridGlobalFrame.minY)
+    }
+
+    /// 按下的那格是不是选中的建筑或选中的线（是就拖整组，不是就拉框）
+    private func isGroupMember(at cell: GridPoint) -> Bool {
+        if let hit = vm.building(at: cell) { return vm.groupSelection.contains(hit.placed.id) }
+        return vm.layout.beltNetwork.beltIDs(at: cell).contains { vm.groupBeltSelection.contains($0) }
+    }
+
+    /// 按手指当前位置更新框或整组位移（手指移动、画布自动滚动都会调）
+    private func updateBoxDrag() {
+        guard let finger = boxDragFingerGlobal else { return }
+        let local = toLocal(finger)
+        switch boxDragKind {
+        case .group:
+            guard let start = boxDragStartLocal else { return }
+            groupDragDelta = GridPoint(col: Int(((local.x - start.x) / cellSize).rounded()),
+                                       row: Int(((local.y - start.y) / cellSize).rounded()))
+        case .box:
+            boxDragCurrent = cellAt(point: local)
+        case nil:
+            break
+        }
+    }
+
     /// 格子缩到比 44pt 小时，点击额外往外找几格，保证手指的可点范围
     private var tapSlop: Int {
         cellSize >= 44 ? 0 : Int(ceil((44 - cellSize) / 2 / cellSize))
@@ -777,4 +931,8 @@ struct FactoryGridView: View {
                 y: CGFloat(cell.row) * cellSize + cellSize / 2)
     }
 
+}
+
+private final class GridFrameBox {
+    var frame: CGRect = .zero
 }

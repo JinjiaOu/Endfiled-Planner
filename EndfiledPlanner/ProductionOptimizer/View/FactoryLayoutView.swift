@@ -7,6 +7,7 @@
 
 import SwiftUI
 import UIKit
+import Combine
 
 /// 把 FactoryLayoutView 里一大串 .alert/.confirmationDialog 拆出来单独一个 ViewModifier——
 /// 全堆在 body 那条链上会导致 Swift 类型检查超时编译不过
@@ -102,6 +103,13 @@ struct FactoryLayoutView: View {
     @State private var draggingDef: BuildingDefinition? = nil
     @State private var dragLocationInGrid: CGPoint? = nil   // 相对于网格原点
 
+    // 框选时拖到画面边缘自动滚动
+    @State private var autoScrollFinger: CGPoint? = nil      // 手指全局坐标，没在框选拖动时为 nil
+    @State private var scrollPosition = ScrollPosition()
+    /// 滚动位置/画面框每滚一下都变，放在引用类型里改，避免每帧都触发整个画布重新计算
+    @State private var scrollGeometry = ScrollGeometryBox()
+    private let autoScrollTimer = Timer.publish(every: 1.0 / 60, on: .main, in: .common).autoconnect()
+
     // 悬浮 Stats
     @State private var showStats = false
 
@@ -131,10 +139,20 @@ struct FactoryLayoutView: View {
                                     vm: vm,
                                     cellSize: cellSize,
                                     draggingDef: $draggingDef,
-                                    dragLocationInGrid: $dragLocationInGrid
+                                    dragLocationInGrid: $dragLocationInGrid,
+                                    autoScrollFinger: $autoScrollFinger
                                 )
                                 .padding(20)
                             }
+                            .scrollPosition($scrollPosition)
+                            .onScrollGeometryChange(for: ScrollMetrics.self) { geo in
+                                ScrollMetrics(offset: geo.contentOffset, contentSize: geo.contentSize,
+                                              containerSize: geo.containerSize)
+                            } action: { _, metrics in
+                                scrollGeometry.metrics = metrics
+                            }
+                            .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { scrollGeometry.viewport = $0 }
+                            .onReceive(autoScrollTimer) { _ in autoScrollStep() }
                             // simultaneousGesture 让双指缩放和 belt DragGesture 共存
                             .simultaneousGesture(
                                 MagnificationGesture()
@@ -162,6 +180,9 @@ struct FactoryLayoutView: View {
                         if showBuildingPalette && !usesSidePalette {
                             buildingPalette
                                 .transition(.move(edge: .bottom).combined(with: .opacity))
+                        } else if !usesSidePalette, vm.editMode == .boxSelect {
+                            GroupSelectionPanel(vm: vm, style: .bottom)
+                                .transition(.move(edge: .bottom).combined(with: .opacity))
                         } else if !usesSidePalette, let placed = vm.selectedPlaced, let def = vm.selectedDefinition {
                             BuildingDetailPanel(vm: vm, placed: placed, def: def, style: .bottom)
                                 .id(placed.id)
@@ -175,10 +196,22 @@ struct FactoryLayoutView: View {
                     .animation(.spring(response: 0.3), value: showBuildingPalette)
                     .animation(.spring(response: 0.3), value: vm.selectedBuildingID)
                     .animation(.spring(response: 0.3), value: vm.selectedBeltID)
+                    .animation(.spring(response: 0.3), value: vm.editMode == .boxSelect)
                 }
 
                 if showBuildingPalette && usesSidePalette {
                     sideBuildingPalette
+                } else if usesSidePalette, vm.editMode == .boxSelect {
+                    HStack {
+                        Spacer()
+                        GroupSelectionPanel(vm: vm, style: .side)
+                            .frame(width: 360)
+                            .padding(.trailing, 18)
+                            .padding(.top, 64)
+                    }
+                    .frame(maxHeight: .infinity, alignment: .top)
+                    .transition(.move(edge: .trailing).combined(with: .opacity))
+                    .zIndex(3)
                 } else if usesSidePalette, let placed = vm.selectedPlaced, let def = vm.selectedDefinition {
                     HStack {
                         Spacer()
@@ -364,10 +397,12 @@ struct FactoryLayoutView: View {
                 }
             }
             Divider().overlay(Color.white.opacity(0.1))
-            toolButton(icon: "rotate.right", label: "旋转",
-                       isActive: false,
-                       color: Color(red: 0.7, green: 0.5, blue: 0.9)) {
-                vm.rotateSelected()
+            // 旋转已选建筑在详情面板里，放置前旋转在建造面板里，这个位置给框选
+            toolButton(icon: "rectangle.dashed", label: "框选",
+                       isActive: vm.editMode == .boxSelect,
+                       color: Color(red: 0.3, green: 0.85, blue: 0.95)) {
+                vm.editMode = .boxSelect
+                showBuildingPalette = false
             }
             Divider().overlay(Color.white.opacity(0.1))
             toolButton(icon: "trash.fill", label: "删除",
@@ -449,6 +484,18 @@ struct FactoryLayoutView: View {
                 Text("按住建筑再拖到网格放置 · 双指缩放")
                     .font(.system(size: 10, design: .monospaced))
                     .foregroundColor(.white.opacity(0.3))
+                Spacer().frame(width: 12)
+                // 放置前旋转（已放下的建筑在详情面板里旋转）
+                Button {
+                    vm.pendingRotation = vm.pendingRotation.next
+                } label: {
+                    Label("旋转 \(vm.pendingRotation.symbol)", systemImage: "rotate.right")
+                        .font(.system(size: 10, weight: .bold, design: .monospaced))
+                        .foregroundColor(Color(red: 0.7, green: 0.5, blue: 0.9))
+                        .padding(.horizontal, 8).padding(.vertical, 4)
+                        .background(Color(red: 0.7, green: 0.5, blue: 0.9).opacity(0.12))
+                }
+                .buttonStyle(.plain)
             }
             .padding(.vertical, 6)
             .frame(maxWidth: .infinity)
@@ -519,6 +566,27 @@ struct FactoryLayoutView: View {
                 vm.pendingDropCell = nil
             }
         ))
+    }
+
+    // MARK: - 框选拖到边缘自动滚动
+    /// 手指离画面边缘不到 edge 点时，按离边缘多近往那边滚（越靠边越快），滚到内容尽头就停
+    private func autoScrollStep() {
+        let viewportFrame = scrollGeometry.viewport
+        guard let finger = autoScrollFinger, viewportFrame.width > 0 else { return }
+        let edge: CGFloat = 56
+        let maxSpeed: CGFloat = 18
+        func speed(_ distanceToEdge: CGFloat) -> CGFloat {
+            distanceToEdge >= edge ? 0 : maxSpeed * (1 - max(0, distanceToEdge) / edge)
+        }
+        let dx = speed(finger.x - viewportFrame.minX) * -1 + speed(viewportFrame.maxX - finger.x)
+        let dy = speed(finger.y - viewportFrame.minY) * -1 + speed(viewportFrame.maxY - finger.y)
+        guard dx != 0 || dy != 0 else { return }
+        let m = scrollGeometry.metrics
+        let maxX = max(0, m.contentSize.width - m.containerSize.width)
+        let maxY = max(0, m.contentSize.height - m.containerSize.height)
+        let target = CGPoint(x: min(max(m.offset.x + dx, 0), maxX), y: min(max(m.offset.y + dy, 0), maxY))
+        guard target != m.offset else { return }
+        scrollPosition.scrollTo(point: target)
     }
 
     // MARK: - 悬浮产能按钮
@@ -653,4 +721,16 @@ private struct PaletteHoldDragGesture: UIGestureRecognizerRepresentable {
             break
         }
     }
+}
+
+private final class ScrollGeometryBox {
+    var metrics = ScrollMetrics()
+    var viewport: CGRect = .zero
+}
+
+/// 画布滚动位置和尺寸（自动滚动时算能滚多远）
+private struct ScrollMetrics: Equatable {
+    var offset: CGPoint = .zero
+    var contentSize: CGSize = .zero
+    var containerSize: CGSize = .zero
 }

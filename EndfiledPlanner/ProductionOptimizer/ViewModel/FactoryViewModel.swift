@@ -15,6 +15,7 @@ enum FactoryEditMode: Equatable {
     case belt               // 连接传送带
     case pipe                // 连接管道
     case erase              // 删除
+    case boxSelect          // 框选：拖框选一组建筑，整组移动/删除
 }
 
 class FactoryViewModel: ObservableObject {
@@ -23,7 +24,17 @@ class FactoryViewModel: ObservableObject {
     @Published var layout: FactoryLayout = FactoryGridModel.load() {
         didSet { recordUndo(previous: oldValue) }
     }
-    @Published var editMode: FactoryEditMode = .select
+    @Published var editMode: FactoryEditMode = .select {
+        didSet {
+            guard editMode != oldValue else { return }
+            // 进框选时清掉单选；离开框选时清掉整组选中
+            if editMode == .boxSelect { clearSelection() } else { clearGroupSelection() }
+        }
+    }
+    /// 框选模式下选中的一组建筑（协议核心不参与）
+    @Published var groupSelection: Set<UUID> = []
+    /// 框选模式下选中的线（整条都在框里的传送带/管道）
+    @Published var groupBeltSelection: Set<UUID> = []
     @Published var selectedBuildingID: UUID? = nil {
         didSet { if selectedBuildingID != nil { selectedBeltID = nil } }
     }
@@ -104,6 +115,9 @@ class FactoryViewModel: ObservableObject {
         isRestoringHistory = false
         if let id = selectedBuildingID, !layout.buildings.contains(where: { $0.id == id }) { selectedBuildingID = nil }
         if let id = selectedBeltID, !layout.beltNetwork.belts.contains(where: { $0.id == id }) { clearBeltSelection() }
+        let existingIDs = Set(layout.buildings.map(\.id))
+        groupSelection.formIntersection(existingIDs)
+        groupBeltSelection.formIntersection(Set(layout.beltNetwork.belts.map(\.id)))
         cancelMoving()
         refreshStats()
     }
@@ -293,6 +307,8 @@ class FactoryViewModel: ObservableObject {
         case .select, .belt, .pipe:
             // 画线模式下轻点（不拖）也算选中
             if !select(at: cell, slop: slop) { clearSelection() }
+        case .boxSelect:
+            toggleGroupMember(at: cell, slop: slop)
         }
     }
 
@@ -335,7 +351,7 @@ class FactoryViewModel: ObservableObject {
         return false
     }
 
-    private func ring(around cell: GridPoint, radius r: Int) -> [GridPoint] {
+    func ring(around cell: GridPoint, radius r: Int) -> [GridPoint] {
         var out: [GridPoint] = []
         for dr in -r...r {
             for dc in -r...r where max(abs(dr), abs(dc)) == r {
@@ -698,12 +714,13 @@ class FactoryViewModel: ObservableObject {
         refreshStats()
     }
 
-    private func removeBuilding(_ placed: PlacedBuilding, def: BuildingDefinition) {
+    func removeBuilding(_ placed: PlacedBuilding, def: BuildingDefinition) {
         let cells = placed.occupiedCells(definition: def)
         layout.buildings.removeAll { $0.id == placed.id }
         for cell in cells { removeCellFromAllBelts(cell, lineType: nil) }
         if selectedBuildingID == placed.id { selectedBuildingID = nil }
         if movingBuildingID == placed.id { cancelMoving() }
+        groupSelection.remove(placed.id)
         refreshStats()
     }
 
@@ -854,15 +871,18 @@ class FactoryViewModel: ObservableObject {
     @Published var lineReattachMessage: String? = nil
 
     /// 原来线头/线尾落在这台建筑某个口外面那一格上的线，改接到口的新位置：
-    /// 另一端不动，中间按 L 形重新走（两种拐法都试，避开建筑），都走不通就把这条线删掉并提示
-    private func reattachLines(old: PlacedBuilding, new: PlacedBuilding, def: BuildingDefinition) {
+    /// 另一端不动，中间按 L 形重新走（两种拐法都试，避开建筑），都走不通就把这条线删掉并提示。
+    /// excluding：整组移动时已经整条平移过的线，不再改接
+    /// 返回断开的线数量
+    @discardableResult
+    func reattachLines(old: PlacedBuilding, new: PlacedBuilding, def: BuildingDefinition, excluding: Set<UUID> = []) -> Int {
         struct Attach { let beltID: UUID; let atHead: Bool; let port: BuildingPort }
         var attaches: [Attach] = []
         for port in def.ports {
             let (cell, facing) = port.resolvedPosition(placed: old, definition: def)
             let ext = cell + facing.outputOffset
             let kind: LineType = port.kind == .item ? .belt : .pipe
-            for belt in layout.beltNetwork.belts where belt.lineType == kind {
+            for belt in layout.beltNetwork.belts where belt.lineType == kind && !excluding.contains(belt.id) {
                 if port.ioDirection == .output, belt.headCell == ext {
                     attaches.append(Attach(beltID: belt.id, atHead: true, port: port))
                 }
@@ -871,7 +891,7 @@ class FactoryViewModel: ObservableObject {
                 }
             }
         }
-        guard !attaches.isEmpty else { return }
+        guard !attaches.isEmpty else { return 0 }
         var broken = 0
         for (beltID, list) in Dictionary(grouping: attaches, by: \.beltID) {
             guard let idx = layout.beltNetwork.belts.firstIndex(where: { $0.id == beltID }),
@@ -900,6 +920,7 @@ class FactoryViewModel: ObservableObject {
         if broken > 0 {
             lineReattachMessage = "有 \(broken) 条线在新位置走不通，已经断开，需要重新接"
         }
+        return broken
     }
 
     /// start → end 的 L 形线（end 那一格朝 finalDir），先横后竖、先竖后横都试，挑不压建筑的
