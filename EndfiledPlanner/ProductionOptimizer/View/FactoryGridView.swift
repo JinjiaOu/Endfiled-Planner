@@ -388,9 +388,9 @@ struct FactoryGridView: View {
         let flowSymbol = (def.id == BuildingDefinition.warehouseInletID
                           ? placed.rotation.opposite : placed.rotation).symbol
 
-        // 名字下面那行设置：取货口显示取什么，准入口设了过滤才显示放行什么
+        // 名字下面那行设置：取货口/暗管出口显示出什么，准入口设了过滤才显示放行什么
         let settingLabel: (text: String, isSet: Bool)?
-        if def.id == BuildingDefinition.warehouseOutletID {
+        if def.choosesOutletMaterial {
             let name = placed.outletMaterialID.flatMap(ItemCatalog.name(for:))
             settingLabel = (name ?? "未设置", name != nil)
         } else if def.id == "log_conditioner" || def.id == "log_pipe_conditioner",

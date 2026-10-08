@@ -323,7 +323,7 @@ class FactoryGridModel {
         for machine in sim.machines {
             for (item, perSecond) in machine.inputs { addConsumption(item, perSecond, by: machine.name) }
         }
-        for sink in sim.sinks where sink.name != BuildingDefinition.find(BuildingDefinition.warehouseInletID)?.name {
+        for sink in sim.sinks where !sink.isStorageInlet {
             for (item, perSecond) in sink.consumed { addConsumption(item, perSecond, by: sink.name) }
         }
         for generator in sim.generators {

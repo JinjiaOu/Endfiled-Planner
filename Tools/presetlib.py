@@ -581,6 +581,9 @@ ROUTER_KINDS = {'splitter', 'converger', 'bridge', 'conditioner'}
 
 def _node_kind(dev):
     special = {WAREHOUSE_OUTLET: 'unloader', WAREHOUSE_INLET: 'loader', 'liquid_cleaner_1': 'cleaner',
+               # 暗管不模拟连通：出口像取货口一样出设定的液体/气体，入口全收（同 App）
+               'udpipe_unloader_1': 'unloader', 'udpipe_unloader_2': 'unloader',
+               'udpipe_loader_1': 'loader', 'udpipe_loader_2': 'loader',
                'log_splitter': 'splitter', 'log_pipe_splitter': 'splitter',
                'log_converger': 'converger', 'log_pipe_converger': 'converger',
                'log_connector': 'bridge', 'log_pipe_connector': 'bridge',
@@ -720,6 +723,10 @@ def simulate(layout, max_iter=400, eps=1e-7):
             terminals.append(i)
         elif n.kind == 'unloader':
             producers.append(i)
+            # 暗管出口：每个接了管道的口按管道上限出货
+            if n.b.device.id.startswith('udpipe_unloader') and n.products:
+                connected = sum(1 for p in n.ports if p.is_output and p.link is not None)
+                n.products = [(n.products[0][0], PIPE_CAP * max(connected, 1))]
         elif n.kind == 'vaporizer':
             vaporizers.append(i)
         elif n.kind in ('loader', 'cleaner', 'generator', 'ignored'):

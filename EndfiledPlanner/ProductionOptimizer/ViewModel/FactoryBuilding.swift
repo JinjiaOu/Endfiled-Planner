@@ -214,7 +214,7 @@ struct PlacedBuilding: Identifiable, Codable {
     var isActive: Bool
     /// 这台机器选的配方（recipes.json 的配方 ID）
     var selectedRecipeID: String? = nil
-    /// 仅取线出口用：当前设置的取货材料（items.json 的 itemId），未设置时不产出
+    /// 仅仓库取货口/暗管出口用：当前设置的取货材料（items.json 的 itemId），未设置时不产出
     var outletMaterialID: String? = nil
     /// 仅物品/管道准入口用：用户设置的最大流速（个/分钟），nil = 不额外限速（跑满带速/管速）
     var flowLimitPerMin: Double? = nil
@@ -447,6 +447,19 @@ extension BuildingDefinition {
         warehouseSourceID: [.wuling],
         warehouseBaseSegmentID: [.wuling],
     ]
+}
+
+// MARK: - 地下暗管：不模拟入口到出口的连通
+// 出口（单口/多口）像仓库取货口一样设置"出什么"，只能选液体和气体，多口也只出一种，每个接了管道的口按管道上限往外送；
+// 入口当终点，送进去的液体/气体全收，不堵上游（用户 2026-10-07 定）
+extension BuildingDefinition {
+    static let undergroundOutletIDs: Set<String> = ["udpipe_unloader_1", "udpipe_unloader_2"]
+    static let undergroundInletIDs: Set<String> = ["udpipe_loader_1", "udpipe_loader_2"]
+
+    var isUndergroundOutlet: Bool { BuildingDefinition.undergroundOutletIDs.contains(id) }
+    var isUndergroundInlet: Bool { BuildingDefinition.undergroundInletIDs.contains(id) }
+    /// 要在详情里选"出什么"的口：仓库取货口（固体）和暗管出口（液体/气体），材料都记在 PlacedBuilding.outletMaterialID
+    var choosesOutletMaterial: Bool { id == BuildingDefinition.warehouseOutletID || isUndergroundOutlet }
 }
 
 // MARK: - 协议核心：每张地图必有且只有一个的中心仓库

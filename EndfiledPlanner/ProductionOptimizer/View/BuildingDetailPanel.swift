@@ -173,8 +173,8 @@ struct BuildingDetailPanel: View {
         if let state, state.outputs.values.contains(where: { $0 > 1e-9 }) {
             section("产出") { rateRows(state.outputs, color: green) }
         }
-        if def.id == BuildingDefinition.warehouseOutletID {
-            section("取货材料") { outletMaterialPicker(for: def) }
+        if def.choosesOutletMaterial {
+            section(def.isUndergroundOutlet ? "出什么" : "取货材料") { outletMaterialPicker(for: def) }
         }
         if def.id == "log_conditioner" || def.id == "log_pipe_conditioner" {
             section("限速") { flowLimitControl(for: def) }
@@ -188,7 +188,7 @@ struct BuildingDetailPanel: View {
         if def.id == "power_station_1" { generatorSection }
         if let range = def.powerRange { diffuserSection(range: range) }
         if let sink = vm.stats.sinkStates.first(where: { $0.id == placed.id }) {
-            section(def.id == BuildingDefinition.warehouseInletID ? "入库" : "处理") {
+            section(def.id == BuildingDefinition.warehouseInletID ? "入库" : def.isUndergroundInlet ? "送入暗管" : "处理") {
                 rateRows(sink.consumed, color: Color(red: 0.4, green: 0.7, blue: 0.9))
             }
         }
@@ -585,11 +585,13 @@ struct BuildingDetailPanel: View {
         }
     }
 
-    /// 仓库取货口的材料选择：只对取货口显示（存货口是入口，接收任意材料，不用选），选完立即重新计算产能统计
+    /// 仓库取货口（选固体）/暗管出口（选液体和气体）的材料选择：存货口、暗管入口是入口，接收任意材料，不用选；
+    /// 选完立即重新计算产能统计
     @ViewBuilder
     private func outletMaterialPicker(for def: BuildingDefinition) -> some View {
-        if def.id == BuildingDefinition.warehouseOutletID, let placedID = vm.selectedBuildingID {
+        if def.choosesOutletMaterial, let placedID = vm.selectedBuildingID {
             let current = vm.selectedPlaced?.outletMaterialID.flatMap(ItemCatalog.name(for:))
+            let candidates = def.isUndergroundOutlet ? vm.fluidMaterials : vm.solidMaterials
             Button {
                 showMaterialSheet = true
             } label: {
@@ -603,8 +605,8 @@ struct BuildingDetailPanel: View {
             .buttonStyle(.plain)
             .sheet(isPresented: $showMaterialSheet) {
                 SearchablePickerSheet(
-                    title: "选择取货材料",
-                    items: vm.solidMaterials.map { SearchablePickerItem(id: $0.itemId, title: $0.name, iconName: $0.name) },
+                    title: def.isUndergroundOutlet ? "暗管出口出什么" : "选择取货材料",
+                    items: candidates.map { SearchablePickerItem(id: $0.itemId, title: $0.name, iconName: $0.name) },
                     selectedID: vm.selectedPlaced?.outletMaterialID,
                     clearTitle: "未设置",
                     onSelect: { material in

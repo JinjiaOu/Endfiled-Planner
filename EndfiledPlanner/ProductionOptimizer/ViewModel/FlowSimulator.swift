@@ -106,7 +106,7 @@ enum FlowSimulator {
         /// 激活口（转化机）或进气口（气体散布机）要的物品和实际到货量（个/秒）
         var activatorItem: String? = nil
         var activatorArrival: Double = 0
-        /// 仓库取货口不算产线
+        /// 仓库取货口/暗管出口不算产线
         let isWarehouseOutlet: Bool
     }
 
@@ -115,6 +115,8 @@ enum FlowSimulator {
         let name: String
         /// 实际消耗（个/秒）
         let consumed: [String: Double]
+        /// 仓库存货口/暗管入口：只是存进去或送走，不算消耗
+        var isStorageInlet = false
     }
 
     /// 一条传送带/管道的流量
@@ -298,6 +300,8 @@ private final class Engine {
         switch def.id {
         case BuildingDefinition.warehouseOutletID: return .unloader
         case BuildingDefinition.warehouseInletID:  return .loader
+        case _ where def.isUndergroundOutlet:      return .unloader
+        case _ where def.isUndergroundInlet:       return .loader
         case "liquid_cleaner_1":                   return .cleaner
         case "log_splitter", "log_pipe_splitter":  return .splitter
         case "log_converger", "log_pipe_converger": return .converger
@@ -356,6 +360,7 @@ private final class Engine {
         case .vaporizer:
             node.activatorPort = node.ports.firstIndex { $0.isInput && $0.port.kind == .pipe }
         case .unloader:
+            // 暗管出口的出货量要看接了几个口，等连好线后在 classifyNodes 里再定
             if let materialID = node.placed.outletMaterialID, let material = ItemCatalog.name(for: materialID) {
                 node.products = [(material, FlowSimulator.beltCapacity)]
             }
@@ -447,6 +452,11 @@ private final class Engine {
                 producers.append(i); terminals.append(i)
             case .unloader:
                 producers.append(i)
+                // 暗管出口：每个接了管道的口都按管道上限出货（多口暗管两个口都接就是两倍）
+                if node.def.isUndergroundOutlet, let product = node.products.first {
+                    let connected = node.ports.filter { $0.isOutput && $0.linkIndex != nil }.count
+                    node.products = [(product.name, FlowSimulator.pipeCapacity * Double(max(connected, 1)))]
+                }
             case .vaporizer:
                 vaporizers.append(i)
             case .loader, .cleaner, .generator, .ignored:
@@ -913,7 +923,9 @@ private final class Engine {
                 }
                 result.machines.append(state)
             case .loader, .cleaner:
-                result.sinks.append(FlowSimulator.SinkState(id: node.placed.id, name: node.def.name, consumed: node.consumed))
+                var sink = FlowSimulator.SinkState(id: node.placed.id, name: node.def.name, consumed: node.consumed)
+                sink.isStorageInlet = node.kind == .loader
+                result.sinks.append(sink)
             case .generator:
                 result.generators.append(FlowSimulator.GeneratorState(
                     id: node.placed.id, name: node.def.name, fuel: node.generatorFuel,
