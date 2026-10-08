@@ -123,6 +123,10 @@ struct FactoryLayoutView: View {
     @State private var showMyLayouts = false
     @State private var showSaveGroupPrompt = false
     @State private var saveGroupName = ""
+    /// 列表里点了要放的布局：等列表关掉后再处理（跨地图要先弹提醒）
+    @State private var layoutToPlace: SavedLayout? = nil
+    @State private var crossMapLayout: SavedLayout? = nil
+    @State private var crossMapWarnings: [String] = []
 
     private var usesSidePalette: Bool {
         horizontalSizeClass == .regular
@@ -183,7 +187,10 @@ struct FactoryLayoutView: View {
 
                     // 底部面板（建筑板 / 选中信息）
                     VStack(spacing: 0) {
-                        if showBuildingPalette && !usesSidePalette {
+                        if !usesSidePalette, vm.pendingPlacement != nil {
+                            PlacementPanel(vm: vm)
+                                .transition(.move(edge: .bottom).combined(with: .opacity))
+                        } else if showBuildingPalette && !usesSidePalette {
                             buildingPalette
                                 .transition(.move(edge: .bottom).combined(with: .opacity))
                         } else if !usesSidePalette, vm.editMode == .boxSelect {
@@ -203,9 +210,21 @@ struct FactoryLayoutView: View {
                     .animation(.spring(response: 0.3), value: vm.selectedBuildingID)
                     .animation(.spring(response: 0.3), value: vm.selectedBeltID)
                     .animation(.spring(response: 0.3), value: vm.editMode == .boxSelect)
+                    .animation(.spring(response: 0.3), value: vm.pendingPlacement != nil)
                 }
 
-                if showBuildingPalette && usesSidePalette {
+                if usesSidePalette, vm.pendingPlacement != nil {
+                    HStack {
+                        Spacer()
+                        PlacementPanel(vm: vm)
+                            .frame(width: 360)
+                            .padding(.trailing, 18)
+                            .padding(.top, 64)
+                    }
+                    .frame(maxHeight: .infinity, alignment: .top)
+                    .transition(.move(edge: .trailing).combined(with: .opacity))
+                    .zIndex(3)
+                } else if showBuildingPalette && usesSidePalette {
                     sideBuildingPalette
                 } else if usesSidePalette, vm.editMode == .boxSelect {
                     HStack {
@@ -309,10 +328,20 @@ struct FactoryLayoutView: View {
                 Button("取消", role: .cancel) {}
                 Button("保存") { saveGroup() }
             } message: {
-                Text("选中的建筑、它们的设置和跟着它们走的线会一起存下来")
+                Text("选中的建筑和它们的设置、选中的线，以及两头接在这些建筑上的线会一起存下来")
             }
-            .sheet(isPresented: $showMyLayouts) {
-                MyLayoutsView(store: myLayouts, currentMap: vm.layout.mapType)
+            .sheet(isPresented: $showMyLayouts, onDismiss: handleLayoutToPlace) {
+                MyLayoutsView(store: myLayouts, currentMap: vm.layout.mapType) { layoutToPlace = $0 }
+            }
+            .alert("跨地图放置", isPresented: Binding(get: { crossMapLayout != nil }, set: { if !$0 { crossMapLayout = nil } })) {
+                Button("取消", role: .cancel) { crossMapLayout = nil }
+                Button("仍然放置") {
+                    if let saved = crossMapLayout { beginPlacement(saved) }
+                    crossMapLayout = nil
+                }
+            } message: {
+                Text("这份布局来自\(crossMapLayout?.mapType.displayName ?? "")，放到\(vm.layout.mapType.displayName)后下面这些会标红、不参与计算：\n"
+                     + crossMapWarnings.joined(separator: "\n"))
             }
             .modifier(FactoryAlertsModifier(vm: vm, showClearConfirm: $showClearConfirm,
                                            pendingPreset: $pendingPreset,
@@ -601,6 +630,29 @@ struct FactoryLayoutView: View {
         myLayouts.add(saved)
         vm.toastText = "已存到我的布局：\(saved.name)"
         withAnimation { vm.showSaveConfirm = true }
+    }
+
+    // MARK: - 放置我的布局
+    private func handleLayoutToPlace() {
+        guard let saved = layoutToPlace else { return }
+        layoutToPlace = nil
+        let warnings = vm.placementWarnings(for: saved)
+        if warnings.isEmpty {
+            beginPlacement(saved)
+        } else {
+            crossMapWarnings = warnings
+            crossMapLayout = saved
+        }
+    }
+
+    /// 虚影放在当前画面中央
+    private func beginPlacement(_ saved: SavedLayout) {
+        let m = scrollGeometry.metrics
+        let padding: CGFloat = 20   // 网格外面那圈 .padding(20)
+        let center = GridPoint(col: Int((m.offset.x + m.containerSize.width / 2 - padding) / cellSize),
+                               row: Int((m.offset.y + m.containerSize.height / 2 - padding) / cellSize))
+        showBuildingPalette = false
+        vm.startPlacement(saved, around: center)
     }
 
     // MARK: - 框选拖到边缘自动滚动

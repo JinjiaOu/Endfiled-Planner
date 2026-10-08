@@ -29,12 +29,16 @@ class FactoryViewModel: ObservableObject {
             guard editMode != oldValue else { return }
             // 进框选时清掉单选；离开框选时清掉整组选中
             if editMode == .boxSelect { clearSelection() } else { clearGroupSelection() }
+            // 换工具就放弃正在摆的布局
+            pendingPlacement = nil
         }
     }
     /// 框选模式下选中的一组建筑（协议核心不参与）
     @Published var groupSelection: Set<UUID> = []
     /// 框选模式下选中的线（整条都在框里的传送带/管道）
     @Published var groupBeltSelection: Set<UUID> = []
+    /// 正在往画布上摆的"我的布局"（虚影），nil = 没在摆
+    @Published var pendingPlacement: PendingPlacement? = nil
     @Published var selectedBuildingID: UUID? = nil {
         didSet { if selectedBuildingID != nil { selectedBeltID = nil } }
     }
@@ -290,6 +294,11 @@ class FactoryViewModel: ObservableObject {
     // MARK: - 网格点击处理
     /// 点击：slop 是格子缩得很小时额外放宽的命中范围（格数），保证手指至少有 ~44pt 的可点区域
     func handleTap(at cell: GridPoint, slop: Int = 0) {
+        // 正在摆布局：点哪里虚影就挪到哪里（以点的格子为中心）
+        if let placement = pendingPlacement {
+            movePlacement(to: GridPoint(col: cell.col - placement.size.width / 2, row: cell.row - placement.size.height / 2))
+            return
+        }
         if let id = movingBuildingID {
             if canReposition(id, to: cell) {
                 commitReposition(id, to: cell)
@@ -518,13 +527,18 @@ class FactoryViewModel: ObservableObject {
         let approachCell = GridPoint(col: snap.externalCell.col - finalDir.outputOffset.col,
                                      row: snap.externalCell.row - finalDir.outputOffset.row)
 
-        var segs: [BeltSegment]
-        if start == snap.externalCell || start == approachCell {
-            segs = []
-        } else {
-            segs = buildBeltSegments(from: start, to: approachCell, currentPoint: currentPoint, lineType: lineType)
-        }
         let finalAxis: BeltAxis = (finalDir == .up || finalDir == .down) ? .vertical : .horizontal
+        var segs: [BeltSegment] = []
+        if start != snap.externalCell {
+            // buildBeltSegments 只走到终点的前一格（最后一段指向终点），所以"口前一格"要自己补上，
+            // 在这格拐进 finalDir；以前漏了这格，最后一段方向跟 finalDir 不一致时会直接斜着连到口外那格
+            if start != approachCell {
+                segs = buildBeltSegments(from: start, to: approachCell, currentPoint: currentPoint, lineType: lineType)
+            }
+            let inDir = segs.last?.toDir ?? finalDir.outputOffset
+            segs.append(BeltSegment(cell: approachCell, axis: finalAxis,
+                                    fromDir: inDir, toDir: finalDir.outputOffset, lineType: lineType))
+        }
         segs.append(BeltSegment(cell: snap.externalCell, axis: finalAxis,
                                 fromDir: finalDir.outputOffset, toDir: finalDir.outputOffset, lineType: lineType))
         return segs
@@ -609,6 +623,12 @@ class FactoryViewModel: ObservableObject {
             return !conflictKeys.contains(key)
         }
         guard !filtered.isEmpty else { return }
+        // 中间有段因为跟已有的线重叠被去掉了：剩下的断成几截，各自按一条线处理，不然断口两头会被直接连起来画成斜线
+        let pieces = splitIntoSubBelts(filtered)
+        if pieces.count > 1 {
+            for piece in pieces { commitSegments(piece.segments) }
+            return
+        }
 
         let startCell = filtered[0].cell
         let startKey  = "\(startCell.col),\(startCell.row)"
@@ -641,7 +661,7 @@ class FactoryViewModel: ObservableObject {
         refreshStats()
     }
 
-    private func autoPlaceBridgeIfCrossing(at cell: GridPoint, lineType: LineType) {
+    func autoPlaceBridgeIfCrossing(at cell: GridPoint, lineType: LineType) {
         let beltIDsHere = Set(layout.beltNetwork.belts
             .filter { belt in
                 belt.lineType == lineType &&

@@ -214,7 +214,8 @@ struct GridSize: Codable, Hashable {
 
 // MARK: - 已放置的建筑实例
 struct PlacedBuilding: Identifiable, Codable {
-    let id: UUID
+    /// var：从"我的布局"放到画布上时要换成新 ID，其它字段原样带过去
+    var id: UUID
     let definitionID: String
     var origin: GridPoint       // 左上角坐标
     var rotation: BuildingRotation

@@ -58,9 +58,11 @@ extension FactoryViewModel {
         groupBeltSelection.removeAll()
     }
 
-    /// 整组移动时整条跟着平移的线：
-    /// - 两头都接在组内建筑上的线（哪怕中间绕到框外）；
-    /// - 选中的线，只要两头没有接在组外建筑上（接组外的那头要留在原地，交给改接逻辑）
+    /// 整组移动/存布局时整条跟着走的线。只要线的两头都没有接在组外建筑上，满足下面任一条就算：
+    /// - 至少一头接在组内建筑上（另一头接组内建筑或者空着，哪怕中间绕到框外）；
+    /// - 被框选/点选选中；
+    /// - 空着的那头跟已经算进来的线首尾相接（一条线分几次画成了好几截的情况）。
+    /// 接在组外建筑上的那头要留在原地，这种线交给改接逻辑
     func beltsMovingWithGroup() -> Set<UUID> {
         // 每个口外面那一格 → 这个口属于哪台建筑
         var outOwner: [String: UUID] = [:]
@@ -77,17 +79,36 @@ extension FactoryViewModel {
         func key(_ cell: GridPoint?, _ type: LineType) -> String {
             cell.map { "\($0.col),\($0.row),\(type.rawValue)" } ?? ""
         }
+        struct Ends { let belt: Belt; let headOwner: UUID?; let tailOwner: UUID? }
+        let ends = layout.beltNetwork.belts.compactMap { belt -> Ends? in
+            let head = outOwner[key(belt.headCell, belt.lineType)]
+            let tail = inOwner[key(belt.tailCell, belt.lineType)]
+            // 有一头接在组外建筑上：不整条平移
+            if let head, !groupSelection.contains(head) { return nil }
+            if let tail, !groupSelection.contains(tail) { return nil }
+            return Ends(belt: belt, headOwner: head, tailOwner: tail)
+        }
         var moving = Set<UUID>()
-        for belt in layout.beltNetwork.belts {
-            let headOwner = outOwner[key(belt.headCell, belt.lineType)]
-            let tailOwner = inOwner[key(belt.tailCell, belt.lineType)]
-            let headInGroup = headOwner.map(groupSelection.contains) ?? false
-            let tailInGroup = tailOwner.map(groupSelection.contains) ?? false
-            if headInGroup && tailInGroup {
-                moving.insert(belt.id)
-            } else if groupBeltSelection.contains(belt.id),
-                      headOwner == nil || headInGroup, tailOwner == nil || tailInGroup {
-                moving.insert(belt.id)
+        for e in ends where e.headOwner != nil || e.tailOwner != nil || groupBeltSelection.contains(e.belt.id) {
+            moving.insert(e.belt.id)
+        }
+        // 两头都空着、但跟已经算进来的线首尾相接的线（一截一截画出来的）也带上，直到没有新的
+        var changed = true
+        while changed {
+            changed = false
+            let included = ends.filter { moving.contains($0.belt.id) }.map(\.belt)
+            for e in ends where !moving.contains(e.belt.id) {
+                let headKey = e.belt.headCell.map { "\($0.col),\($0.row)" } ?? ""
+                let tailKey = e.belt.tailCell.map { "\($0.col),\($0.row)" } ?? ""
+                let touches = included.contains {
+                    $0.lineType == e.belt.lineType &&
+                    ((e.headOwner == nil && $0.tailNeighborhood.contains(headKey)) ||
+                     (e.tailOwner == nil && $0.headNeighborhood.contains(tailKey)))
+                }
+                if touches {
+                    moving.insert(e.belt.id)
+                    changed = true
+                }
             }
         }
         return moving

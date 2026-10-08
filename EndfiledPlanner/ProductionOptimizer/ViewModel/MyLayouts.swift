@@ -87,11 +87,13 @@ final class MyLayoutStore: ObservableObject {
 }
 
 extension FactoryViewModel {
-    /// 把当前框选的建筑和跟着它们走的线（见 beltsMovingWithGroup）存成一份布局；没选建筑返回 nil
+    /// 把当前框选的建筑、跟着它们走的线（见 beltsMovingWithGroup）和选中的线存成一份布局；没选建筑返回 nil。
+    /// 选中的线哪怕一头接在组外建筑上（比如从协议核心拉出来的线，核心不会被选进组里）也存，
+    /// 放出来时那头空着，放到对应位置就能接上
     func makeSavedLayout(name: String) -> SavedLayout? {
         let buildings = groupBuildings
         guard !buildings.isEmpty else { return nil }
-        let movingIDs = beltsMovingWithGroup()
+        let movingIDs = beltsMovingWithGroup().union(groupBeltSelection)
         let belts = layout.beltNetwork.belts.filter { movingIDs.contains($0.id) }
 
         var cells: [GridPoint] = []

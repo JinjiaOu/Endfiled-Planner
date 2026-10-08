@@ -42,6 +42,9 @@ struct FactoryGridView: View {
     @State private var boxDragFingerGlobal: CGPoint? = nil
     /// 网格在屏幕上的位置：滚动时每帧都变，放在引用类型里改，不触发重新计算视图
     @State private var gridFrameBox = GridFrameBox()
+    /// 拖布局虚影：起点时虚影的 origin 和手指（网格坐标）
+    @State private var placementDragStartOrigin: GridPoint? = nil
+    @State private var placementDragStartLocal: CGPoint? = nil
     private var gridGlobalFrame: CGRect { gridFrameBox.frame }
     private let groupColor = Color(red: 0.3, green: 0.85, blue: 0.95)
 
@@ -61,11 +64,13 @@ struct FactoryGridView: View {
             boxSelectionOverlay
             gestureOverlay
             repositionHandle
+            placementOverlay
         }
         .frame(width: CGFloat(cols) * cellSize, height: CGFloat(rows) * cellSize)
         .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { frame in
             gridFrameBox.frame = frame
             if boxDragKind != nil { updateBoxDrag() }
+            if placementDragStartOrigin != nil { updatePlacementDrag() }
         }
         .onAppear {
             withAnimation(.linear(duration: 1.2).repeatForever(autoreverses: false)) {
@@ -724,6 +729,93 @@ struct FactoryGridView: View {
                 }
             }
         }
+    }
+
+    // MARK: - 布局虚影：按住虚影拖动（拖到画面边缘自动滚动），点空白处虚影挪过去；绿 = 能放，红 = 压到建筑或出界
+    @ViewBuilder
+    private var placementOverlay: some View {
+        if let placement = vm.pendingPlacement {
+            let ok = vm.placementBlockedReason == nil
+            let tint = ok ? Color(red: 0.4, green: 0.9, blue: 0.4) : Color.red
+            let conflicts: Set<Int> = placement.saved.mapType == vm.layout.mapType ? [] : Set(placementConflictIndices(placement))
+            Canvas { context, _ in
+                let style = StrokeStyle(lineWidth: max(2, cellSize * 0.3), lineCap: .round, lineJoin: .round,
+                                        dash: [cellSize * 0.5, cellSize * 0.25])
+                for belt in placement.belts {
+                    let color = belt.lineType == .belt ? beltColor : pipeColor
+                    drawChain(belt.segments, color: color.opacity(0.75), blockedColor: color.opacity(0.75),
+                              blockedSet: [], style: style, radius: cellSize * 0.38, context: &context)
+                }
+            }
+            .allowsHitTesting(false)
+            ForEach(Array(placement.buildings.enumerated()), id: \.offset) { index, placed in
+                if let def = BuildingDefinition.find(placed.definitionID) {
+                    let size = placed.effectiveSize(definition: def)
+                    let w = CGFloat(size.width) * cellSize, h = CGFloat(size.height) * cellSize
+                    ZStack {
+                        Rectangle().fill(def.category.color.opacity(0.3))
+                        Rectangle().stroke(conflicts.contains(index) ? Color(red: 0.95, green: 0.25, blue: 0.2) : def.category.color,
+                                           style: StrokeStyle(lineWidth: 2, dash: [6, 3]))
+                        Text(def.name)
+                            .font(.system(size: min(w, h) * 0.16, weight: .bold, design: .monospaced))
+                            .foregroundColor(.white.opacity(0.85)).lineLimit(1)
+                            .minimumScaleFactor(0.5)
+                            .padding(2)
+                    }
+                    .frame(width: w, height: h)
+                    .offset(x: CGFloat(placed.origin.col) * cellSize, y: CGFloat(placed.origin.row) * cellSize)
+                    .allowsHitTesting(false)
+                }
+            }
+            // 外框：颜色表示能不能放，同时也是拖动的把手
+            let frameW = CGFloat(placement.size.width) * cellSize
+            let frameH = CGFloat(placement.size.height) * cellSize
+            Rectangle()
+                .fill(tint.opacity(0.08))
+                .overlay(Rectangle().stroke(tint, style: StrokeStyle(lineWidth: 2.5, dash: [8, 4])))
+                .contentShape(Rectangle())
+                .frame(width: frameW, height: frameH)
+                .offset(x: CGFloat(placement.origin.col) * cellSize, y: CGFloat(placement.origin.row) * cellSize)
+                .gesture(
+                    DragGesture(minimumDistance: 2, coordinateSpace: .global)
+                        .onChanged { v in
+                            if placementDragStartOrigin == nil {
+                                placementDragStartOrigin = vm.pendingPlacement?.origin
+                                placementDragStartLocal = toLocal(v.startLocation)
+                            }
+                            boxDragFingerGlobal = v.location
+                            autoScrollFinger = v.location
+                            updatePlacementDrag()
+                        }
+                        .onEnded { _ in
+                            autoScrollFinger = nil
+                            placementDragStartOrigin = nil
+                            placementDragStartLocal = nil
+                            boxDragFingerGlobal = nil
+                        }
+                )
+        }
+    }
+
+    /// 跨地图放置时哪些建筑会冲突（下标对应 placement.buildings），虚影上先标红框
+    private func placementConflictIndices(_ placement: PendingPlacement) -> [Int] {
+        let rules = vm.layout.mapType.rules
+        return placement.buildings.enumerated().compactMap { index, placed in
+            guard let def = BuildingDefinition.find(placed.definitionID) else { return nil }
+            if !rules.allows(def) { return index }
+            let ids = placed.selectedRecipeIDs.union(placed.selectedRecipeID.map { [$0] } ?? [])
+            let blocked = vm.availableRecipes(for: def).contains { ids.contains($0.id) && rules.blockedMode(of: $0, on: def) != nil }
+            if blocked || BuildingDefinition.warehousePortIDs.contains(def.id) { return index }
+            return nil
+        }
+    }
+
+    private func updatePlacementDrag() {
+        guard let startOrigin = placementDragStartOrigin, let startLocal = placementDragStartLocal,
+              let finger = boxDragFingerGlobal else { return }
+        let local = toLocal(finger)
+        vm.movePlacement(to: GridPoint(col: startOrigin.col + Int(((local.x - startLocal.x) / cellSize).rounded()),
+                                       row: startOrigin.row + Int(((local.y - startLocal.y) / cellSize).rounded())))
     }
 
     // MARK: - 传送带起点标记

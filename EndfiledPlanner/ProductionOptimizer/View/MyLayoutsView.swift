@@ -5,12 +5,13 @@
 
 import SwiftUI
 
-/// "我的布局"列表：缩略图 + 名字 + 来源地图 + 建筑数 + 时间；左滑删除，长按改名。
-/// 放置到画布上是 M4 第 3 步
+/// "我的布局"列表：缩略图 + 名字 + 来源地图 + 建筑数 + 时间；点一个放到画布上，左滑删除/改名，长按也能改名删除
 struct MyLayoutsView: View {
     @ObservedObject var store: MyLayoutStore
     /// 当前画布的地图，来源地图不一样时标出来
     let currentMap: MapType
+    /// 点了某个布局：外面关掉列表后开始摆
+    var onPlace: (SavedLayout) -> Void = { _ in }
 
     @Environment(\.dismiss) private var dismiss
     @State private var renaming: SavedLayout? = nil
@@ -39,7 +40,13 @@ struct MyLayoutsView: View {
                 } else {
                     List {
                         ForEach(store.layouts) { saved in
-                            row(saved)
+                            Button {
+                                onPlace(saved)
+                                dismiss()
+                            } label: {
+                                row(saved)
+                            }
+                            .buttonStyle(.plain)
                                 .listRowBackground(Color.clear)
                                 .swipeActions(edge: .trailing) {
                                     Button(role: .destructive) { deleting = saved } label: {
@@ -57,7 +64,7 @@ struct MyLayoutsView: View {
                                     }
                                 }
                         }
-                        Text("放到画布上的功能在下一步加")
+                        Text("点一个布局放到画布上")
                             .font(.system(size: 11))
                             .foregroundColor(.white.opacity(0.35))
                             .frame(maxWidth: .infinity)
@@ -130,8 +137,12 @@ struct MyLayoutsView: View {
                     .foregroundColor(.white.opacity(0.35))
             }
             Spacer()
+            Image(systemName: "chevron.right")
+                .font(.system(size: 12))
+                .foregroundColor(.white.opacity(0.3))
         }
         .padding(.vertical, 6)
+        .contentShape(Rectangle())
     }
 }
 
