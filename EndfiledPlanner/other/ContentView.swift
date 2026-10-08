@@ -145,10 +145,9 @@ struct HomeView: View {
                         description: "PRODUCTION OPTIMIZER",
                         subtitle: "效率与布局优化",
                         color: Color(red: 0.9, green: 0.5, blue: 0.2),
-                        status: "DEVELOPING"
+                        status: "ONLINE"
                     )
                 }
-                .opacity(0.5)
             }
             .padding(.horizontal)
         }

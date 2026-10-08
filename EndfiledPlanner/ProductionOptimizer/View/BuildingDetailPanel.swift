@@ -612,26 +612,30 @@ struct BuildingDetailPanel: View {
     private func corePortPicker(for def: BuildingDefinition) -> some View {
         if let placedID = vm.selectedBuildingID, let current = vm.selectedPlaced {
             let ports = corePortLabels(def: def, placed: current)
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 6) {
                 ForEach(ports, id: \.index) { port in
                     let material = current.portMaterialIDs[port.index].flatMap(ItemCatalog.name(for:))
                     Button {
                         corePortSheetIndex = port.index
                     } label: {
-                        HStack(spacing: 6) {
+                        // 每行至少 44pt 高、整行可点，手机上不容易点错行
+                        HStack(spacing: 8) {
                             Text(port.label)
-                                .font(.system(size: 10, weight: .bold, design: .monospaced))
-                                .foregroundColor(.white.opacity(0.6))
-                                .frame(width: 36, alignment: .leading)
-                            if let material { ItemIcon(name: material, size: 18) }
+                                .font(.system(size: 13, weight: .bold, design: .monospaced))
+                                .foregroundColor(.white.opacity(0.7))
+                                .frame(width: 44, alignment: .leading)
+                            if let material { ItemIcon(name: material, size: 24) }
                             Text(material ?? "不出货")
-                                .font(.system(size: 11))
-                                .foregroundColor(material == nil ? .white.opacity(0.35) : Color(red: 0.4, green: 0.8, blue: 0.2))
+                                .font(.system(size: 14))
+                                .foregroundColor(material == nil ? .white.opacity(0.4) : Color(red: 0.4, green: 0.8, blue: 0.2))
                             Spacer()
                             Image(systemName: "chevron.right")
-                                .font(.system(size: 9))
-                                .foregroundColor(.white.opacity(0.3))
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundColor(.white.opacity(0.45))
                         }
+                        .padding(.horizontal, 10)
+                        .frame(minHeight: 44)
+                        .background(Color.white.opacity(0.06))
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
