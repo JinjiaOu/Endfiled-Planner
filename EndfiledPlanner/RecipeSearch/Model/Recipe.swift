@@ -23,6 +23,8 @@ struct Recipe {
     let time: Int
     /// 运行需要的气体环境（"稳定环境"等），不需要时为 nil
     let gasEnvName: String?
+    /// 配方组（对应机器 modes 的 craftGroupId，用来判断是基础/液体/气体哪种模式的配方）
+    var formulaGroupId: String? = nil
     let inputs: [RecipeItem]
     let outputs: [RecipeItem]
 

@@ -121,14 +121,14 @@ struct BuildingDefinition: Identifiable, Hashable {
     /// 净耗电 = powerUsage − powerGenerate，见 FactoryGridModel.analyze
     let powerGenerate: Double
     let ports: [BuildingPort]
-    /// nil = 两张地图都能造；非 nil 就只有列出来的地图能造（比如取线终端只有武陵有）
-    let allowedMaps: Set<MapType>?
     /// 供电桩的供电范围：本体向四周各扩几格，范围内耗电 > 0 的建筑才能运行；非供电桩为 nil
     let powerRange: Int?
+    /// 配方模式（基础/液体/气体…）；地图能不能用某模式的配方见 MapRules
+    let modes: [BuildingMode]
 
     init(id: String, name: String, category: BuildingCategory, size: GridSize,
-         powerUsage: Double, powerGenerate: Double = 0, ports: [BuildingPort], allowedMaps: Set<MapType>? = nil,
-         powerRange: Int? = nil) {
+         powerUsage: Double, powerGenerate: Double = 0, ports: [BuildingPort],
+         powerRange: Int? = nil, modes: [BuildingMode] = []) {
         self.id = id
         self.name = name
         self.category = category
@@ -136,15 +136,22 @@ struct BuildingDefinition: Identifiable, Hashable {
         self.powerUsage = powerUsage
         self.powerGenerate = powerGenerate
         self.ports = ports
-        self.allowedMaps = allowedMaps
         self.powerRange = powerRange
+        self.modes = modes
     }
 
     /// 需要在供电桩范围内才能运行（游戏表里 needPower 的建筑去掉电力建筑本身，正好就是耗电 > 0 的这些）
     var needsPower: Bool { powerUsage > 0 }
 
+    /// 能不能在这张地图上造，规则见 MapRules
     func isAvailable(on map: MapType) -> Bool {
-        allowedMaps?.contains(map) ?? true
+        map.rules.allows(self)
+    }
+
+    /// 配方属于这台机器的哪个模式（按 recipes.json 的 formulaGroupId 对 devices.json 的 craftGroupId）
+    func mode(of recipe: Recipe) -> BuildingMode? {
+        guard let group = recipe.formulaGroupId else { return nil }
+        return modes.first { $0.craftGroupId == group }
     }
 
     func hash(into hasher: inout Hasher) { hasher.combine(id) }
@@ -429,10 +436,17 @@ struct BeltNetwork: Codable {
     }
 }
 
+/// 机器的一种配方模式（devices.json 的 modes）
+struct BuildingMode: Hashable {
+    let id: String          // normal / liquid / gas / gasliquid …
+    let name: String        // 基础模式 / 液体模式 …
+    let craftGroupId: String
+}
+
 // MARK: - 仓库取线机制
 // "仓库取货口"(unloader_1)/"仓库存货口"(loader_1)/"仓库存取线源桩"(log_hongs_bus_source)/
 // "仓库存取线基段"(log_hongs_bus) 都已经在 devices.json 的仓储存取分类里了，不用手写；
-// 只是 JSON 本身不知道"源桩/基段是武陵专属机制"这件事，需要手动覆盖它们的 allowedMaps
+// 哪张地图能造、取线怎么接，见 MapRules
 extension BuildingDefinition {
     /// 仓库取货口：只出，取货具体是什么材料由 PlacedBuilding.outletMaterialID 决定
     static let warehouseOutletID = "unloader_1"
@@ -445,12 +459,6 @@ extension BuildingDefinition {
     static let warehouseSourceID = "log_hongs_bus_source"
     /// 武陵专属：仓库存取线基段——必须连着源桩，取货口/存货口再连到基段上
     static let warehouseBaseSegmentID = "log_hongs_bus"
-
-    /// JSON 数据本身不带"这个建筑只有武陵能用"这种地图限定信息，这里按实际游戏机制手动覆盖
-    private static let mapOverrides: [String: Set<MapType>] = [
-        warehouseSourceID: [.wuling],
-        warehouseBaseSegmentID: [.wuling],
-    ]
 }
 
 // MARK: - 地下暗管：不模拟入口到出口的连通
@@ -499,16 +507,9 @@ extension BuildingDefinition {
     static let multiRecipeMaxExternalSolidOutputs = 1
 }
 
-// MARK: - 建筑库（从 devices.json 解析，叠加地图限定覆盖）
+// MARK: - 建筑库（从 devices.json 解析）
 extension BuildingDefinition {
-    static let all: [BuildingDefinition] = BuildingParser.loadAll().map { def in
-        guard let override = mapOverrides[def.id] else { return def }
-        return BuildingDefinition(
-            id: def.id, name: def.name, category: def.category,
-            size: def.size, powerUsage: def.powerUsage, powerGenerate: def.powerGenerate, ports: def.ports,
-            allowedMaps: override, powerRange: def.powerRange
-        )
-    }
+    static let all: [BuildingDefinition] = BuildingParser.loadAll()
 
     static func find(_ id: String) -> BuildingDefinition? {
         all.first { $0.id == id }

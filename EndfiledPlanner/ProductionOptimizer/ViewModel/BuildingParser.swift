@@ -26,6 +26,13 @@ enum BuildingParser {
         let powerGenerate: Double?  // 只有协议核心、热能池这类真正的发电建筑才有，绝大多数记录没有这个字段
         let ports: [DevicePort]?
         let powerRange: Int?        // 只有供电桩有：供电范围（本体向四周各扩几格）
+        let modes: [DeviceMode]?    // 机器的配方模式（基础/液体/气体…），按 craftGroupId 对应到配方
+    }
+
+    private struct DeviceMode: Codable {
+        let id: String
+        let name: String
+        let craftGroupId: String
     }
 
     private struct DeviceSize: Codable {
@@ -93,7 +100,8 @@ enum BuildingParser {
             powerUsage: device.powerConsume ?? 0,
             powerGenerate: device.powerGenerate ?? 0,
             ports: ports,
-            powerRange: device.powerRange
+            powerRange: device.powerRange,
+            modes: (device.modes ?? []).map { BuildingMode(id: $0.id, name: $0.name, craftGroupId: $0.craftGroupId) }
         )
     }
 

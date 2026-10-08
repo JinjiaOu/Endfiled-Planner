@@ -73,9 +73,6 @@ enum LegacyRecipeIndex {
 // MARK: - 网格模型
 class FactoryGridModel {
 
-    static let gridCols = 80
-    static let gridRows = 80
-
     // MARK: - 保存/读取（UserDefaults）
     private static let saveKey = "factory_layout_v1"
 
@@ -97,9 +94,10 @@ class FactoryGridModel {
     }
 
     // MARK: - 协议核心：每张地图必有且只有一个，没有就在默认位置（网格正中心）自动生成
-    static func defaultProtocolCoreOrigin() -> GridPoint {
+    static func defaultProtocolCoreOrigin(on map: MapType) -> GridPoint {
         guard let def = BuildingDefinition.find(BuildingDefinition.protocolCoreID) else { return GridPoint(col: 0, row: 0) }
-        return GridPoint(col: (gridCols - def.size.width) / 2, row: (gridRows - def.size.height) / 2)
+        let rules = map.rules
+        return GridPoint(col: (rules.gridCols - def.size.width) / 2, row: (rules.gridRows - def.size.height) / 2)
     }
 
     /// 优先放网格正中心；测试产线这种摆得比较满的布局中心可能被占了，
@@ -108,13 +106,14 @@ class FactoryGridModel {
         guard !layout.buildings.contains(where: { $0.definitionID == BuildingDefinition.protocolCoreID }) else { return }
         guard let def = BuildingDefinition.find(BuildingDefinition.protocolCoreID) else { return }
 
-        let center = defaultProtocolCoreOrigin()
+        let center = defaultProtocolCoreOrigin(on: layout.mapType)
+        let rules = layout.mapType.rules
         if canPlace(definition: def, at: center, rotation: .up, existing: layout.buildings, mapType: layout.mapType) {
             layout.buildings.append(PlacedBuilding(definitionID: def.id, origin: center, rotation: .up))
             return
         }
-        for row in 0...(gridRows - def.size.height) {
-            for col in 0...(gridCols - def.size.width) {
+        for row in 0...(rules.gridRows - def.size.height) {
+            for col in 0...(rules.gridCols - def.size.width) {
                 let origin = GridPoint(col: col, row: row)
                 if canPlace(definition: def, at: origin, rotation: .up, existing: layout.buildings, mapType: layout.mapType) {
                     layout.buildings.append(PlacedBuilding(definitionID: def.id, origin: origin, rotation: .up))
@@ -134,8 +133,9 @@ class FactoryGridModel {
         existing: [PlacedBuilding],
         mapType: MapType
     ) -> Bool {
-        // 这个建筑本来就不允许出现在当前地图（比如取线终端在四号谷地）
-        guard definition.isAvailable(on: mapType) else { return false }
+        let rules = mapType.rules
+        // 这个建筑本来就不允许出现在当前地图（比如武陵专属建筑在四号谷地）
+        guard rules.allows(definition) else { return false }
 
         // 协议核心全局唯一：已经有一个了就不能再放第二个（重定位时 existing 会把它自己排除掉，不受影响）
         if definition.isProtocolCore, existing.contains(where: { $0.definitionID == definition.id }) {
@@ -149,8 +149,8 @@ class FactoryGridModel {
         // 边界检查
         let size = dummy.effectiveSize(definition: definition)
         if origin.col < 0 || origin.row < 0 { return false }
-        if origin.col + size.width > gridCols { return false }
-        if origin.row + size.height > gridRows { return false }
+        if origin.col + size.width > rules.gridCols { return false }
+        if origin.row + size.height > rules.gridRows { return false }
 
         // 碰撞检查
         for placed in existing {
@@ -169,10 +169,10 @@ class FactoryGridModel {
 
         // 仓库取货口/存货口的地图专属规则
         if BuildingDefinition.warehousePortIDs.contains(definition.id) {
-            switch mapType {
-            case .valley4:
-                guard isFlushOnValley4Edge(placed: dummy, definition: definition) else { return false }
-            case .wuling:
+            switch rules.warehouseLine {
+            case .perimeter(let edges):
+                guard isFlushOnPerimeter(placed: dummy, definition: definition, edges: edges) else { return false }
+            case .busDock:
                 // 取货口/存货口可以直接贴源桩，也可以贴基段，两个都算数。
                 // 跟四号谷地贴地图边一样，这里也要求长边整条贴死，不是"离得近就行"
                 let dockTargets = existing.filter {
@@ -189,17 +189,15 @@ class FactoryGridModel {
     // MARK: - 仓库取线的地图专属规则
     // 范围/边的取舍都是先给个合理默认值，后面可以按实际地图再调
 
-    /// 四号谷地：只允许上边和左边这两条边（绕基地半圈），不是四条边都能放
-    static let valley4PerimeterEdges: Set<BuildingRotation> = [.up, .left]
-
     /// 仓库取货口/存货口是长条形（比如 3x1），必须长边整条贴死在允许的那条边上。
     /// 关键点：口要朝地图内部开（贴上边→朝下，贴左边→朝右），不是朝边界外——
     /// 朝外的话外面连接格会落在网格范围之外，传送带根本没地方接。
-    static func isFlushOnValley4Edge(placed: PlacedBuilding, definition: BuildingDefinition) -> Bool {
+    /// 四号谷地只允许上边和左边这两条边（绕基地半圈），允许哪几条边见 MapRules
+    static func isFlushOnPerimeter(placed: PlacedBuilding, definition: BuildingDefinition, edges: Set<BuildingRotation>) -> Bool {
         guard let port = definition.ports.first else { return false }
         let (portCell, facing) = port.resolvedPosition(placed: placed, definition: definition)
-        if valley4PerimeterEdges.contains(.up) && facing == .down && portCell.row == 0 { return true }
-        if valley4PerimeterEdges.contains(.left) && facing == .right && portCell.col == 0 { return true }
+        if edges.contains(.up) && facing == .down && portCell.row == 0 { return true }
+        if edges.contains(.left) && facing == .right && portCell.col == 0 { return true }
         return false
     }
 
@@ -259,6 +257,8 @@ class FactoryGridModel {
         let machineStates: [FlowSimulator.MachineState]
         let sinkStates: [FlowSimulator.SinkState]
         let flowConverged: Bool
+        /// 跟当前地图冲突的建筑 → 原因（红框显示，不参与模拟）
+        var mapConflicts: [UUID: String] = [:]
     }
 
     struct ProductionLine {
@@ -273,7 +273,17 @@ class FactoryGridModel {
     }
 
     /// - Parameter machineRecipes: 按建筑 id 分组的配方表（RecipeViewModel.recipesByMachine()）
-    static func analyze(layout: FactoryLayout, machineRecipes: [String: [Recipe]]) -> ProductionStats {
+    static func analyze(layout original: FactoryLayout, machineRecipes: [String: [Recipe]]) -> ProductionStats {
+        // 跟地图冲突的建筑不参与模拟、不耗电，跟关掉的建筑一样
+        let conflicts = mapConflicts(in: original, machineRecipes: machineRecipes)
+        var layout = original
+        for i in layout.buildings.indices where conflicts[layout.buildings[i].id] != nil {
+            layout.buildings[i].isActive = false
+        }
+        // 不能用管道的地图上（旧存档里）画着的管道不参与模拟
+        if !layout.mapType.rules.allowsPipes {
+            layout.beltNetwork.belts.removeAll { $0.lineType == .pipe }
+        }
         var totalPowerConsumed = 0.0
         var totalPowerGenerated = 0.0
         var categoryBreakdown: [BuildingCategory: Int] = [:]
@@ -361,7 +371,51 @@ class FactoryGridModel {
             outletMaterials: outletMaterials,
             machineStates: sim.machines,
             sinkStates: sim.sinks,
-            flowConverged: sim.converged
+            flowConverged: sim.converged,
+            mapConflicts: conflicts
         )
+    }
+
+    // MARK: - 地图冲突
+    /// 每次重算统计都重新检查：建筑在这张图上不能造、配方模式在这张图上不能用、
+    /// 仓库取货口/存货口没贴好（贴的源桩/基段被删了也算）、基段没连着源桩。返回 建筑 ID → 原因
+    static func mapConflicts(in layout: FactoryLayout, machineRecipes: [String: [Recipe]]) -> [UUID: String] {
+        let rules = layout.mapType.rules
+        var conflicts: [UUID: String] = [:]
+        for placed in layout.buildings {
+            guard let def = BuildingDefinition.find(placed.definitionID) else { continue }
+            if !rules.allows(def) {
+                let maps = MapRules.maps(allowing: def).map(\.displayName).joined(separator: "、")
+                conflicts[placed.id] = "\(layout.mapType.displayName)不能造（仅\(maps)）"
+                continue
+            }
+            let recipeIDs = placed.selectedRecipeIDs.union(placed.selectedRecipeID.map { [$0] } ?? [])
+            let blocked = recipes(for: def, in: machineRecipes)
+                .filter { recipeIDs.contains($0.id) }
+                .compactMap { rules.blockedMode(of: $0, on: def) }
+            if let mode = blocked.first {
+                conflicts[placed.id] = "\(layout.mapType.displayName)不能用\(mode.name)配方"
+                continue
+            }
+            if BuildingDefinition.warehousePortIDs.contains(def.id) || def.id == BuildingDefinition.warehouseBaseSegmentID {
+                let others = layout.buildings.filter { $0.id != placed.id }
+                if !canPlace(definition: def, at: placed.origin, rotation: placed.rotation,
+                             existing: others, mapType: layout.mapType) {
+                    conflicts[placed.id] = dockHint(for: def, rules: rules)
+                }
+            }
+        }
+        return conflicts
+    }
+
+    private static func dockHint(for def: BuildingDefinition, rules: MapRules) -> String {
+        if def.id == BuildingDefinition.warehouseBaseSegmentID { return "没连着仓库存取线源桩" }
+        switch rules.warehouseLine {
+        case .perimeter(let edges):
+            let names: [BuildingRotation: String] = [.up: "上边", .right: "右边", .down: "下边", .left: "左边"]
+            let list = BuildingRotation.allCases.filter(edges.contains).compactMap { names[$0] }.joined(separator: "或")
+            return "要贴着地图\(list)放，口朝里"
+        case .busDock:   return "要贴着仓库存取线源桩或基段放"
+        }
     }
 }

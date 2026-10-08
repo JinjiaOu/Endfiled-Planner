@@ -31,6 +31,7 @@ class RecipeViewModel: ObservableObject {
         let machineName: String
         let seconds: Double
         let gasEnvName: String?
+        let formulaGroupId: String?
         let ingredients: [ItemRecord]
         let outcomes: [ItemRecord]
     }
@@ -72,6 +73,7 @@ class RecipeViewModel: ObservableObject {
             machine: env.map { "\(record.machineName)（\($0)）" } ?? record.machineName,
             time: Int(record.seconds.rounded()),
             gasEnvName: env,
+            formulaGroupId: record.formulaGroupId.flatMap { $0.isEmpty ? nil : $0 },
             inputs: toItems(record.ingredients),
             outputs: toItems(record.outcomes)
         )

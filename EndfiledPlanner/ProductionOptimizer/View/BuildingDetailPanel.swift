@@ -161,6 +161,14 @@ struct BuildingDetailPanel: View {
     // MARK: - 主体：按建筑类型
     @ViewBuilder
     private var content: some View {
+        if let conflict = vm.stats.mapConflicts[placed.id] {
+            section("地图不支持") {
+                Text("\(conflict)。这台建筑不参与产能计算。")
+                    .font(.system(size: 11))
+                    .foregroundColor(Color(red: 0.95, green: 0.35, blue: 0.3))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
         if def.isMultiRecipeMachine {
             section("配方（可多选，自我供给）") { multiRecipePicker(for: def) }
         } else if !vm.availableRecipes(for: def).isEmpty {
@@ -371,7 +379,8 @@ struct BuildingDetailPanel: View {
                             id: recipe.id,
                             title: "\(outputText)（\(recipe.time)s）",
                             subtitle: recipeSubtitle(inputText: inputText, env: recipe.requiredEnv),
-                            iconName: recipe.outputs.first?.name
+                            iconName: recipe.outputs.first?.name,
+                            disabledTag: recipeMapTag(recipe, def: def)
                         )
                     },
                     selectedID: currentID,
@@ -384,6 +393,13 @@ struct BuildingDetailPanel: View {
                 )
             }
         }
+    }
+
+    /// 这条配方在当前地图不能用时的标签（"仅武陵"），能用返回 nil
+    private func recipeMapTag(_ recipe: Recipe, def: BuildingDefinition) -> String? {
+        guard vm.layout.mapType.rules.blockedMode(of: recipe, on: def) != nil else { return nil }
+        let maps = MapRules.maps(allowing: recipe, on: def).map(\.displayName).joined(separator: "、")
+        return "仅\(maps)"
     }
 
     /// 反应池/扩容反应池：多选配方 + 自我供给分析 + 净产出的输出口手动指定
@@ -412,7 +428,8 @@ struct BuildingDetailPanel: View {
                                 id: recipe.id,
                                 title: "\(outputText)（\(recipe.time)s）",
                                 subtitle: inputText.isEmpty ? nil : "原料：\(inputText)",
-                                iconName: recipe.outputs.first?.name
+                                iconName: recipe.outputs.first?.name,
+                                disabledTag: recipeMapTag(recipe, def: def)
                             )
                         },
                         multiSelect: true,

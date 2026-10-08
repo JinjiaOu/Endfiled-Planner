@@ -99,7 +99,16 @@ class Device:
 
 DEVICES = {d['id']: Device(d) for d in DEVICES_RAW
            if CATEGORY_KIND.get(d['categoryName']) and d['size']['width'] > 0 and d['size']['depth'] > 0}
-MAP_ONLY = {WAREHOUSE_SOURCE: 'wuling', WAREHOUSE_SEGMENT: 'wuling'}
+# 同 App 的 MapRules：武陵专属建筑；四号谷地不能用的配方模式
+WULING_ONLY = {'pump_1', 'pump_2', 'gas_pump_1', 'miner_4', 'mix_pool_1', 'mix_pool_2', 'transmuter_1', 'transmuter_2',
+               'liquid_purifier_1', 'gas_reactor_1', 'xiranite_oven_1', 'liquid_cleaner_1', 'vaporizer_1', 'dismantler_1',
+               'liquid_storager_1', 'gas_storager_1', 'udpipe_loader_1', 'udpipe_loader_2', 'udpipe_unloader_1',
+               'udpipe_unloader_2', 'power_diffuser_2', WAREHOUSE_SOURCE, WAREHOUSE_SEGMENT,
+               # 四号谷地也不能用管道（同 App 的 allowsPipes）
+               'log_pipe_splitter', 'log_pipe_converger', 'log_pipe_connector', 'log_pipe_conditioner'}
+MAP_ONLY = {i: 'wuling' for i in WULING_ONLY}
+BLOCKED_MODES = {'valley4': {'liquid', 'gas', 'gasliquid'}, 'wuling': set()}
+GROUP_MODE = {m['craftGroupId']: m['id'] for d in DEVICES_RAW for m in d.get('modes', []) if m.get('craftGroupId')}
 
 
 def recipes_for(device_id):
@@ -218,6 +227,10 @@ class Layout:
         if err:
             raise PlacementError(f'{self.name}: {device.name} @({col},{row}) rot={rot}: {err}')
         b = Building(device, (col, row), rot)
+        for r in ([recipe] if recipe else []) + list(recipes or []):
+            mode = GROUP_MODE.get(RECIPE_BY_ID[r].get('formulaGroupId'))
+            if mode in BLOCKED_MODES[self.map_type]:
+                raise PlacementError(f'{self.name}: {r} 是{mode}模式配方，{self.map_type} 不能用')
         if recipe:
             assert RECIPE_BY_ID[recipe]['machineId'] == device_id, (recipe, device_id)
             b.recipe_id = recipe

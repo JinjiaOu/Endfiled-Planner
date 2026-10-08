@@ -352,13 +352,16 @@ struct FactoryLayoutView: View {
                 showBuildingPalette = false
                 vm.beltStart = nil
             }
-            Divider().overlay(Color.white.opacity(0.1))
-            toolButton(icon: "water.waves", label: "管道",
-                       isActive: vm.editMode == .pipe,
-                       color: Color(red: 0.3, green: 0.7, blue: 1.0)) {
-                vm.editMode = .pipe
-                showBuildingPalette = false
-                vm.beltStart = nil
+            // 不能用管道的地图（四号谷地）不显示管道工具
+            if vm.layout.mapType.rules.allowsPipes {
+                Divider().overlay(Color.white.opacity(0.1))
+                toolButton(icon: "water.waves", label: "管道",
+                           isActive: vm.editMode == .pipe,
+                           color: Color(red: 0.3, green: 0.7, blue: 1.0)) {
+                    vm.editMode = .pipe
+                    showBuildingPalette = false
+                    vm.beltStart = nil
+                }
             }
             Divider().overlay(Color.white.opacity(0.1))
             toolButton(icon: "rotate.right", label: "旋转",

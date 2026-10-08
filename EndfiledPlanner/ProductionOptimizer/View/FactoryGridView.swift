@@ -29,8 +29,8 @@ struct FactoryGridView: View {
     @State private var lastErasedCell: GridPoint? = nil
     @State private var eraseDragActive = false
 
-    private var cols: Int { FactoryGridModel.gridCols }
-    private var rows: Int { FactoryGridModel.gridRows }
+    private var cols: Int { vm.layout.mapType.rules.gridCols }
+    private var rows: Int { vm.layout.mapType.rules.gridRows }
 
     var body: some View {
         ZStack(alignment: .topLeading) {
@@ -390,7 +390,10 @@ struct FactoryGridView: View {
 
         // 名字下面那行设置：取货口/暗管出口显示出什么，准入口设了过滤才显示放行什么
         let settingLabel: (text: String, isSet: Bool)?
-        if def.choosesOutletMaterial {
+        let hasMapConflict = vm.stats.mapConflicts[placed.id] != nil
+        if hasMapConflict {
+            settingLabel = ("地图不支持", false)
+        } else if def.choosesOutletMaterial {
             let name = placed.outletMaterialID.flatMap(ItemCatalog.name(for:))
             settingLabel = (name ?? "未设置", name != nil)
         } else if def.id == "log_conditioner" || def.id == "log_pipe_conditioner",
@@ -403,8 +406,9 @@ struct FactoryGridView: View {
         return ZStack {
             Rectangle().fill(def.category.color.opacity(isSelected ? 0.4 : 0.25))
             Rectangle().stroke(
-                isSelected ? Color(red: 1.0, green: 0.8, blue: 0.0) : def.category.color.opacity(0.6),
-                lineWidth: isSelected ? 2.5 : 1.5)
+                isSelected ? Color(red: 1.0, green: 0.8, blue: 0.0)
+                    : hasMapConflict ? Color(red: 0.95, green: 0.25, blue: 0.2) : def.category.color.opacity(0.6),
+                lineWidth: isSelected || hasMapConflict ? 2.5 : 1.5)
             if isThin {
                 HStack(spacing: 4) {
                     Image(systemName: def.category.icon)
@@ -417,8 +421,8 @@ struct FactoryGridView: View {
                         if let setting = settingLabel {
                             Text(setting.text)
                                 .font(.system(size: min(w, h) * 0.26, design: .monospaced))
-                                .foregroundColor(setting.isSet
-                                                 ? Color(red: 0.4, green: 0.8, blue: 0.2)
+                                .foregroundColor(hasMapConflict ? Color(red: 0.95, green: 0.35, blue: 0.3)
+                                                 : setting.isSet ? Color(red: 0.4, green: 0.8, blue: 0.2)
                                                  : .white.opacity(0.35))
                                 .lineLimit(1)
                         }
@@ -440,8 +444,8 @@ struct FactoryGridView: View {
                     if let setting = settingLabel {
                         Text(setting.text)
                             .font(.system(size: min(w, h) * 0.14, design: .monospaced))
-                            .foregroundColor(setting.isSet
-                                             ? Color(red: 0.4, green: 0.8, blue: 0.2)
+                            .foregroundColor(hasMapConflict ? Color(red: 0.95, green: 0.35, blue: 0.3)
+                                             : setting.isSet ? Color(red: 0.4, green: 0.8, blue: 0.2)
                                              : .white.opacity(0.35))
                             .lineLimit(1)
                     }

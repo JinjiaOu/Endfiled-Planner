@@ -180,6 +180,8 @@ class FactoryViewModel: ObservableObject {
     func switchMap(to mapType: MapType) {
         layout = .empty
         layout.mapType = mapType
+        // 新地图不能用管道时，正拿着的管道工具退回选择
+        if editMode == .pipe && !mapType.rules.allowsPipes { editMode = .select }
         FactoryGridModel.ensureProtocolCore(in: &layout)
         selectedBuildingID = nil
         beltStart = nil
@@ -201,10 +203,10 @@ class FactoryViewModel: ObservableObject {
                 return candidate
             }
         }
-        switch layout.mapType {
-        case .valley4:
+        switch layout.mapType.rules.warehouseLine {
+        case .perimeter:
             return cell.row <= cell.col ? .down : .right
-        case .wuling:
+        case .busDock:
             // 基段和源桩都能贴，猜方向时两种都算候选
             let dockTargets = layout.buildings.filter {
                 $0.definitionID == BuildingDefinition.warehouseBaseSegmentID ||

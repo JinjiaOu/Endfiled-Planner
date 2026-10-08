@@ -12,6 +12,9 @@ struct SearchablePickerItem: Identifiable {
     let title: String
     var subtitle: String? = nil
     var iconName: String? = nil
+    /// 非 nil 时这一行标灰、点不了，右边显示这段标签（比如四号谷地里液体模式配方标"仅武陵"）；
+    /// 多选模式下已经勾上的还能取消勾选
+    var disabledTag: String? = nil
 }
 
 /// 全屏搜索选择弹窗：长列表（取货材料 170+ 个、多配方）用原生 Menu 很难点选，换成大行高 + 搜索框。
@@ -70,7 +73,9 @@ struct SearchablePickerSheet: View {
                 }
                 ForEach(filteredItems) { item in
                     let isSelected = multiSelect ? selectedIDs.contains(item.id) : item.id == selectedID
-                    row(title: item.title, subtitle: item.subtitle, iconName: item.iconName, isSelected: isSelected) {
+                    row(title: item.title, subtitle: item.subtitle, iconName: item.iconName, isSelected: isSelected,
+                        disabledTag: item.disabledTag) {
+                        if item.disabledTag != nil && !(multiSelect && isSelected) { return }
                         if multiSelect {
                             onToggle?(item.id)
                         } else {
@@ -145,7 +150,8 @@ struct SearchablePickerSheet: View {
         .padding(.horizontal, 4).padding(.vertical, 6)
     }
 
-    private func row(title: String, subtitle: String?, iconName: String? = nil, isSelected: Bool, action: @escaping () -> Void) -> some View {
+    private func row(title: String, subtitle: String?, iconName: String? = nil, isSelected: Bool,
+                     disabledTag: String? = nil, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: 12) {
                 if multiSelect {
@@ -166,12 +172,20 @@ struct SearchablePickerSheet: View {
                     }
                 }
                 Spacer()
+                if let disabledTag {
+                    Text(disabledTag)
+                        .font(.system(size: 11, weight: .bold))
+                        .padding(.horizontal, 6).padding(.vertical, 2)
+                        .background(Color.white.opacity(0.12))
+                        .foregroundColor(.white.opacity(0.6))
+                }
                 if !multiSelect && isSelected {
                     Image(systemName: "checkmark")
                         .foregroundColor(accent)
                 }
             }
             .padding(.vertical, 8)
+            .opacity(disabledTag == nil ? 1 : 0.45)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
