@@ -172,6 +172,15 @@ struct FactoryLayoutView: View {
                                     .onEnded { _ in lastCellSize = cellSize }
                             )
 
+                            // 电力提示（画布顶部）：发电不够、或者有建筑不在供电桩范围内时才出现
+                            VStack {
+                                powerWarningBanner
+                                    .padding(.top, 8)
+                                    .padding(.horizontal, 16)
+                                Spacer()
+                            }
+                            .allowsHitTesting(false)
+
                             // 悬浮产能按钮（右下角）
                             VStack {
                                 Spacer()
@@ -674,6 +683,34 @@ struct FactoryLayoutView: View {
         let target = CGPoint(x: min(max(m.offset.x + dx, 0), maxX), y: min(max(m.offset.y + dy, 0), maxY))
         guard target != m.offset else { return }
         scrollPosition.scrollTo(point: target)
+    }
+
+    // MARK: - 电力提示
+    /// 只是提示：模拟里电不够时机器照常按满速算，没有模拟缺电降速
+    @ViewBuilder
+    private var powerWarningBanner: some View {
+        let stats = vm.stats
+        let shortage = stats.powerShortage
+        let unpowered = stats.unpoweredCount
+        if shortage > 0.5 || unpowered > 0 {
+            let red = Color(red: 0.95, green: 0.3, blue: 0.25)
+            VStack(alignment: .leading, spacing: 3) {
+                if shortage > 0.5 {
+                    Label(String(format: "电力不足：缺 %.0f MW（耗电 %.0f / 发电 %.0f）",
+                                 shortage, stats.totalPowerConsumed, stats.totalPowerGenerated),
+                          systemImage: "bolt.trianglebadge.exclamationmark.fill")
+                }
+                if unpowered > 0 {
+                    Label("\(unpowered) 个建筑不在供电桩范围内，不运行", systemImage: "bolt.slash.fill")
+                }
+            }
+            .font(.system(size: 11, weight: .bold))
+            .foregroundColor(red)
+            .padding(.horizontal, 12).padding(.vertical, 7)
+            .background(Color(red: 0.10, green: 0.11, blue: 0.14).opacity(0.92))
+            .overlay(Rectangle().stroke(red.opacity(0.6), lineWidth: 1))
+            .transition(.move(edge: .top).combined(with: .opacity))
+        }
     }
 
     // MARK: - 悬浮产能按钮

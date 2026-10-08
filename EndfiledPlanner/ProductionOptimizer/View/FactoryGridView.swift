@@ -505,6 +505,19 @@ struct FactoryGridView: View {
             }
         }
         .frame(width: w, height: h)
+        .overlay(alignment: .topLeading) {
+            // 不在供电桩范围内：左上角断电图标，不用点开也看得到
+            if placed.isActive && vm.stats.unpoweredIDs.contains(placed.id) {
+                Image(systemName: "bolt.slash.fill")
+                    .font(.system(size: max(9, min(min(w, h) * 0.22, 18)), weight: .bold))
+                    .foregroundColor(Color(red: 1.0, green: 0.8, blue: 0.0))
+                    .padding(3)
+                    .background(Color.black.opacity(0.55))
+                    .padding(3)
+                    .accessibilityLabel("未通电")
+                    .allowsHitTesting(false)
+            }
+        }
         .overlay(alignment: .topTrailing) {
             if let displayedStatus {
                 Circle()
