@@ -57,6 +57,8 @@ class FactoryViewModel: ObservableObject {
     @Published var beltStart: GridPoint? = nil          // 传送带起点
     @Published var pendingDropCell: GridPoint? = nil    // 拖拽放置落点
     @Published var showSaveConfirm = false
+    /// 保存提示条上的文字（保存画布 / 存为我的布局共用一个提示条）
+    @Published var toastText = "画布已保存"
     /// 详情面板点了"移动"后，下一次点网格就把这台建筑挪过去（点的格子是新的左上角）
     @Published var movingBuildingID: UUID? = nil
     @Published var moveFailedMessage: String? = nil
@@ -806,6 +808,7 @@ class FactoryViewModel: ObservableObject {
         var toSave = layout
         toSave.savedAt = .now
         FactoryGridModel.save(toSave)
+        toastText = "画布已保存"
         showSaveConfirm = true
     }
 

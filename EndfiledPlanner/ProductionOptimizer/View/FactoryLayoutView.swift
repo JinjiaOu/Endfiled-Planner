@@ -118,6 +118,12 @@ struct FactoryLayoutView: View {
     @State private var pendingMapSwitch: MapType? = nil
     @State private var pendingPreset: FactoryPreset? = nil
 
+    // 我的布局
+    @StateObject private var myLayouts = MyLayoutStore()
+    @State private var showMyLayouts = false
+    @State private var showSaveGroupPrompt = false
+    @State private var saveGroupName = ""
+
     private var usesSidePalette: Bool {
         horizontalSizeClass == .regular
     }
@@ -181,7 +187,7 @@ struct FactoryLayoutView: View {
                             buildingPalette
                                 .transition(.move(edge: .bottom).combined(with: .opacity))
                         } else if !usesSidePalette, vm.editMode == .boxSelect {
-                            GroupSelectionPanel(vm: vm, style: .bottom)
+                            GroupSelectionPanel(vm: vm, style: .bottom, onSaveAs: promptSaveGroup)
                                 .transition(.move(edge: .bottom).combined(with: .opacity))
                         } else if !usesSidePalette, let placed = vm.selectedPlaced, let def = vm.selectedDefinition {
                             BuildingDetailPanel(vm: vm, placed: placed, def: def, style: .bottom)
@@ -204,7 +210,7 @@ struct FactoryLayoutView: View {
                 } else if usesSidePalette, vm.editMode == .boxSelect {
                     HStack {
                         Spacer()
-                        GroupSelectionPanel(vm: vm, style: .side)
+                        GroupSelectionPanel(vm: vm, style: .side, onSaveAs: promptSaveGroup)
                             .frame(width: 360)
                             .padding(.trailing, 18)
                             .padding(.top, 64)
@@ -265,7 +271,7 @@ struct FactoryLayoutView: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Menu {
                         Button { vm.saveLayout() } label: {
-                            Label("保存布局", systemImage: "square.and.arrow.down")
+                            Label("保存画布", systemImage: "square.and.arrow.down")
                         }
                         Menu {
                             ForEach(MapType.allCases, id: \.self) { map in
@@ -298,6 +304,16 @@ struct FactoryLayoutView: View {
             }
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbarBackground(Color(red: 0.08, green: 0.09, blue: 0.12), for: .navigationBar)
+            .alert("存为布局", isPresented: $showSaveGroupPrompt) {
+                TextField("布局名字", text: $saveGroupName)
+                Button("取消", role: .cancel) {}
+                Button("保存") { saveGroup() }
+            } message: {
+                Text("选中的建筑、它们的设置和跟着它们走的线会一起存下来")
+            }
+            .sheet(isPresented: $showMyLayouts) {
+                MyLayoutsView(store: myLayouts, currentMap: vm.layout.mapType)
+            }
             .modifier(FactoryAlertsModifier(vm: vm, showClearConfirm: $showClearConfirm,
                                            pendingPreset: $pendingPreset,
                                            pendingMapSwitch: $pendingMapSwitch))
@@ -403,6 +419,12 @@ struct FactoryLayoutView: View {
                        color: Color(red: 0.3, green: 0.85, blue: 0.95)) {
                 vm.editMode = .boxSelect
                 showBuildingPalette = false
+            }
+            Divider().overlay(Color.white.opacity(0.1))
+            toolButton(icon: "square.stack.3d.up", label: "我的布局",
+                       isActive: showMyLayouts,
+                       color: Color(red: 0.4, green: 0.8, blue: 0.2)) {
+                showMyLayouts = true
             }
             Divider().overlay(Color.white.opacity(0.1))
             toolButton(icon: "trash.fill", label: "删除",
@@ -568,6 +590,19 @@ struct FactoryLayoutView: View {
         ))
     }
 
+    // MARK: - 存为我的布局
+    private func promptSaveGroup() {
+        saveGroupName = myLayouts.suggestedName()
+        showSaveGroupPrompt = true
+    }
+
+    private func saveGroup() {
+        guard let saved = vm.makeSavedLayout(name: saveGroupName) else { return }
+        myLayouts.add(saved)
+        vm.toastText = "已存到我的布局：\(saved.name)"
+        withAnimation { vm.showSaveConfirm = true }
+    }
+
     // MARK: - 框选拖到边缘自动滚动
     /// 手指离画面边缘不到 edge 点时，按离边缘多近往那边滚（越靠边越快），滚到内容尽头就停
     private func autoScrollStep() {
@@ -670,7 +705,7 @@ struct FactoryLayoutView: View {
             HStack(spacing: 10) {
                 Image(systemName: "checkmark.circle.fill")
                     .foregroundColor(Color(red: 0.4, green: 0.8, blue: 0.2))
-                Text("布局已保存")
+                Text(vm.toastText)
                     .font(.system(size: 14, weight: .bold, design: .monospaced))
                     .foregroundColor(.white)
             }

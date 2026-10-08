@@ -12,6 +12,8 @@ struct GroupSelectionPanel: View {
 
     @ObservedObject var vm: FactoryViewModel
     let style: Style
+    /// 点"存为布局"：由外面弹出起名字的输入框
+    var onSaveAs: () -> Void = {}
 
     private let groupColor = Color(red: 0.3, green: 0.85, blue: 0.95)
     private let red = Color(red: 0.9, green: 0.3, blue: 0.2)
@@ -55,8 +57,9 @@ struct GroupSelectionPanel: View {
             }
             HStack(spacing: 8) {
                 actionButton("删除", icon: "trash.fill", color: red, enabled: vm.hasGroupSelection) { vm.deleteGroup() }
-                // 存为布局在 M4 第 2 步做
-                actionButton("存为布局", icon: "square.and.arrow.down.on.square", color: green, enabled: false) {}
+                // 要有建筑才能存（只选了线不算）
+                actionButton("存为布局", icon: "square.and.arrow.down.on.square", color: green,
+                             enabled: !vm.groupSelection.isEmpty) { onSaveAs() }
                 actionButton("取消选择", icon: "xmark.circle", color: .white.opacity(0.7), enabled: vm.hasGroupSelection) {
                     vm.clearGroupSelection()
                 }
