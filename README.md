@@ -18,6 +18,19 @@
 
 ---
 
+## 截图
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/screenshots/factory_utilization.webp" width="200" alt="基建规划·利用率视图"><br><sub>基建规划 · 利用率视图</sub></td>
+    <td align="center"><img src="docs/screenshots/factory_stats.webp" width="200" alt="基建规划·产能统计"><br><sub>基建规划 · 产能统计</sub></td>
+    <td align="center"><img src="docs/screenshots/blueprints.webp" width="200" alt="蓝图码管理"><br><sub>蓝图码管理</sub></td>
+    <td align="center"><img src="docs/screenshots/recipe_tree.webp" width="200" alt="配方树"><br><sub>配方分析 · 配方树</sub></td>
+  </tr>
+</table>
+
+---
+
 ## 功能
 
 ### 🔍 配方分析系统
