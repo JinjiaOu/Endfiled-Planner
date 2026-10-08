@@ -253,6 +253,14 @@ class FactoryViewModel: ObservableObject {
         refreshStats()
     }
 
+    // MARK: - 协议核心出货口
+    /// 设置/清空协议核心某个出货口出的材料（portIndex 是 BuildingDefinition.ports 的下标，itemID 是 itemId）
+    func setPortMaterial(_ itemID: String?, portIndex: Int, for buildingID: UUID) {
+        guard let idx = layout.buildings.firstIndex(where: { $0.id == buildingID }) else { return }
+        layout.buildings[idx].portMaterialIDs[portIndex] = itemID
+        refreshStats()
+    }
+
     // MARK: - 取线出口
     /// 设置/清空某个取线出口当前取货的材料（itemId）
     func setOutletMaterial(_ itemID: String?, for buildingID: UUID) {

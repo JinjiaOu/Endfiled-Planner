@@ -173,6 +173,8 @@ private enum NodeKind {
     case machine, unloader, loader, cleaner
     case splitter, converger, bridge, conditioner
     case vaporizer, generator, ignored
+    /// 协议核心：出货口按口设定出什么（像取货口），进货口全收（像存货口）
+    case hub
 
     var isRouter: Bool {
         self == .splitter || self == .converger || self == .bridge || self == .conditioner
@@ -218,6 +220,8 @@ private final class Node {
     var conditionerLimit = Double.infinity
     /// 准入口只放行的物品名，nil = 全部通过
     var conditionerFilter: String? = nil
+    /// 输出口下标 → 走这个口的物品名：反应池用 outputPortAssignments，协议核心用 portMaterialIDs 换成物品名
+    var portAssignments: [Int: String] = [:]
 
     var throttle = 1.0
     var tIn = 1.0
@@ -300,6 +304,7 @@ private final class Engine {
         switch def.id {
         case BuildingDefinition.warehouseOutletID: return .unloader
         case BuildingDefinition.warehouseInletID:  return .loader
+        case BuildingDefinition.protocolCoreID:    return .hub
         case _ where def.isUndergroundOutlet:      return .unloader
         case _ where def.isUndergroundInlet:       return .loader
         case "liquid_cleaner_1":                   return .cleaner
@@ -331,6 +336,7 @@ private final class Engine {
     }
 
     private func configure(_ node: Node, recipesFor: (BuildingDefinition) -> [Recipe]) {
+        node.portAssignments = node.placed.outputPortAssignments
         switch node.kind {
         case .machine:
             let recipes = recipesFor(node.def)
@@ -359,6 +365,12 @@ private final class Engine {
             }
         case .vaporizer:
             node.activatorPort = node.ports.firstIndex { $0.isInput && $0.port.kind == .pipe }
+        case .hub:
+            // 每个设了材料的口记成"口 → 物品名"，出货量等连好线后在 classifyNodes 里按接了几个口再定
+            for (pi, materialID) in node.placed.portMaterialIDs {
+                guard pi < node.ports.count, node.ports[pi].isOutput, let name = ItemCatalog.name(for: materialID) else { continue }
+                node.portAssignments[pi] = name
+            }
         case .unloader:
             // 暗管出口的出货量要看接了几个口，等连好线后在 classifyNodes 里再定
             if let materialID = node.placed.outletMaterialID, let material = ItemCatalog.name(for: materialID) {
@@ -457,6 +469,14 @@ private final class Engine {
                     let connected = node.ports.filter { $0.isOutput && $0.linkIndex != nil }.count
                     node.products = [(product.name, FlowSimulator.pipeCapacity * Double(max(connected, 1)))]
                 }
+            case .hub:
+                producers.append(i); terminals.append(i)
+                // 每个设了材料、接了线的出货口按带速出货；没接线的口不算
+                var rates: [String: Double] = [:]
+                for (pi, name) in node.portAssignments where node.ports[pi].linkIndex != nil {
+                    rates[name, default: 0] += FlowSimulator.beltCapacity
+                }
+                node.products = rates.sorted { $0.key < $1.key }.map { ($0.key, $0.value) }
             case .vaporizer:
                 vaporizers.append(i)
             case .loader, .cleaner, .generator, .ignored:
@@ -509,11 +529,11 @@ private final class Engine {
 
     /// 一般机器不用管走哪个口，所有同类型输出口平均分；反应池/扩容反应池净产出可能不止一种，
     /// 同类型口有几个净产物时必须按用户手动指定的 outputPortAssignments 走各自的口，
-    /// 不然会把两种液体都各分一半糊到两个管道口上，接错下游
+    /// 不然会把两种液体都各分一半糊到两个管道口上，接错下游。协议核心同理，按每个口设定的材料走
     private func outputLinks(_ node: Node, for item: String) -> [Int] {
         let kind = portKind(for: item)
         let allOfKind = node.ports.enumerated().filter { $0.element.isOutput && $0.element.port.kind == kind }
-        let assignments = node.placed.outputPortAssignments
+        let assignments = node.portAssignments
         if !assignments.isEmpty {
             let assignedToThis = allOfKind.filter { assignments[$0.offset] == item }
             if !assignedToThis.isEmpty { return assignedToThis.compactMap { $0.element.linkIndex } }
@@ -727,7 +747,7 @@ private final class Engine {
     private func evaluateTerminal(_ node: Node) {
         switch node.kind {
         case .machine:  evaluateMachine(node)
-        case .loader:
+        case .loader, .hub:
             for li in inputLinks(node) {
                 for (item, value) in links[li].flow {
                     links[li].passFlow[item] = 1
@@ -875,8 +895,14 @@ private final class Engine {
         }
         for node in nodes {
             switch node.kind {
-            case .machine, .unloader:
-                let isOutlet = node.kind == .unloader
+            case .machine, .unloader, .hub:
+                if node.kind == .hub {
+                    var sink = FlowSimulator.SinkState(id: node.placed.id, name: node.def.name, consumed: node.consumed)
+                    sink.isStorageInlet = true
+                    result.sinks.append(sink)
+                    if node.products.isEmpty { continue }
+                }
+                let isOutlet = node.kind != .machine
                 var status = FlowSimulator.MachineStatus.running
                 var detail: String? = nil
                 if node.kind == .unloader && node.products.isEmpty {

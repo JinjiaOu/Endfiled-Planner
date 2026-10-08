@@ -224,6 +224,8 @@ struct PlacedBuilding: Identifiable, Codable {
     var selectedRecipeIDs: Set<String> = []
     /// 仅反应池/扩容反应池用：净产出的物品 → 走哪个物理输出口（下标对应 BuildingDefinition.ports 数组，只在同一物品口/管道口不止一个净产物时才需要手动指定）
     var outputPortAssignments: [Int: String] = [:]
+    /// 仅协议核心用：每个出货口出什么（key 是 BuildingDefinition.ports 的下标，value 是 itemId），没设的口不出货
+    var portMaterialIDs: [Int: String] = [:]
 
     init(definitionID: String, origin: GridPoint, rotation: BuildingRotation = .up) {
         self.id = UUID()
@@ -236,6 +238,7 @@ struct PlacedBuilding: Identifiable, Codable {
     private enum CodingKeys: String, CodingKey {
         case id, definitionID, origin, rotation, isActive
         case selectedRecipeID, outletMaterialID, flowLimitPerMin, filterItemID, selectedRecipeIDs, outputPortAssignments
+        case portMaterialIDs
     }
 
     /// 旧存档（FactoryLayout.dataVersion 1）记的是配方列表下标和材料中文名，读取时一次性换成配方 ID / itemId
@@ -253,6 +256,7 @@ struct PlacedBuilding: Identifiable, Codable {
         flowLimitPerMin = try c.decodeIfPresent(Double.self, forKey: .flowLimitPerMin)
         filterItemID = try c.decodeIfPresent(String.self, forKey: .filterItemID)
         outputPortAssignments = try c.decodeIfPresent([Int: String].self, forKey: .outputPortAssignments) ?? [:]
+        portMaterialIDs = try c.decodeIfPresent([Int: String].self, forKey: .portMaterialIDs) ?? [:]
 
         let legacy = try decoder.container(keyedBy: LegacyKeys.self)
         if let recipeID = try c.decodeIfPresent(String.self, forKey: .selectedRecipeID) {

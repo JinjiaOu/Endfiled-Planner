@@ -16,6 +16,8 @@ struct BuildingDetailPanel: View {
     @State private var showRecipeSheet = false
     @State private var showMaterialSheet = false
     @State private var showFilterSheet = false
+    /// 协议核心正在选材料的出货口（BuildingDefinition.ports 下标），nil = 没在选
+    @State private var corePortSheetIndex: Int? = nil
 
     private let green = Color(red: 0.4, green: 0.8, blue: 0.2)
     private let orange = Color(red: 0.9, green: 0.5, blue: 0.2)
@@ -181,14 +183,16 @@ struct BuildingDetailPanel: View {
             section("只放行") { filterItemPicker(for: def) }
         }
         if def.isProtocolCore {
+            section("出货口") { corePortPicker(for: def) }
             section("协议核心") {
                 infoText(String(format: "固定发电 %.0f MW，计入总发电；本身没有供电范围，周围建筑仍要靠供电桩。", def.powerGenerate))
+                infoText("进货口送进来的东西全部入库。")
             }
         }
         if def.id == "power_station_1" { generatorSection }
         if let range = def.powerRange { diffuserSection(range: range) }
         if let sink = vm.stats.sinkStates.first(where: { $0.id == placed.id }) {
-            section(def.id == BuildingDefinition.warehouseInletID ? "入库" : def.isUndergroundInlet ? "送入暗管" : "处理") {
+            section(def.id == BuildingDefinition.warehouseInletID || def.isProtocolCore ? "入库" : def.isUndergroundInlet ? "送入暗管" : "处理") {
                 rateRows(sink.consumed, color: Color(red: 0.4, green: 0.7, blue: 0.9))
             }
         }
@@ -583,6 +587,73 @@ struct BuildingDetailPanel: View {
                 infoText("其它物品到这里会被挡住，上游跟着堵。")
             }
         }
+    }
+
+    /// 协议核心的出货口：每个口单独选出什么固体，按带速出货；不设置的口不出货。
+    /// 口的名字按实际朝向和位置排（比如"右 1"是右边从上往下第一个），跟着建筑旋转走
+    @ViewBuilder
+    private func corePortPicker(for def: BuildingDefinition) -> some View {
+        if let placedID = vm.selectedBuildingID, let current = vm.selectedPlaced {
+            let ports = corePortLabels(def: def, placed: current)
+            VStack(alignment: .leading, spacing: 4) {
+                ForEach(ports, id: \.index) { port in
+                    let material = current.portMaterialIDs[port.index].flatMap(ItemCatalog.name(for:))
+                    Button {
+                        corePortSheetIndex = port.index
+                    } label: {
+                        HStack(spacing: 6) {
+                            Text(port.label)
+                                .font(.system(size: 10, weight: .bold, design: .monospaced))
+                                .foregroundColor(.white.opacity(0.6))
+                                .frame(width: 36, alignment: .leading)
+                            if let material { ItemIcon(name: material, size: 18) }
+                            Text(material ?? "不出货")
+                                .font(.system(size: 11))
+                                .foregroundColor(material == nil ? .white.opacity(0.35) : Color(red: 0.4, green: 0.8, blue: 0.2))
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 9))
+                                .foregroundColor(.white.opacity(0.3))
+                        }
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .sheet(isPresented: Binding(get: { corePortSheetIndex != nil },
+                                        set: { if !$0 { corePortSheetIndex = nil } })) {
+                if let portIndex = corePortSheetIndex {
+                    SearchablePickerSheet(
+                        title: "\(ports.first { $0.index == portIndex }?.label ?? "出货口") 出什么",
+                        items: vm.solidMaterials.map { SearchablePickerItem(id: $0.itemId, title: $0.name, iconName: $0.name) },
+                        selectedID: current.portMaterialIDs[portIndex],
+                        clearTitle: "不出货",
+                        onSelect: { material in
+                            vm.setPortMaterial(material, portIndex: portIndex, for: placedID)
+                        }
+                    )
+                }
+            }
+        }
+    }
+
+    /// 协议核心出货口的显示名：按朝向分组（上/右/下/左），组内左右边从上往下、上下边从左往右编号
+    private func corePortLabels(def: BuildingDefinition, placed: PlacedBuilding) -> [(index: Int, label: String)] {
+        let sideNames: [BuildingRotation: String] = [.up: "上", .right: "右", .down: "下", .left: "左"]
+        let outputs = def.ports.enumerated().filter { $0.element.ioDirection == .output }.map { item in
+            (index: item.offset, resolved: item.element.resolvedPosition(placed: placed, definition: def))
+        }
+        var labels: [(index: Int, label: String)] = []
+        for side in BuildingRotation.allCases {
+            let onSide = outputs.filter { $0.resolved.facing == side }.sorted {
+                side == .up || side == .down ? $0.resolved.cell.col < $1.resolved.cell.col
+                                             : $0.resolved.cell.row < $1.resolved.cell.row
+            }
+            for (n, port) in onSide.enumerated() {
+                labels.append((port.index, "\(sideNames[side] ?? "") \(n + 1)"))
+            }
+        }
+        return labels
     }
 
     /// 仓库取货口（选固体）/暗管出口（选液体和气体）的材料选择：存货口、暗管入口是入口，接收任意材料，不用选；

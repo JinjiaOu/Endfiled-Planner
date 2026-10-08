@@ -126,6 +126,7 @@ class Building:
         self.recipe_ids = []
         self.material_id = None
         self.port_assignments = {}
+        self.port_materials = {}  # 仅协议核心：出货口下标 → itemId，同 App 的 portMaterialIDs
         self.flow_limit = None
         self.filter_id = None  # 准入口只放行的物品 itemId，同 App 的 filterItemID
         self.label = device.name
@@ -495,6 +496,8 @@ class Layout:
                 d['flowLimitPerMin'] = b.flow_limit
             if b.filter_id:
                 d['filterItemID'] = b.filter_id
+            if b.port_materials:
+                d['portMaterialIDs'] = {str(k): v for k, v in sorted(b.port_materials.items())}
             out_buildings.append(d)
         out_belts = []
         for i, belt in enumerate(self.belts):
@@ -581,6 +584,7 @@ ROUTER_KINDS = {'splitter', 'converger', 'bridge', 'conditioner'}
 
 def _node_kind(dev):
     special = {WAREHOUSE_OUTLET: 'unloader', WAREHOUSE_INLET: 'loader', 'liquid_cleaner_1': 'cleaner',
+               PROTOCOL_CORE: 'hub',  # 出货口按口设定出什么，进货口全收（同 App）
                # 暗管不模拟连通：出口像取货口一样出设定的液体/气体，入口全收（同 App）
                'udpipe_unloader_1': 'unloader', 'udpipe_unloader_2': 'unloader',
                'udpipe_loader_1': 'loader', 'udpipe_loader_2': 'loader',
@@ -727,6 +731,15 @@ def simulate(layout, max_iter=400, eps=1e-7):
             if n.b.device.id.startswith('udpipe_unloader') and n.products:
                 connected = sum(1 for p in n.ports if p.is_output and p.link is not None)
                 n.products = [(n.products[0][0], PIPE_CAP * max(connected, 1))]
+        elif n.kind == 'hub':
+            producers.append(i)
+            terminals.append(i)
+            rates = {}
+            for pi, m in n.b.port_materials.items():
+                if n.ports[pi].is_output and n.ports[pi].link is not None:
+                    name = ITEM_BY_ID[m]['name']
+                    rates[name] = rates.get(name, 0) + BELT_CAP
+            n.products = sorted(rates.items())
         elif n.kind == 'vaporizer':
             vaporizers.append(i)
         elif n.kind in ('loader', 'cleaner', 'generator', 'ignored'):
@@ -764,6 +777,8 @@ def simulate(layout, max_iter=400, eps=1e-7):
         kind = 'item' if is_solid(item) else 'pipe'
         all_kind = [(pi, p) for pi, p in enumerate(n.ports) if p.is_output and p.port.kind == kind]
         assign = n.b.port_assignments
+        if n.kind == 'hub':
+            assign = {pi: ITEM_BY_ID[m]['name'] for pi, m in n.b.port_materials.items()}
         if assign:
             mine = [p for pi, p in all_kind if assign.get(pi) == item]
             if mine:
@@ -915,7 +930,7 @@ def simulate(layout, max_iter=400, eps=1e-7):
             n = nodes[i]
             if n.kind == 'machine':
                 eval_machine(n)
-            elif n.kind == 'loader':
+            elif n.kind in ('loader', 'hub'):
                 for li in in_links(n):
                     for item, v in links[li].flow.items():
                         links[li].pass_flow[item] = 1
@@ -1006,7 +1021,7 @@ def simulate(layout, max_iter=400, eps=1e-7):
 
     machines = []
     for n in nodes:
-        if n.kind in ('machine', 'unloader'):
+        if n.kind in ('machine', 'unloader') or (n.kind == 'hub' and n.products):
             status, detail = 'running', None
             if n.kind == 'unloader' and not n.products:
                 status, detail = 'noRecipe', '未设置取货材料'
@@ -1024,7 +1039,7 @@ def simulate(layout, max_iter=400, eps=1e-7):
         elif n.kind == 'vaporizer':
             machines.append({'b': n.b, 'status': 'running' if n.active_env else 'inactive', 'throttle': 1 if n.active_env else 0,
                              'detail': n.active_env or n.gate_note, 'outputs': {}})
-    sinks = [{'b': n.b, 'consumed': {k: v * 60 for k, v in n.consumed.items()}} for n in nodes if n.kind in ('loader', 'cleaner')]
+    sinks = [{'b': n.b, 'consumed': {k: v * 60 for k, v in n.consumed.items()}} for n in nodes if n.kind in ('loader', 'cleaner', 'hub')]
     unpowered = [n.b.label for n in nodes if n.unpowered]
     generated = sum(n.generated for n in nodes if n.kind == 'generator') + sum(n.b.device.power_gen for n in nodes if n.b.device.id == PROTOCOL_CORE)
     consumed = sum(n.b.device.power for n in nodes if not n.unpowered)
