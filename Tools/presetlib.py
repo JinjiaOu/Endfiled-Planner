@@ -127,6 +127,7 @@ class Building:
         self.material_id = None
         self.port_assignments = {}
         self.flow_limit = None
+        self.filter_id = None  # 准入口只放行的物品 itemId，同 App 的 filterItemID
         self.label = device.name
 
     @property
@@ -492,6 +493,8 @@ class Layout:
                 d['outletMaterialID'] = b.material_id
             if b.flow_limit is not None:
                 d['flowLimitPerMin'] = b.flow_limit
+            if b.filter_id:
+                d['filterItemID'] = b.filter_id
             out_buildings.append(d)
         out_belts = []
         for i, belt in enumerate(self.belts):
@@ -561,6 +564,7 @@ class _Node:
         self.required_env = None
         self.activator_port, self.activator_item = None, None
         self.conditioner_limit = float('inf')
+        self.conditioner_filter = None
         self.throttle, self.t_in, self.r_min = 1.0, 1.0, 1.0
         self.limiting, self.gate_note = None, None
         self.conditioner_scale = 1.0
@@ -660,6 +664,7 @@ def simulate(layout, max_iter=400, eps=1e-7):
         elif n.kind == 'conditioner':
             cap = PIPE_CAP if b.device.id == 'log_pipe_conditioner' else BELT_CAP
             n.conditioner_limit = min(cap, max(b.flow_limit, 0) / 60) if b.flow_limit is not None else cap
+            n.conditioner_filter = ITEM_BY_ID[b.filter_id]['name'] if b.filter_id else None
         nodes.append(n)
 
     diffusers = [(n.bounds, n.b.device.power_range) for n in nodes if n.b.device.power_range]
@@ -872,10 +877,12 @@ def simulate(layout, max_iter=400, eps=1e-7):
             elif n.kind == 'conditioner':
                 if ins and outs:
                     finalize(ins[0])
-                    total = sum(links[ins[0]].flow.values())
+                    allowed = {k: v for k, v in links[ins[0]].flow.items()
+                               if n.conditioner_filter is None or k == n.conditioner_filter}
+                    total = sum(allowed.values())
                     scale = n.conditioner_limit / total if total > n.conditioner_limit else 1
                     n.conditioner_scale = scale
-                    for item, v in links[ins[0]].flow.items():
+                    for item, v in allowed.items():
                         links[outs[0]].offer[item] = links[outs[0]].offer.get(item, 0) + v * scale
             for o in outs:
                 finalize(o)
@@ -966,7 +973,8 @@ def simulate(layout, max_iter=400, eps=1e-7):
             elif n.kind == 'conditioner':
                 if ins and outs:
                     for item in links[ins[0]].flow:
-                        links[ins[0]].pass_flow[item] = n.conditioner_scale * links[outs[0]].pass_offer(item)
+                        blocked = n.conditioner_filter is not None and item != n.conditioner_filter
+                        links[ins[0]].pass_flow[item] = 0 if blocked else n.conditioner_scale * links[outs[0]].pass_offer(item)
         delta = 0
         for i in producers:
             n = nodes[i]

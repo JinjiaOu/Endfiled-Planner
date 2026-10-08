@@ -388,6 +388,18 @@ struct FactoryGridView: View {
         let flowSymbol = (def.id == BuildingDefinition.warehouseInletID
                           ? placed.rotation.opposite : placed.rotation).symbol
 
+        // 名字下面那行设置：取货口显示取什么，准入口设了过滤才显示放行什么
+        let settingLabel: (text: String, isSet: Bool)?
+        if def.id == BuildingDefinition.warehouseOutletID {
+            let name = placed.outletMaterialID.flatMap(ItemCatalog.name(for:))
+            settingLabel = (name ?? "未设置", name != nil)
+        } else if def.id == "log_conditioner" || def.id == "log_pipe_conditioner",
+                  let name = placed.filterItemID.flatMap(ItemCatalog.name(for:)) {
+            settingLabel = (name, true)
+        } else {
+            settingLabel = nil
+        }
+
         return ZStack {
             Rectangle().fill(def.category.color.opacity(isSelected ? 0.4 : 0.25))
             Rectangle().stroke(
@@ -402,12 +414,12 @@ struct FactoryGridView: View {
                         Text(def.name)
                             .font(.system(size: min(w, h) * 0.32, weight: .bold, design: .monospaced))
                             .foregroundColor(.white).lineLimit(1)
-                        if def.id == BuildingDefinition.warehouseOutletID {
-                            Text(placed.outletMaterialID.flatMap(ItemCatalog.name(for:)) ?? "未设置")
+                        if let setting = settingLabel {
+                            Text(setting.text)
                                 .font(.system(size: min(w, h) * 0.26, design: .monospaced))
-                                .foregroundColor(placed.outletMaterialID == nil
-                                                 ? .white.opacity(0.35)
-                                                 : Color(red: 0.4, green: 0.8, blue: 0.2))
+                                .foregroundColor(setting.isSet
+                                                 ? Color(red: 0.4, green: 0.8, blue: 0.2)
+                                                 : .white.opacity(0.35))
                                 .lineLimit(1)
                         }
                     }
@@ -425,12 +437,12 @@ struct FactoryGridView: View {
                     Text(def.name)
                         .font(.system(size: min(w, h) * 0.16, weight: .bold, design: .monospaced))
                         .foregroundColor(.white).lineLimit(1)
-                    if def.id == BuildingDefinition.warehouseOutletID {
-                        Text(placed.outletMaterialID.flatMap(ItemCatalog.name(for:)) ?? "未设置")
+                    if let setting = settingLabel {
+                        Text(setting.text)
                             .font(.system(size: min(w, h) * 0.14, design: .monospaced))
-                            .foregroundColor(placed.outletMaterialID == nil
-                                             ? .white.opacity(0.35)
-                                             : Color(red: 0.4, green: 0.8, blue: 0.2))
+                            .foregroundColor(setting.isSet
+                                             ? Color(red: 0.4, green: 0.8, blue: 0.2)
+                                             : .white.opacity(0.35))
                             .lineLimit(1)
                     }
                     Text(flowSymbol)

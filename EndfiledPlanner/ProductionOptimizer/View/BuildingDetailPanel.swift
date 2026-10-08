@@ -15,6 +15,7 @@ struct BuildingDetailPanel: View {
     @State private var expanded = true
     @State private var showRecipeSheet = false
     @State private var showMaterialSheet = false
+    @State private var showFilterSheet = false
 
     private let green = Color(red: 0.4, green: 0.8, blue: 0.2)
     private let orange = Color(red: 0.9, green: 0.5, blue: 0.2)
@@ -177,6 +178,7 @@ struct BuildingDetailPanel: View {
         }
         if def.id == "log_conditioner" || def.id == "log_pipe_conditioner" {
             section("限速") { flowLimitControl(for: def) }
+            section("只放行") { filterItemPicker(for: def) }
         }
         if def.isProtocolCore {
             section("协议核心") {
@@ -546,6 +548,40 @@ struct BuildingDetailPanel: View {
             }
             .foregroundColor(Color(red: 0.4, green: 0.8, blue: 0.2))
             .buttonStyle(.plain)
+        }
+    }
+
+    /// 物品/管道准入口只放行哪种物品：物品准入口从固体里选，管道准入口从液体和气体里选；不设置 = 全部通过
+    @ViewBuilder
+    private func filterItemPicker(for def: BuildingDefinition) -> some View {
+        if let placedID = vm.selectedBuildingID {
+            let current = vm.selectedPlaced?.filterItemID.flatMap(ItemCatalog.name(for:))
+            let candidates = def.id == "log_pipe_conditioner" ? vm.fluidMaterials : vm.solidMaterials
+            Button {
+                showFilterSheet = true
+            } label: {
+                HStack(spacing: 4) {
+                    if let current { ItemIcon(name: current, size: 20) }
+                    Label(current ?? "全部通过", systemImage: "line.3.horizontal.decrease.circle")
+                }
+                    .font(.system(size: 10, design: .monospaced))
+                    .foregroundColor(Color(red: 0.4, green: 0.8, blue: 0.2))
+            }
+            .buttonStyle(.plain)
+            .sheet(isPresented: $showFilterSheet) {
+                SearchablePickerSheet(
+                    title: "只放行哪种物品",
+                    items: candidates.map { SearchablePickerItem(id: $0.itemId, title: $0.name, iconName: $0.name) },
+                    selectedID: vm.selectedPlaced?.filterItemID,
+                    clearTitle: "全部通过",
+                    onSelect: { item in
+                        vm.setFilterItem(item, for: placedID)
+                    }
+                )
+            }
+            if current != nil {
+                infoText("其它物品到这里会被挡住，上游跟着堵。")
+            }
         }
     }
 

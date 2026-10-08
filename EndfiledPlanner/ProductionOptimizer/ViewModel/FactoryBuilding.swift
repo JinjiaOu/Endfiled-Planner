@@ -218,6 +218,8 @@ struct PlacedBuilding: Identifiable, Codable {
     var outletMaterialID: String? = nil
     /// 仅物品/管道准入口用：用户设置的最大流速（个/分钟），nil = 不额外限速（跑满带速/管速）
     var flowLimitPerMin: Double? = nil
+    /// 仅物品/管道准入口用：只让这种物品通过（items.json 的 itemId），nil = 全部通过；别的物品到这里被挡住
+    var filterItemID: String? = nil
     /// 仅反应池/扩容反应池用：同时勾选运行的配方 ID 集合
     var selectedRecipeIDs: Set<String> = []
     /// 仅反应池/扩容反应池用：净产出的物品 → 走哪个物理输出口（下标对应 BuildingDefinition.ports 数组，只在同一物品口/管道口不止一个净产物时才需要手动指定）
@@ -233,7 +235,7 @@ struct PlacedBuilding: Identifiable, Codable {
 
     private enum CodingKeys: String, CodingKey {
         case id, definitionID, origin, rotation, isActive
-        case selectedRecipeID, outletMaterialID, flowLimitPerMin, selectedRecipeIDs, outputPortAssignments
+        case selectedRecipeID, outletMaterialID, flowLimitPerMin, filterItemID, selectedRecipeIDs, outputPortAssignments
     }
 
     /// 旧存档（FactoryLayout.dataVersion 1）记的是配方列表下标和材料中文名，读取时一次性换成配方 ID / itemId
@@ -249,6 +251,7 @@ struct PlacedBuilding: Identifiable, Codable {
         rotation = try c.decode(BuildingRotation.self, forKey: .rotation)
         isActive = try c.decodeIfPresent(Bool.self, forKey: .isActive) ?? true
         flowLimitPerMin = try c.decodeIfPresent(Double.self, forKey: .flowLimitPerMin)
+        filterItemID = try c.decodeIfPresent(String.self, forKey: .filterItemID)
         outputPortAssignments = try c.decodeIfPresent([Int: String].self, forKey: .outputPortAssignments) ?? [:]
 
         let legacy = try decoder.container(keyedBy: LegacyKeys.self)

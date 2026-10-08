@@ -109,6 +109,11 @@ class RecipeViewModel: ObservableObject {
         recipes.keys.compactMap { ItemCatalog.byName[$0] }.filter { $0.phase == .solid }.sorted { $0.name < $1.name }
     }
 
+    /// 配方产物里所有液体和气体
+    func fluidOutputs() -> [ItemInfo] {
+        recipes.keys.compactMap { ItemCatalog.byName[$0] }.filter { $0.phase != .solid }.sorted { $0.name < $1.name }
+    }
+
     static func isMiningMachine(_ machine: String) -> Bool {
         machine.contains("矿机") ||
         machine.contains("水驱矿机") ||

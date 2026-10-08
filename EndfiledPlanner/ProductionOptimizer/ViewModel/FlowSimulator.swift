@@ -214,6 +214,8 @@ private final class Node {
     var activatorPort: Int? = nil
     var activatorItem: String? = nil
     var conditionerLimit = Double.infinity
+    /// 准入口只放行的物品名，nil = 全部通过
+    var conditionerFilter: String? = nil
 
     var throttle = 1.0
     var tIn = 1.0
@@ -257,6 +259,8 @@ private final class Link {
     var capScale = 1.0
     /// 到货里最终被消耗掉的比例（按物品）
     var passFlow: [String: Double] = [:]
+    /// 这条线上某物品被下游哪里挡住了（目前只有准入口过滤），给上游机器的"阻塞"提示用
+    var blockNote: [String: String] = [:]
 
     init(kind: PortKind) {
         self.kind = kind
@@ -362,6 +366,7 @@ private final class Engine {
             } else {
                 node.conditionerLimit = cap
             }
+            node.conditionerFilter = node.placed.filterItemID.flatMap(ItemCatalog.name(for:))
         default:
             break
         }
@@ -520,7 +525,7 @@ private final class Engine {
 
     private func step() -> Double {
         for link in links {
-            link.offer = [:]; link.flow = [:]; link.capScale = 1; link.passFlow = [:]
+            link.offer = [:]; link.flow = [:]; link.capScale = 1; link.passFlow = [:]; link.blockNote = [:]
         }
         for node in nodes { node.consumed = [:]; node.gateNote = nil }
         capDelta = 0
@@ -589,10 +594,12 @@ private final class Engine {
         case .conditioner:
             guard let inL = ins.first, let outL = outs.first else { return }
             finalize(inL)
-            let total = links[inL].flow.values.reduce(0, +)
+            // 被过滤掉的物品过不去（视为堵住），限速只算放行的那部分
+            let allowed = links[inL].flow.filter { node.conditionerFilter == nil || $0.key == node.conditionerFilter }
+            let total = allowed.values.reduce(0, +)
             let scale = total > node.conditionerLimit ? node.conditionerLimit / total : 1
             node.conditionerScale = scale
-            for (item, value) in links[inL].flow { links[outL].offer[item, default: 0] += value * scale }
+            for (item, value) in allowed { links[outL].offer[item, default: 0] += value * scale }
         default:
             break
         }
@@ -643,23 +650,38 @@ private final class Engine {
                 links[inL].passFlow[item] = value > 1e-12
                     ? accepted / value
                     : outs.map { links[$0].passOffer(item) }.max() ?? 0
+                if let note = outs.lazy.compactMap({ self.links[$0].blockNote[item] }).first {
+                    links[inL].blockNote[item] = note
+                }
             }
         case .converger:
             guard let outL = outs.first else { return }
             for inL in ins {
-                for item in links[inL].flow.keys { links[inL].passFlow[item] = links[outL].passOffer(item) }
+                for item in links[inL].flow.keys {
+                    links[inL].passFlow[item] = links[outL].passOffer(item)
+                    links[inL].blockNote[item] = links[outL].blockNote[item]
+                }
             }
         case .bridge:
             for p in node.ports where p.isInput {
                 guard let inL = p.linkIndex,
                       let outL = node.ports.first(where: { $0.isOutput && $0.facing == p.facing.opposite })?.linkIndex
                 else { continue }
-                for item in links[inL].flow.keys { links[inL].passFlow[item] = links[outL].passOffer(item) }
+                for item in links[inL].flow.keys {
+                    links[inL].passFlow[item] = links[outL].passOffer(item)
+                    links[inL].blockNote[item] = links[outL].blockNote[item]
+                }
             }
         case .conditioner:
             guard let inL = ins.first, let outL = outs.first else { return }
             for item in links[inL].flow.keys {
-                links[inL].passFlow[item] = node.conditionerScale * links[outL].passOffer(item)
+                if let filter = node.conditionerFilter, filter != item {
+                    links[inL].passFlow[item] = 0
+                    links[inL].blockNote[item] = "被\(node.def.name)挡住（只放行\(filter)）"
+                } else {
+                    links[inL].passFlow[item] = node.conditionerScale * links[outL].passOffer(item)
+                    links[inL].blockNote[item] = links[outL].blockNote[item]
+                }
             }
         default:
             break
@@ -820,6 +842,16 @@ private final class Engine {
         return result
     }
 
+    /// 机器被堵时，看看是不是下游有准入口把它的产物挡住了
+    private func blockNote(for node: Node) -> String? {
+        for product in node.products {
+            for li in outputLinks(node, for: product.name) {
+                if let note = links[li].blockNote[product.name] { return note }
+            }
+        }
+        return nil
+    }
+
     private func makeResult() -> FlowSimulator.Result {
         var result = FlowSimulator.Result()
         result.unpoweredIDs = Set(nodes.filter { $0.unpowered }.map { $0.placed.id })
@@ -849,7 +881,7 @@ private final class Engine {
                         status = .starved
                         detail = node.limitingItem.map { "缺少 \($0)" } ?? "原料不足"
                     } else {
-                        status = .blocked; detail = "出口没接好或下游吃不下"
+                        status = .blocked; detail = blockNote(for: node) ?? "出口没接好或下游吃不下"
                     }
                 }
                 var outputs: [String: Double] = [:]

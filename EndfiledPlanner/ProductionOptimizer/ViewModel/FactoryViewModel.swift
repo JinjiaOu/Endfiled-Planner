@@ -55,6 +55,8 @@ class FactoryViewModel: ObservableObject {
     let machineRecipes: [String: [Recipe]]
     // 取线出口能选的材料：配方产物里所有固体
     let solidMaterials: [ItemInfo]
+    // 管道准入口过滤能选的：配方产物里所有液体和气体
+    let fluidMaterials: [ItemInfo]
 
     /// >0 时（比如删除工具按住划过的整个过程）所有改动合并成一步，endUndoGroup 时才入栈
     private var undoGroupDepth = 0
@@ -110,6 +112,7 @@ class FactoryViewModel: ObservableObject {
         let recipeVM = RecipeViewModel()
         machineRecipes = recipeVM.recipesByMachine()
         solidMaterials = recipeVM.solidOutputs()
+        fluidMaterials = recipeVM.fluidOutputs()
         var loaded = FactoryGridModel.load()
         FactoryGridModel.ensureProtocolCore(in: &loaded)
         layout = loaded
@@ -240,6 +243,13 @@ class FactoryViewModel: ObservableObject {
     func setFlowLimit(_ perMin: Double?, for buildingID: UUID) {
         guard let idx = layout.buildings.firstIndex(where: { $0.id == buildingID }) else { return }
         layout.buildings[idx].flowLimitPerMin = perMin
+        refreshStats()
+    }
+
+    /// 设置物品/管道准入口只放行哪种物品（itemId），nil = 全部通过
+    func setFilterItem(_ itemID: String?, for buildingID: UUID) {
+        guard let idx = layout.buildings.firstIndex(where: { $0.id == buildingID }) else { return }
+        layout.buildings[idx].filterItemID = itemID
         refreshStats()
     }
 
