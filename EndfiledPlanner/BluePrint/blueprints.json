@@ -1,6 +1,6 @@
 {
   "version": "1.1.0",
-  "lastUpdated": "2026-10-07",
+  "lastUpdated": "2026-10-08",
   "blueprintSets": [
     {
       "id": "set_001",
@@ -3055,6 +3055,256 @@
           "order": 11,
           "name": "首墩3阶段模块",
           "code": "EF01o5uiE49e56EoaIieO",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "set_048",
+      "name": "【终末地1.4】武陵毕业基建 · 摆完挂机 简单好抄",
+      "author": "萧然Q",
+      "region": "武陵",
+      "location": "",
+      "description": "产物：灼铜零件、灼铜装备原件、赤铜耐压罐、分离芯、重息壤、赫铜零件、优质芽针针剂、锦草软饮、中容武陵电池。首墩上面有液化重息壤储液罐，可以用瓶子直接接。兑换调度券主要用灼铜零件、重息壤、中容武陵电池。产能溢出非常多，基建有防爆仓机制，不会因为爆仓停电",
+      "blueprints": [
+        {
+          "id": "bp_048_01",
+          "order": 1,
+          "name": "武陵城右下1",
+          "code": "EF01o5u22o495660IieO",
+          "notes": ""
+        },
+        {
+          "id": "bp_048_02",
+          "order": 2,
+          "name": "1.4主基地左下2",
+          "code": "EF01eaA66e12a4a3OoAi8",
+          "notes": "灼铜装备零件产线，调整灼铜零件准入口可以调速，往右一格多生产1个/分钟"
+        },
+        {
+          "id": "bp_048_03",
+          "order": 3,
+          "name": "1.4武陵城右上3",
+          "code": "EF01i1U99i6E12e1172U4",
+          "notes": ""
+        },
+        {
+          "id": "bp_048_04",
+          "order": 4,
+          "name": "1.4武陵城左上4",
+          "code": "EF01I43EEI2049I45o08",
+          "notes": ""
+        },
+        {
+          "id": "bp_048_05",
+          "order": 5,
+          "name": "1.4首墩右1",
+          "code": "EF013Eo553O1Eaua90579",
+          "notes": ""
+        },
+        {
+          "id": "bp_048_06",
+          "order": 6,
+          "name": "1.4首墩左2",
+          "code": "EF01i1U99i6E12ii7aU4",
+          "notes": ""
+        },
+        {
+          "id": "bp_048_07",
+          "order": 7,
+          "name": "应龙关上1",
+          "code": "EF01U9eaaU059OE437Oa8",
+          "notes": ""
+        },
+        {
+          "id": "bp_048_08",
+          "order": 8,
+          "name": "应龙关下2",
+          "code": "EF01Oe4AAOiueI32e9oe4",
+          "notes": "最下面的液化息壤暗管入口可以去做填间驻地任务，连接到暗管出口填液化息壤"
+        }
+      ]
+    },
+    {
+      "id": "set_049",
+      "name": "【终末地1.5】保姆级武陵毕业基建 · 摆完挂机 简单好抄",
+      "author": "萧然Q",
+      "region": "武陵",
+      "location": "",
+      "description": "产物：灼铜零件、灼铜装备原件、赤铜耐压罐、分离芯、重息壤、赫铜零件、优质芽针针剂、锦草软饮、中容武陵电池。跟 1.4 版相比只换了应龙关两个蓝图，前 6 个和 1.4 版一样。首墩上面有液化重息壤储液罐，可以用瓶子直接接。兑换调度券主要用灼铜零件、重息壤、中容武陵电池，应龙关和景玉谷优先用灼铜零件兑换，剩下的再用重息壤和电池。基建有防爆仓机制，不会因为爆仓停电",
+      "blueprints": [
+        {
+          "id": "bp_049_01",
+          "order": 1,
+          "name": "武陵城右下1",
+          "code": "EF01o5u22o495660IieO",
+          "notes": ""
+        },
+        {
+          "id": "bp_049_02",
+          "order": 2,
+          "name": "1.4主基地左下2",
+          "code": "EF01eaA66e12a4a3OoAi8",
+          "notes": "灼铜装备零件产线，调整灼铜零件准入口可以调速，往右一格多生产1个/分钟"
+        },
+        {
+          "id": "bp_049_03",
+          "order": 3,
+          "name": "1.4武陵城右上3",
+          "code": "EF01i1U99i6E12e1172U4",
+          "notes": ""
+        },
+        {
+          "id": "bp_049_04",
+          "order": 4,
+          "name": "1.4武陵城左上4",
+          "code": "EF01I43EEI2049I45o08",
+          "notes": ""
+        },
+        {
+          "id": "bp_049_05",
+          "order": 5,
+          "name": "1.4首墩右1",
+          "code": "EF013Eo553O1Eaua90579",
+          "notes": ""
+        },
+        {
+          "id": "bp_049_06",
+          "order": 6,
+          "name": "1.4首墩左2",
+          "code": "EF01i1U99i6E12ii7aU4",
+          "notes": ""
+        },
+        {
+          "id": "bp_049_07",
+          "order": 7,
+          "name": "1.5应龙关上",
+          "code": "EF01i1U99i6E12eee72U4",
+          "notes": ""
+        },
+        {
+          "id": "bp_049_08",
+          "order": 8,
+          "name": "1.5应龙关下",
+          "code": "EF013Eo553O1EauuU0579",
+          "notes": "最下面的液化息壤暗管入口可以去做填间驻地任务，连接到暗管出口填液化息壤"
+        }
+      ]
+    },
+    {
+      "id": "set_050",
+      "name": "【终末地】1.4基建毕业蓝图攻略！气体时代来了",
+      "author": "魔法Zc目录",
+      "region": "武陵",
+      "location": "",
+      "description": "1.4 版武陵毕业基建：武陵城 4 个、景玉谷 2 个、首墩 1 个、应龙关 2 个",
+      "blueprints": [
+        {
+          "id": "bp_050_01",
+          "order": 1,
+          "name": "1.4武陵1",
+          "code": "EF013Eou8uo47auUu0579",
+          "notes": ""
+        },
+        {
+          "id": "bp_050_02",
+          "order": 2,
+          "name": "1.4武陵2",
+          "code": "EF01I43ouo3OA979O5o08",
+          "notes": ""
+        },
+        {
+          "id": "bp_050_03",
+          "order": 3,
+          "name": "1.4武陵3",
+          "code": "EF0170iUeUi6855u2O0Ai",
+          "notes": ""
+        },
+        {
+          "id": "bp_050_04",
+          "order": 4,
+          "name": "1.4武陵4",
+          "code": "EF010819a91uOi12iE179",
+          "notes": ""
+        },
+        {
+          "id": "bp_050_05",
+          "order": 5,
+          "name": "1.4景玉谷1",
+          "code": "EF01E752O25A0o5193uIa",
+          "notes": ""
+        },
+        {
+          "id": "bp_050_06",
+          "order": 6,
+          "name": "1.4景玉谷2",
+          "code": "EF016u01910o271U6O83e",
+          "notes": ""
+        },
+        {
+          "id": "bp_050_07",
+          "order": 7,
+          "name": "1.4首墩",
+          "code": "EF0170iUeUi6855u7O0Ai",
+          "notes": ""
+        },
+        {
+          "id": "bp_050_08",
+          "order": 8,
+          "name": "1.4应龙1",
+          "code": "EF01o5u8I8uEi6390IieO",
+          "notes": ""
+        },
+        {
+          "id": "bp_050_09",
+          "order": 9,
+          "name": "1.4应龙2",
+          "code": "EF013Eou8uo47auoU0579",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "set_051",
+      "name": "【终末地】1.5基建过渡蓝图攻略！",
+      "author": "魔法Zc目录",
+      "region": "武陵",
+      "location": "",
+      "description": "只包含 1.5 新版本修改的部分，新同学请配合 1.4 蓝图（【终末地】1.4基建毕业蓝图攻略！气体时代来了，视频 BV1SHKH6FE6T）一起用",
+      "blueprints": [
+        {
+          "id": "bp_051_01",
+          "order": 1,
+          "name": "1.5调整模块",
+          "code": "EF015i2O4O271uaIieIoe",
+          "notes": ""
+        },
+        {
+          "id": "bp_051_02",
+          "order": 2,
+          "name": "1.5应龙关1",
+          "code": "EF018OI3o3I2e12u6UI73",
+          "notes": ""
+        },
+        {
+          "id": "bp_051_03",
+          "order": 3,
+          "name": "1.5应龙关2",
+          "code": "EF010819a91uOi138E179",
+          "notes": ""
+        },
+        {
+          "id": "bp_051_04",
+          "order": 4,
+          "name": "1.5首墩灼铜",
+          "code": "EF016u01910o271IUO83e",
+          "notes": ""
+        },
+        {
+          "id": "bp_051_05",
+          "order": 5,
+          "name": "1.5首墩-药",
+          "code": "EF013Eou8uo47au4a0579",
           "notes": ""
         }
       ]
