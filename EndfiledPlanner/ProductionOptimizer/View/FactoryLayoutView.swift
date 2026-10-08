@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UIKit
 
 /// 把 FactoryLayoutView 里一大串 .alert/.confirmationDialog 拆出来单独一个 ViewModifier——
 /// 全堆在 body 那条链上会导致 Swift 类型检查超时编译不过
@@ -492,31 +493,29 @@ struct FactoryLayoutView: View {
         .frame(width: 72)
         .scaleEffect(draggingDef?.id == def.id ? 1.08 : 1.0)
         .animation(.spring(response: 0.2), value: draggingDef?.id)
-        // 先按住 0.2 秒再拖才算"拿建筑去放置"：手指一按下就滑动时长按会失败，滑动交还给外面的 ScrollView。
-        // 之前直接挂 DragGesture（哪怕是 simultaneousGesture），在新版 iOS 上会把卡片区域的列表滑动吃掉，
-        // 只能在卡片上下的空白里才滑得动。原来长按弹出的"旋转"菜单会跟这个长按冲突，去掉了，
-        // 放置前旋转用工具栏的旋转按钮
-        .gesture(
-            LongPressGesture(minimumDuration: 0.2)
-                .sequenced(before: DragGesture(minimumDistance: 0, coordinateSpace: .global))
-                .onChanged { value in
-                    guard case .second(true, let drag) = value else { return }
-                    if draggingDef == nil {
-                        draggingDef = def
-                        vm.editMode = .place(def)
-                    }
-                    // 全局坐标，由 FactoryGridView 的 GeometryReader 换算成网格内坐标
-                    if let drag { dragLocationInGrid = drag.location }
+        // 先按住 0.2 秒再拖才算"拿建筑去放置"，手指一按下就滑动则交给外面的 ScrollView 滚动。
+        // SwiftUI 自己的 DragGesture / 长按+拖（不管 gesture 还是 simultaneousGesture）在新版 iOS 上
+        // 都会把卡片区域的列表滑动吃掉，所以改用 UIKit 的长按手势：它和 ScrollView 的滑动是同一套
+        // 手势系统，按下就滑时长按自动失败，滚动不受影响；长按成功后手指移动会持续回调位置。
+        // 原来长按弹出的"旋转"菜单会跟这个冲突，去掉了，放置前旋转用工具栏的旋转按钮
+        .gesture(PaletteHoldDragGesture(
+            onChanged: { location in
+                if draggingDef == nil {
+                    draggingDef = def
+                    vm.editMode = .place(def)
                 }
-                .onEnded { _ in
-                    if draggingDef != nil, let cell = vm.pendingDropCell {
-                        vm.placeBuilding(def, at: cell)
-                    }
-                    draggingDef = nil
-                    dragLocationInGrid = nil
-                    vm.pendingDropCell = nil
+                // 全局坐标，由 FactoryGridView 的 GeometryReader 换算成网格内坐标
+                dragLocationInGrid = location
+            },
+            onEnded: { placed in
+                if placed, draggingDef != nil, let cell = vm.pendingDropCell {
+                    vm.placeBuilding(def, at: cell)
                 }
-        )
+                draggingDef = nil
+                dragLocationInGrid = nil
+                vm.pendingDropCell = nil
+            }
+        ))
     }
 
     // MARK: - 悬浮产能按钮
@@ -624,4 +623,31 @@ struct FactoryLayoutView: View {
 
 #Preview {
     FactoryLayoutView()
+}
+
+/// 建筑卡片的"按住再拖"：UIKit 长按手势，按住 0.2 秒内手指没怎么动才开始，之后跟着手指回调全局坐标
+private struct PaletteHoldDragGesture: UIGestureRecognizerRepresentable {
+    var onChanged: (CGPoint) -> Void
+    /// 参数：true = 正常松手（放置），false = 被系统取消（不放置）
+    var onEnded: (Bool) -> Void
+
+    func makeUIGestureRecognizer(context: Context) -> UILongPressGestureRecognizer {
+        let recognizer = UILongPressGestureRecognizer()
+        recognizer.minimumPressDuration = 0.2
+        recognizer.allowableMovement = 10
+        return recognizer
+    }
+
+    func handleUIGestureRecognizerAction(_ recognizer: UILongPressGestureRecognizer, context: Context) {
+        switch recognizer.state {
+        case .began, .changed:
+            onChanged(context.converter.location(in: .global))
+        case .ended:
+            onEnded(true)
+        case .cancelled, .failed:
+            onEnded(false)
+        default:
+            break
+        }
+    }
 }
