@@ -25,7 +25,7 @@ ORIGINALS = ROOT / '素材原图/物品'
 LOG_DIR = TOOLS / 'update_logs'
 DATA_FILES = ['recipes.json', 'items.json', 'devices.json', 'fuels.json', 'icon_fallbacks.json']
 # 只提交这些位置，别的改动不碰
-COMMIT_PATHS = ['EndfiledPlanner/other', '素材原图/物品', 'Tools/icon_report.json']
+COMMIT_PATHS = ['EndfiledPlanner/other', '素材原图/物品', 'Tools/icon_report.json', 'Tools/icon_sources.json']
 
 sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 LOG_DIR.mkdir(exist_ok=True)

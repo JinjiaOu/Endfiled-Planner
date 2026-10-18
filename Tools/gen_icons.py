@@ -2,6 +2,7 @@
 """Generate compact item asset catalogs and report deterministic wiki matches."""
 import argparse
 from collections import defaultdict
+import hashlib
 import json
 from pathlib import Path
 import shutil
@@ -15,6 +16,15 @@ DEFAULT_TABLECFG = Path('/Users/owen/Desktop/Project/EndfieldData/TableCfg')
 
 def write_json(path, value):
     path.write_text(json.dumps(value, ensure_ascii=False, indent=2) + '\n', encoding='utf-8', newline='\n')
+
+def render(source, target):
+    # 长边缩到 192（原来用 macOS 的 sips，改 PIL 后 Windows 上也能跑）。
+    # A 256-colour transparent palette keeps the full 192px silhouette compact.
+    with Image.open(source) as image:
+        image = image.convert('RGBA')
+        image.thumbnail((192, 192), Image.Resampling.LANCZOS)
+        image.quantize(colors=256, method=Image.Quantize.FASTOCTREE,
+                       dither=Image.Dither.NONE).save(target, optimize=True)
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
@@ -66,6 +76,12 @@ def main():
             textures.setdefault(ids[0], source)
             used.add(source)
     report['wikiUnused'] = sorted(p.name for paths in wiki.values() for p in paths if p not in used)
+    # 原图没变的图标直接沿用已生成的 PNG：不同电脑的 Pillow 版本缩出来字节不一样，
+    # 全部重画会让清单里所有图标的 sha256 都变，App 用户就得重新下载整套图标
+    sources_path = ROOT / 'Tools/icon_sources.json'
+    previous_sources = json.loads(sources_path.read_text(encoding='utf-8')) if sources_path.exists() else {}
+    sources = {}
+    rendered = 0
     # Stage the complete catalog before replacing the generated output, so stale assets disappear.
     args.output.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(dir=args.output.parent, prefix='.item-icons-') as temporary:
@@ -75,13 +91,13 @@ def main():
         for item_id, source in sorted(textures.items()):
             folder = catalog / (item_id + '.imageset')
             folder.mkdir()
-            # 长边缩到 192（原来用 macOS 的 sips，改 PIL 后 Windows 上也能跑）。
-            # A 256-colour transparent palette keeps the full 192px silhouette compact.
-            with Image.open(source) as image:
-                image = image.convert('RGBA')
-                image.thumbnail((192, 192), Image.Resampling.LANCZOS)
-                image.quantize(colors=256, method=Image.Quantize.FASTOCTREE,
-                               dither=Image.Dither.NONE).save(folder / 'icon.png', optimize=True)
+            sources[item_id] = hashlib.sha256(source.read_bytes()).hexdigest()
+            existing = args.output / (item_id + '.imageset') / 'icon.png'
+            if previous_sources.get(item_id) == sources[item_id] and existing.exists():
+                shutil.copyfile(existing, folder / 'icon.png')
+            else:
+                rendered += 1
+                render(source, folder / 'icon.png')
             write_json(folder / 'Contents.json', {'images': [{'filename': 'icon.png', 'idiom': 'universal', 'scale': '1x'}],
                                                   'info': {'author': 'xcode', 'version': 1}})
         size = sum(p.stat().st_size for p in catalog.rglob('*') if p.is_file())
@@ -90,8 +106,9 @@ def main():
             shutil.rmtree(args.output)
         shutil.move(str(catalog), str(args.output))
     write_json(ROOT / 'Tools/icon_report.json', report)
+    write_json(sources_path, dict(sorted(sources.items())))
     print(f'matched={len(report["matched"])}, fallback={len(report["fallback"])}, unmatched={len(report["unmatched"])}, wikiUnused={len(report["wikiUnused"])}')
-    print(f'imagesets={len(textures)}, bytes={size}, sizeMB={size / 1_000_000:.3f}, below6MB={size < 6_000_000}')
+    print(f'imagesets={len(textures)}, rendered={rendered}, bytes={size}, sizeMB={size / 1_000_000:.3f}, below6MB={size < 6_000_000}')
     print(f'originalsMoved={not (ROOT / "EndfiledPlanner/物品").exists()}')
     # 新版本物品 wiki 可能还没传图，App 里会显示占位图标，这里只提示不报错
     if report['unmatched']:
