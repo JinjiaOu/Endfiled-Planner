@@ -33,7 +33,7 @@ def write_manifest(other=OTHER):
     manifest = {'formatVersion': FORMAT_VERSION, 'dataVersion': digest,
                 'builtAt': built_at or datetime.datetime.now(datetime.timezone.utc).isoformat(timespec='seconds'),
                 'sourceCommit': meta.get('sourceCommit'), 'files': files, 'icons': icons}
-    path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+    path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + '\n', encoding='utf-8', newline='\n')
     print(f'manifest: dataVersion={digest}, builtAt={manifest["builtAt"]}, files={len(files)}, icons={len(icons)}')
 
 if __name__ == '__main__':
