@@ -57,7 +57,8 @@ def load_config():
     if not path.exists():
         raise RuntimeError('缺少 Tools/update_config.json，先复制 update_config.example.json 改好')
     cfg = json.loads(path.read_text(encoding='utf-8'))
-    cfg['endfield_data'] = Path(cfg['endfield_data']).expanduser()
+    # 相对路径按本仓库根目录算；默认解包仓库跟本仓库放在同一个文件夹下
+    cfg['endfield_data'] = (ROOT / Path(cfg.get('endfield_data', '../EndfieldData')).expanduser()).resolve()
     if not (cfg['endfield_data'] / 'TableCfg').is_dir():
         raise RuntimeError(f'找不到解包数据: {cfg["endfield_data"] / "TableCfg"}')
     return cfg

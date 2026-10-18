@@ -1,5 +1,5 @@
 {
-  "endfield_data": "D:/EndfieldData",
+  "endfield_data": "../EndfieldData",
   "skland_did": "",
   "auto_push": true,
   "remotes": ["origin", "gitee"]
