@@ -22,7 +22,8 @@ def entry(path):
 
 def write_manifest(other=OTHER):
     files = {name: entry(other / name) for name in FILES}
-    icons = {p.parent.stem: entry(p) for p in sorted((other / 'ItemIcons.xcassets').glob('*.imageset/icon.png'))}
+    # 按 id 字符串排序，不按路径排：Windows 的路径比较不分大小写，item_Ingredient_* 会排到别处
+    icons = dict(sorted((p.parent.stem, entry(p)) for p in (other / 'ItemIcons.xcassets').glob('*.imageset/icon.png')))
     # 内容指纹：文件或图标有任何变化才换版本号
     digest = hashlib.sha256(json.dumps([files, icons], sort_keys=True).encode()).hexdigest()[:16]
     meta = json.loads((other / 'datapack_meta.json').read_text(encoding='utf-8'))
