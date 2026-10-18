@@ -57,6 +57,12 @@ struct HomeView: View {
                         EndFieldBanner()
                             .padding(.horizontal)
                             .padding(.top, 20)
+
+                        // 有新游戏数据时显示，没有时不占位置
+                        if dataUpdater.showsHomeBanner {
+                            DataUpdateBanner()
+                                .padding(.horizontal)
+                        }
                         
                         featureGrid
                         

@@ -30,6 +30,14 @@ final class DataPackUpdater: ObservableObject {
         return false
     }
 
+    /// 首页横幅（DataUpdateBanner）：有新数据、下载中、待重启时显示
+    var showsHomeBanner: Bool {
+        switch state {
+        case .available, .downloading, .readyToRestart: return true
+        default: return false
+        }
+    }
+
     private static let mirrors = [
         "https://gitee.com/JinjiaOu/endfield--planner/raw/main/EndfiledPlanner/other/",
         "https://raw.githubusercontent.com/JinjiaOu/Endfiled-Planner/refs/heads/main/EndfiledPlanner/other/",

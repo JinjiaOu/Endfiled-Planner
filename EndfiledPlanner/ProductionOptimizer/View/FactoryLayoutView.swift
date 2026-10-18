@@ -359,6 +359,7 @@ struct FactoryLayoutView: View {
             .modifier(FactoryAlertsModifier(vm: vm, showClearConfirm: $showClearConfirm,
                                            pendingPreset: $pendingPreset,
                                            pendingMapSwitch: $pendingMapSwitch))
+            .modifier(OptimizerDisclaimerModifier())
         }
     }
 
