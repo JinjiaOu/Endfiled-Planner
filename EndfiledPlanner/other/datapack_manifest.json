@@ -1,0 +1,1574 @@
+{
+  "formatVersion": 1,
+  "dataVersion": "d222fc14b5a53a42",
+  "builtAt": "2026-10-18T02:02:26+00:00",
+  "sourceCommit": "8b955ea78c6f04b6e5164b75f63f46b503c5f6f2",
+  "files": {
+    "recipes.json": {
+      "sha256": "bd83007763094e5057e61500bea677a3c8f10ef0ed3bdf993bb92ed9a087478e",
+      "size": 330431
+    },
+    "items.json": {
+      "sha256": "4b940e6e37e2909bd7633e94385ecf624144fa3ea1b323d5d581b9ccfb6165aa",
+      "size": 26308
+    },
+    "devices.json": {
+      "sha256": "4c9e49dc03b20fbaca0133528ba6e4854d84bac4294cdc86a3d6bfc5f9764ed3",
+      "size": 136266
+    },
+    "fuels.json": {
+      "sha256": "39ac07dcdd4f463a5251270f3a9731dafdaa5c4b3e0d005458941b9a96ba5363",
+      "size": 954
+    },
+    "icon_fallbacks.json": {
+      "sha256": "d46ffaae32d9030859a91c5a8691c15d5096da41868d74e382da1ec9d30e4333",
+      "size": 4351
+    }
+  },
+  "icons": {
+    "item_Ingredient_flour_1": {
+      "sha256": "311e5d5942bfdcd30b808487098f25ceb17bce557d72a0c9f6e0e0466ad1f787",
+      "size": 5955
+    },
+    "item_Ingredient_oil_1": {
+      "sha256": "bf4595b4d768776b95024e69439b483dd6589ccf1d911410b04f053f0b9b75e6",
+      "size": 5239
+    },
+    "item_Ingredient_paprika_1": {
+      "sha256": "0389381ee8beadcbbf244ab6c9a4af0a3e2c86977466e2b0e923af99ad5edf3a",
+      "size": 7359
+    },
+    "item_Ingredient_starch_1": {
+      "sha256": "7099e20aeda0a72893a22e29dbaf1fc6306718904f5c58e488d11934015e8756",
+      "size": 6651
+    },
+    "item_Ingredient_sugar_1": {
+      "sha256": "907f157d4b3d256717362e434c3e440472a8c53434ebfe72249d1e5ee0950cc0",
+      "size": 4879
+    },
+    "item_activity_copper_poly": {
+      "sha256": "f84b76a348540e5e3bba58d967adbc779402f148bb22bbc0fe0b66c90d02fd58",
+      "size": 9939
+    },
+    "item_activity_copper_poly_cmpt": {
+      "sha256": "dadf4199e06c077c0823e893f2e82b6d33a8e74f6b094ed8efaa59297ccd0e0f",
+      "size": 10940
+    },
+    "item_activity_copper_poly_gas": {
+      "sha256": "528f94fd9ce971f4c201d9608f13139c8d8daa45cac8fe648755220633a8e3a3",
+      "size": 15433
+    },
+    "item_activity_copper_poly_tool": {
+      "sha256": "2bfd8e9784e7f0dce34f40b168dde2d11795d901a1b97504d724520e9e7dbbb1",
+      "size": 11645
+    },
+    "item_activity_copper_xiranite_tool": {
+      "sha256": "469fcd11e510215d16eff724052eaa50fd39a9d8366859141e318ee723eff43f",
+      "size": 8362
+    },
+    "item_activity_xiranite_bottle": {
+      "sha256": "abfed4bb18d37322fb53c929bca3888f49e379ca901e0f1a2c78d3bc65f33cb0",
+      "size": 6015
+    },
+    "item_activity_xiranite_box": {
+      "sha256": "1374e4766f1f8227b303e771da3a090542679651fb5cd8dad158e8dc1485b43b",
+      "size": 5923
+    },
+    "item_activity_xiranite_cmpt": {
+      "sha256": "33d0e83508d7752f3264e5309018ac6b25763c214f6bf13a4dfb0b33d4b5f9a9",
+      "size": 10311
+    },
+    "item_activity_xiranite_enr_bottle": {
+      "sha256": "338ad16fb7e48f74936d92bf4875a2a59d6b681ac3623ff5f8aec5fe2b502378",
+      "size": 7982
+    },
+    "item_activity_xiranite_enr_box": {
+      "sha256": "82b0dfa2c60c472629fa7fdbee2685dc1b15a9a69c336481c3060ada5716ae89",
+      "size": 11229
+    },
+    "item_activity_xiranite_enr_cmpt": {
+      "sha256": "2ea4048b3fda35835afa206d39adce92136717cf8b5151d073f4fe00acf7d507",
+      "size": 13716
+    },
+    "item_activity_xiranite_enr_hulu": {
+      "sha256": "5b0b629e91fe088f1bf90290fb626476502c4e05b94d91de6b0a72631dcfd5a2",
+      "size": 10266
+    },
+    "item_activity_xiranite_enr_lung": {
+      "sha256": "3ac68a0d0ccbac463069c68e4481d11e452bacd27905b481597b9d14a834d3b7",
+      "size": 13078
+    },
+    "item_activity_xiranite_enr_nugget": {
+      "sha256": "13ecdffa7f8bc6c7bd09e696587e312ca1923e7e1badb01954d5a6a2c05d4571",
+      "size": 12275
+    },
+    "item_activity_xiranite_enr_tool": {
+      "sha256": "132bed12515bb83eb7a976268a65fde952be5dbc6f917d7f080eda7fbb33a4b2",
+      "size": 8051
+    },
+    "item_activity_xiranite_hulu": {
+      "sha256": "334e4d910bbf7e0766b2fcdea6129636b1909e1e22c25bdbb33764502ea32158",
+      "size": 7309
+    },
+    "item_activity_xiranite_lung": {
+      "sha256": "04dea85b381d50daf230ac5df63ddcb455ea014ac9c6d9d184ce899ddf407607",
+      "size": 8333
+    },
+    "item_activity_xiranite_nugget": {
+      "sha256": "a7201e16363d1fbd58baf6b2c7eda41a7edfe8d2a0e0967855c5302e12b0cb24",
+      "size": 7659
+    },
+    "item_adventureexp": {
+      "sha256": "65781b8c26977ca3389f7f2ecc4eaa5747f43e8402be3e47ae65d0f3da50a894",
+      "size": 4233
+    },
+    "item_agfly_1_agmelee_1_moss_2_1": {
+      "sha256": "23fabdb549076d6740087213adad512ffdb7de286b2f8b1d67dafeb209ec17c9",
+      "size": 8990
+    },
+    "item_agmelee_1_moss_1_lbmob_1_1": {
+      "sha256": "0bd9bff4e3106ddeb374f2ddb02e90fb5c3eebe68499d6fa68d5ae8e77dae69b",
+      "size": 14407
+    },
+    "item_agmelee_1_sp_2_slimeml_1_1": {
+      "sha256": "82bf4e35c7d846b4b407a20f5be0f4ab5574ee6647b30969208a6e9d24e6900a",
+      "size": 9583
+    },
+    "item_agrange_1_erhound_1_sp_1_1": {
+      "sha256": "8538e93005bb2175316e9dfa4fb5c2a712881fd354fe8447d6075f6c236f2bdd",
+      "size": 11262
+    },
+    "item_agrange_1_lbshamman_bottled_1": {
+      "sha256": "e72c178b1dd71eef69d0154e00191c07893af699126131b0aafc8dc367fefe8c",
+      "size": 8560
+    },
+    "item_agrange_1_moss_2_lbmob_1_1": {
+      "sha256": "da00fc68c908f426fbd61fd6224286ca5a5fd71e241ae9bdb9e672f054a5b5fd",
+      "size": 9676
+    },
+    "item_ap": {
+      "sha256": "7b76c1305a365e017df3654b6b8c3febfc463a23e7c00a4702f6b02fc5285422",
+      "size": 7018
+    },
+    "item_arrow_chip_bomb": {
+      "sha256": "42f5b9a93042a9506df3b60e207563201e31fe984ef05a511bf47ea79a4fc985",
+      "size": 9551
+    },
+    "item_arrow_chip_frozen": {
+      "sha256": "21d42c8641cc9bf14754b6e577d0e54146b1589a72dc57f50c5595d83c5a274f",
+      "size": 11083
+    },
+    "item_arrow_chip_multiple": {
+      "sha256": "3da154d326095b575f6f77bc9db5e3d6e6cabb549ab6be548c73b69159efcb26",
+      "size": 10197
+    },
+    "item_arrow_chip_penetrate": {
+      "sha256": "db082235913aa5d4d7f0a4c9fdd34972002308b6f5b577f36d69fabe498e3f88",
+      "size": 12162
+    },
+    "item_arrow_chip_shield_breaker": {
+      "sha256": "8295dc8571cb42eb0fc8306927761e1d7b4829c5761199ec86c6578f9b43a651",
+      "size": 11084
+    },
+    "item_bottled_flower1spc_1": {
+      "sha256": "84ff70135716c3cd329efddf8e2428323edb70a168dfcebc8a6fdab35f968fe6",
+      "size": 8676
+    },
+    "item_bottled_flower1spc_2": {
+      "sha256": "f85b55470ed2c973df3ea0e636972bc050bef21bdcee76fad7c0fb88757ff700",
+      "size": 9798
+    },
+    "item_bottled_flower1spc_3": {
+      "sha256": "72a436e0f3412f689403214078ce0ffc4588553a89aaa2df29cb1584904332ab",
+      "size": 10310
+    },
+    "item_bottled_flower2spc_1": {
+      "sha256": "3fe323ecdaa6afc36fdcc77ec992cb221be285acd954d5bb5d24309314c3e5bd",
+      "size": 8854
+    },
+    "item_bottled_flower2spc_2": {
+      "sha256": "44277f81e1eb4575388134e3fba1f92d212deef059eb81f61eb3aa74953bddea",
+      "size": 9819
+    },
+    "item_bottled_flower2spc_3": {
+      "sha256": "1f830707429c727ef7ac70b91a2f6ca359714239b985aaa0d131e926f79ab85c",
+      "size": 9948
+    },
+    "item_bottled_food_1": {
+      "sha256": "017cb046415af88cb3205c63ddc05ea0d676b5b667d9e4a13bf81e17b576ed66",
+      "size": 7134
+    },
+    "item_bottled_food_2": {
+      "sha256": "63013e4c34ccc500fdb2ae0814ea53612c9e5e8228097f881816a955938285a1",
+      "size": 8164
+    },
+    "item_bottled_food_3": {
+      "sha256": "90ceb8156e3e14019a7b36c80f1766bcb919210a5ffe9438493eabf01a454ba5",
+      "size": 10402
+    },
+    "item_bottled_food_4": {
+      "sha256": "330542ae1bf3c07d432c2fbae255946eb3ccd2d1b5cd551169364c86aa55c9d4",
+      "size": 6262
+    },
+    "item_bottled_food_5": {
+      "sha256": "c346796f538125626a41db282f5a63c1b802a0c67452ebc55b7084b6f52be887",
+      "size": 7830
+    },
+    "item_bottled_grass1spc_1": {
+      "sha256": "c958e27c1f5a9030c636d2efdd951ded9a14bce4189ca137234a826bf88de004",
+      "size": 8696
+    },
+    "item_bottled_grass1spc_2": {
+      "sha256": "7dbfff2d0bf70c79c61f08f4c749a6297fef68498492666d52f45efed4015180",
+      "size": 5232
+    },
+    "item_bottled_grass2spc_1": {
+      "sha256": "aa883483af5cd3d6810fd574db939171844209614f8a47ea4c8d31a54608930d",
+      "size": 10430
+    },
+    "item_bottled_grass2spc_2": {
+      "sha256": "bc3e41fb4bbd2454ec76616bc575151ca57da3ae8f9946a21bda9e5c37b257f0",
+      "size": 10154
+    },
+    "item_bottled_insec1_1": {
+      "sha256": "c555da2878c9f6462f7a230dc3748dc3b1a2c24138e9caf2d1424b0ff39de4b5",
+      "size": 8330
+    },
+    "item_bottled_insec1_2": {
+      "sha256": "b6c4e2f87a3ff939adcdb67528de510d1191b44b0b802718ddaf14b899b98816",
+      "size": 8720
+    },
+    "item_bottled_insec2_1": {
+      "sha256": "ba8f96e1b54faab8d02b072d9d1540b12bff17577a12c29aaf8614ba66cd064c",
+      "size": 8280
+    },
+    "item_bottled_insec2_2": {
+      "sha256": "b0c402b818dbcb25ca8b41dfaf7b70b93154da538ab87c84f30eec42f20e8fe1",
+      "size": 8509
+    },
+    "item_bottled_moss_1_2_1": {
+      "sha256": "c7e6c0598d954026a09dadb8f9b6014e14acfab081e4fe193a699c53edc8d41b",
+      "size": 9100
+    },
+    "item_bottled_moss_2_animal_1": {
+      "sha256": "9f0c19f60b53ad43b2745de1fcf7208c10979808b05c39d3751790f0f38c1993",
+      "size": 9494
+    },
+    "item_bottled_rec_hp_1": {
+      "sha256": "7283f9bf9825aef0afa72c2f579c8fb9548829a7d78ee15341b6648120598802",
+      "size": 9076
+    },
+    "item_bottled_rec_hp_2": {
+      "sha256": "78a6ee8fe4776e254dcbbe393ff7c4fda91ad109884dee49a0a0c3342112f278",
+      "size": 9145
+    },
+    "item_bottled_rec_hp_3": {
+      "sha256": "2c1f8febc325658c61566b3f29c0076a22e553f2c44706f1951079c22c46a2f6",
+      "size": 13178
+    },
+    "item_bottled_rec_hp_4": {
+      "sha256": "72d6cdd0a608bf66b45451387f27f3ff241e6f220a46fdea4d810e59e4c2e8b7",
+      "size": 9438
+    },
+    "item_bottled_rec_hp_5": {
+      "sha256": "868a67cbf497de3849de432799bb085f0f2008973413e9b3d893f096c89e8660",
+      "size": 7810
+    },
+    "item_byproduct_bean_1": {
+      "sha256": "0b124c148e1c6c9531213357370859cc7a366319f31053cc7972bc48c4f3c2a8",
+      "size": 6029
+    },
+    "item_byproduct_bean_moss_1": {
+      "sha256": "a419e850c1d49504a4f019c3646806d461edf273f2451c0878cbc34133ac313e",
+      "size": 8902
+    },
+    "item_byproduct_potato_1": {
+      "sha256": "167c28df5db25b58f8308f95362d664226100b6e43d2b711b7ad6ab195b827ee",
+      "size": 7291
+    },
+    "item_byproduct_potato_moss_1": {
+      "sha256": "2b3695cb7716aec80f12db7bdba22d702e702edc8ad223e0d913c32d8fb604c2",
+      "size": 8653
+    },
+    "item_carbon_enr": {
+      "sha256": "62b49e8df7a3a23c1a94399bab6cd55829515d909b22e7ab81deb40fdf509786",
+      "size": 7246
+    },
+    "item_carbon_enr_powder": {
+      "sha256": "66c58b4977d9bd1d9c12ee7f86d913d0356fa0102fa99ee58fbea7dc8256dadf",
+      "size": 6762
+    },
+    "item_carbon_mtl": {
+      "sha256": "a538a802308d13683e2b8432c43f01cb67d78b2642d5725e4c57cd07ad4b0028",
+      "size": 8018
+    },
+    "item_carbon_powder": {
+      "sha256": "928db024d0c046caf34a162207b51a5e741cb50a62ba67613071e07abf4622d4",
+      "size": 5334
+    },
+    "item_cbp_exp": {
+      "sha256": "982bace7b7c41ffe7b352e397d5d12140f56651ec6a40e5de5380ba8dba914e2",
+      "size": 5447
+    },
+    "item_copper_bottle": {
+      "sha256": "dced1d6630d65870b8f755c59046f5a406e4d092d6dba7c9e41a75d72733bbd5",
+      "size": 5569
+    },
+    "item_copper_cmpt": {
+      "sha256": "be7a8d93beb69ed444efe890881b662863fe50d65f1a8eb711dbb2c9d37575cc",
+      "size": 11247
+    },
+    "item_copper_enr": {
+      "sha256": "54a03e2c097d64681c1092246ed930fbc4288b957a71809732c64265c12d2e10",
+      "size": 9457
+    },
+    "item_copper_enr2": {
+      "sha256": "02838cad1798311572f1e5d5ec232d0b663c03596cae3c2dc7302e3feebcfba6",
+      "size": 20457
+    },
+    "item_copper_enr2_cmpt": {
+      "sha256": "f5578d04cfd36041845375734c10947786d2b0ffd1347a476e43a5bd1a3fd3b2",
+      "size": 12724
+    },
+    "item_copper_enr_bottle": {
+      "sha256": "21213b8eedb07de2b203584eba978025a9d0bd253fb1ce7a89ea0d20e86e19d9",
+      "size": 5739
+    },
+    "item_copper_enr_cmpt": {
+      "sha256": "56e2650c2d737121173b7b80ec5fa5351b367d4c754a22932f3ce31ab12a88d5",
+      "size": 12122
+    },
+    "item_copper_jar": {
+      "sha256": "b022cf7ab06aa38c4e3f4b9f8c04d19ad5626f83747af587dd9b0988509c98bc",
+      "size": 7728
+    },
+    "item_copper_nugget": {
+      "sha256": "9a7ac3d18e03e198f2d178610fb1b51206d3ea8404910d10c0f5d4916cad5501",
+      "size": 7475
+    },
+    "item_copper_ore": {
+      "sha256": "4b4bab0e849cebfcbccf5e3180759876a2d247e1d523f99463434fc092fe7876",
+      "size": 7537
+    },
+    "item_copper_powder": {
+      "sha256": "235cd85f9e9cbb398259dee6c2b111e03323342d57b8d6b464a41d8cdf75708d",
+      "size": 7722
+    },
+    "item_corp1_animal_1": {
+      "sha256": "d286acca9bce02c74b138fdb5f52d9d683361f190423062b43fca1d279203926",
+      "size": 12452
+    },
+    "item_corp2_animal_1": {
+      "sha256": "d36b8bd3d077ce46e82846f14ed70768768eb97c7471880b950ebe8bee75c21c",
+      "size": 11016
+    },
+    "item_corp3_animal_1": {
+      "sha256": "ca87887359a87f99bfe3cc50781caec67103fe137471ae81ad98f6312cabdff7",
+      "size": 10095
+    },
+    "item_corp3_grass1_1": {
+      "sha256": "ea799ae91b701298322d267e3ec8531facd2a498e619b0e231a054e228c302a9",
+      "size": 9668
+    },
+    "item_corp4_animal_1": {
+      "sha256": "9894b2f1bb878fa708e457954d970eae3f8f7a72b0842ae85f2a0b41b4b7de4d",
+      "size": 12258
+    },
+    "item_corp4_grass2_1": {
+      "sha256": "807409a52117ad1e900f27308d4324242e96ce0489220eda9ebe9605e046c9d2",
+      "size": 10661
+    },
+    "item_corp4_spc": {
+      "sha256": "d1279634e8025b40343e8277fdd8d6d18bab16a0f3096f4f1b61412fd3a9a6b5",
+      "size": 9644
+    },
+    "item_corp_bean_1": {
+      "sha256": "bf3fcaa33e150558999dbc9a68679974a3ec2934e33f6436ce783fc1f99dc4d8",
+      "size": 6696
+    },
+    "item_corp_bean_seed_1": {
+      "sha256": "aa7559175b47355a11b4cacd40c0ff26a7683c461615cc18e5c6373eddc12061",
+      "size": 7732
+    },
+    "item_corp_cabbage_1": {
+      "sha256": "f55589e899112fd4559e187bb08227ca525abc803caa353576e56f62f42e4168",
+      "size": 9738
+    },
+    "item_corp_cabbage_seed_1": {
+      "sha256": "6ae8b32e937bab71748a996e813a9ca1492233fd17eafcbaef888cc7a831d9c9",
+      "size": 5248
+    },
+    "item_corp_canolaflower_1": {
+      "sha256": "3c70c888d280250a97bca5b31925371ed23520f858db88cabf96d9376f1b1180",
+      "size": 7854
+    },
+    "item_corp_canolaflower_seed_1": {
+      "sha256": "03678f0220cf193b37f2ae7ef2b1374ce7e9897d223a01526e957b97ba4019eb",
+      "size": 8382
+    },
+    "item_corp_mushroom_1": {
+      "sha256": "3e2ac61b8717685f5572492c47aedad7b2a146f798c28c4ad32fb377efbeff19",
+      "size": 6678
+    },
+    "item_corp_mushroom_seed_1": {
+      "sha256": "01e9960a2799ba7dc1f8f2124fa2d4c4b76cffc17ca253d56848089e1b5f98b8",
+      "size": 6942
+    },
+    "item_corp_potato_1": {
+      "sha256": "030d6ff35126d08d7ce3b2f131c536e7d6aba6d713952081d35c018d1c64632c",
+      "size": 7453
+    },
+    "item_corp_potato_seed_1": {
+      "sha256": "5d0d33e67e9d7da2faf36548ae036a397fbcb4fa21859e9b0d896de77cded953",
+      "size": 7265
+    },
+    "item_corp_strawberry_1": {
+      "sha256": "86b2092285a55857197c2fe6bd2d24fe3af40e4e090b778b217165545f305301",
+      "size": 9903
+    },
+    "item_corp_strawberry_seed_1": {
+      "sha256": "3fba163e4f820cd8915677e8f513e5661f499b8301f8bfc1d15dbc450c989ea8",
+      "size": 7185
+    },
+    "item_corp_sugarcane_1": {
+      "sha256": "e58e9a06069ceb19760a0a3bf1ab314d39fab7794a6463e6dd4c64936ff4baa0",
+      "size": 7094
+    },
+    "item_corp_sugarcane_seed_1": {
+      "sha256": "09ddc144a7419f3c115a7dc69fe10e902ed8cd5b021aae8a2f6438800583bfbc",
+      "size": 7867
+    },
+    "item_corp_tomato_1": {
+      "sha256": "52bf0d00706906595b18d4c9235634eb5f81d5b11d8405c208ed9a112b68a018",
+      "size": 9275
+    },
+    "item_corp_tomato_seed_1": {
+      "sha256": "b3e85af91e45c248fb408f64ae4b1d4375e40aef5079196139c53968bbb3f2bb",
+      "size": 7738
+    },
+    "item_corp_whitegourd_1": {
+      "sha256": "16d91790ffb4958a6a56fb7f5fafc244b5a0d370881ef021294520971c0dcf15",
+      "size": 6538
+    },
+    "item_corp_whitegourd_seed_1": {
+      "sha256": "1dd211e3943ae1b0883a3e907ae3de1fe0f43d03ef61aac6c044fa7fc5a1cb8a",
+      "size": 7481
+    },
+    "item_crystal_enr": {
+      "sha256": "d37c9b6fbe841e4b3c408c3740bd22e16427593b9d2cf50cbcbf5edd73006b4c",
+      "size": 14502
+    },
+    "item_crystal_enr_powder": {
+      "sha256": "a80f3b65081822cd26574325528506a2d7c13b6b6a11ff5c1c82f31d4936787a",
+      "size": 10743
+    },
+    "item_crystal_powder": {
+      "sha256": "bce9d83fd70472ce8645905ea575fe36b310b2191175e9381961210852756857",
+      "size": 7304
+    },
+    "item_crystal_shell": {
+      "sha256": "e7f851a81b036bf5600b166c6c54f6e7c01b462d36f1724e9b7702406025ec25",
+      "size": 6435
+    },
+    "item_device_balloon_recycle_1": {
+      "sha256": "c3857ebfaae57a581c14e5ade2947c647997067bf8353b11301346b725547611",
+      "size": 4548
+    },
+    "item_device_balloon_recycle_2": {
+      "sha256": "c45e4100782d1c98b11477cf9e4034bbf5349b7703b1606e5ae161fb14704fb3",
+      "size": 6097
+    },
+    "item_device_balloon_recycle_3": {
+      "sha256": "b0796c57d73da42abf467699b277be6d50b77a660e10b56816b47bd0673df827",
+      "size": 7673
+    },
+    "item_device_buff_snow_1": {
+      "sha256": "2fd693a29f937794a29e9c846e9aa72102e5e585d59952f8cb798cea53d325b1",
+      "size": 8087
+    },
+    "item_device_buff_snow_2": {
+      "sha256": "f918154fb8bed88349216b2e80600e7da7ffa4bda5dc06477cc440e9533687c9",
+      "size": 9422
+    },
+    "item_device_buff_snow_3": {
+      "sha256": "2642dc2af1413cb324b67b3b90162b43ed14f08992537a2b0d58411cd9ff9436",
+      "size": 10891
+    },
+    "item_device_xiranite_nexus_1": {
+      "sha256": "4a40a55b9617817c10b8a92432d3c99e6b9bb122faaece2aa0ebb8ab840dde10",
+      "size": 13637
+    },
+    "item_device_xiranite_radar_1": {
+      "sha256": "81d950eeed5fd6ce32867380d0f1357711c2737a2bf019de1f87876871fd500e",
+      "size": 7880
+    },
+    "item_dog_1_slimeml_1_1": {
+      "sha256": "eb3954f3eed434022736d5ee50fcab6bdab837e1f38494028915f8310b151c93",
+      "size": 10778
+    },
+    "item_dog_hsmob_corp_1": {
+      "sha256": "16090aef8c1482faceb216e04eba06cfcf2f38fa5f2f509f83285a267316f1c2",
+      "size": 8264
+    },
+    "item_domain_jinlong_coupon": {
+      "sha256": "752bbf4d4c6245740b51fb6791448245931a7d00fdc728c0bfc6abd20b034c7f",
+      "size": 8940
+    },
+    "item_domain_jinlong_exp": {
+      "sha256": "c08c2300bb2055fd4df6823ae0e92d06f52c5114f2ce3f42974e8c4d90742cae",
+      "size": 8584
+    },
+    "item_domain_tundra_coupon": {
+      "sha256": "dc7f05f962a250accba23dbf448e53d0ab7710fdb915ac8874400c2909be5c1a",
+      "size": 7271
+    },
+    "item_domain_tundra_exp": {
+      "sha256": "d27b3be70fc91379f282f421ac24210d2e3270f2fde26e2c95dcb9724c6d18f8",
+      "size": 8482
+    },
+    "item_drop_agdisk_1": {
+      "sha256": "bafb30fdca781f33b86112f71e2a5e421978831b5816ea6a86a4815044832b94",
+      "size": 10477
+    },
+    "item_drop_agfly_1": {
+      "sha256": "8384d804825ddcbb8b945b1c26ee259ab6d3504883797a0eeb3db2b5a70387c5",
+      "size": 10307
+    },
+    "item_drop_agmelee_1": {
+      "sha256": "c316698c519000b00d1c61c60aea624a3598cff79dc018c3f933beb739ffc725",
+      "size": 8968
+    },
+    "item_drop_agrange_1": {
+      "sha256": "f37a0a7e3e28708dd04088676c5c73b0002783f43cc46d9e9f08c0af6df3d0d0",
+      "size": 9925
+    },
+    "item_drop_agshield_1": {
+      "sha256": "c61bbc434d8d64c91a95d385d0d2a908787b58ce45ae17bcd3565661f01391f3",
+      "size": 12133
+    },
+    "item_drop_babyents_1": {
+      "sha256": "0baa3a1b53486a0854be5a033c65e8567c9e4ac2f25d1a8eaf0a8c6c707d004b",
+      "size": 13362
+    },
+    "item_drop_dog_1": {
+      "sha256": "e425df946145a3a1a81482a4299e4031564a4974eaeab8c9453c14dfd4acbfd4",
+      "size": 9501
+    },
+    "item_drop_erhound_1": {
+      "sha256": "2c22942b4e4480611792e60afa318c360b99fb45fed2d5f90187edd22fa5c1e3",
+      "size": 11167
+    },
+    "item_drop_ethillu_1": {
+      "sha256": "f493925cd317960b67b7caeacf95a74a537b22084e812c0afb06ba1a40ee7560",
+      "size": 10008
+    },
+    "item_drop_firebat_1": {
+      "sha256": "c444bc898bc49ec294bd033d1fed4b1e4f78624e73a7a2bd01a0666b3dd59630",
+      "size": 7194
+    },
+    "item_drop_hsbear_1": {
+      "sha256": "98070f4e8e0c320152dbc11bdf2f15e3e1d9965f09bed15fb9fcc2a78ba79e48",
+      "size": 8772
+    },
+    "item_drop_hscrane_1": {
+      "sha256": "87172fbd144171299d5f11e9bddf2f7c3e08bcb23fc156d4a7cf9def418ec271",
+      "size": 8614
+    },
+    "item_drop_hsfly_1": {
+      "sha256": "6e80e2eacb17d747fb5f5fc26ac296ee7efbfc5f533106fc3c7c88d642273084",
+      "size": 5600
+    },
+    "item_drop_hshog_1": {
+      "sha256": "74cd54d982a5e16266c122dc284912fbcddd2cb7a45a529c467f1d055307948a",
+      "size": 6440
+    },
+    "item_drop_hsmino_1": {
+      "sha256": "d76b3e0b5eb6766e6e86003627f3cd8cbd9d655bf8c62ea591d122e0c7185eee",
+      "size": 6257
+    },
+    "item_drop_hsmob_1": {
+      "sha256": "d481d3f4f85af9ab3513f2eebeead72ef243926f16914c06fb44f749bd06f381",
+      "size": 6559
+    },
+    "item_drop_hstiger_1": {
+      "sha256": "8771bf8a06742d0808a5e9a1dc4e024048d0a36d07b20df1dec6bbff33b152fc",
+      "size": 11855
+    },
+    "item_drop_hvybow_1": {
+      "sha256": "d1412f9dee8449f66c58e08f62da2cc84c765c80fb44409c49416ae15c9d7c95",
+      "size": 12862
+    },
+    "item_drop_jzmonk_1": {
+      "sha256": "77b799d2c4e754cda9c9d0e35c5ec62d21fa30c5defa64cc5c828a3b560ea994",
+      "size": 11755
+    },
+    "item_drop_jzogre_1": {
+      "sha256": "6fe1a6354300ea1c9cf00d2d4c4dad8a607f3f0ba1b2a6eddc11afceb2723a12",
+      "size": 10480
+    },
+    "item_drop_klbuds_1": {
+      "sha256": "d37cf5bdb53cdd77cbdacb244655e5e6ade13cba1bfa36b7be32872e3ef51b99",
+      "size": 8798
+    },
+    "item_drop_klcaps_1": {
+      "sha256": "2297c9cee40e95f7928f0bcc28ca29fa2d0eba2d73db711d2320828a18ebcd2d",
+      "size": 9362
+    },
+    "item_drop_klcreatures_1": {
+      "sha256": "413346e8152e54587fd3209e690ae1ea7abf432ecbe6b138b62aefea241befb9",
+      "size": 6647
+    },
+    "item_drop_lbmob_1": {
+      "sha256": "082f606951615293516510a2f78d1d1a8c75964160d81a50e4ed03f86a83fa53",
+      "size": 4218
+    },
+    "item_drop_lbroshan_1": {
+      "sha256": "ee1d9d7841542f03614b54b4780dfe9e50a8ea5078965e94f5710351810b6073",
+      "size": 8455
+    },
+    "item_drop_lbshamman_1": {
+      "sha256": "460bf75da7a35414086bdccdc49b4bda71af812cc5f6301219d2eac4de75542b",
+      "size": 7635
+    },
+    "item_drop_lbshield_1": {
+      "sha256": "b65bf4cb0c0c5fa7308f01fe38f28b1e1dcabff94ae2ba57863e4e65cf7f351b",
+      "size": 9329
+    },
+    "item_drop_lbtough_1": {
+      "sha256": "7dae6d5bb4c153708ba9761515778b338e8e11889908f12d7fc551ec58336664",
+      "size": 8630
+    },
+    "item_drop_mimicw_1": {
+      "sha256": "13cbcd356678ca48b3611d593eca1769d7b355c5fb8a8516c197e7135e9d306f",
+      "size": 4795
+    },
+    "item_drop_sandb_1": {
+      "sha256": "dddc54c1eacdcf546e687a97247737db0a16e14ec8eb99f27eb6f45a9bf9370f",
+      "size": 6824
+    },
+    "item_drop_slimeml_1": {
+      "sha256": "9d00fa414d3a61c7b9c7c3f04c0ef1b8851810f946d5b41fdad978e55b4b6add",
+      "size": 9299
+    },
+    "item_drop_slwood_1": {
+      "sha256": "c43887e588591e96bbae91ec50bd6945836cbd3953989130b3473a85734997b3",
+      "size": 7398
+    },
+    "item_drop_wgabyss_1": {
+      "sha256": "0e1e11e9af61dc850246101d3fb6a4db709358148664f16af4bb282851d262a7",
+      "size": 9909
+    },
+    "item_drop_wgshoal_1": {
+      "sha256": "7f954a115b614275b4b27af94e66503460ab22bb43a5e91bef98edda9dc6a2db",
+      "size": 8304
+    },
+    "item_drop_wgslime_1": {
+      "sha256": "1e82569ebfb166903b069eff32ec2215e2d41d5550f4db54189a35d6097932b0",
+      "size": 8176
+    },
+    "item_drop_wgthorns_1": {
+      "sha256": "132cf8103302199f0e567e3773a124298f970b914e013061bf956197a06b66c6",
+      "size": 11012
+    },
+    "item_equip_script_1": {
+      "sha256": "77a0158d6e40f92717759e5238141a9f64f167756ba86e1bb66fb0a6bebf6c04",
+      "size": 7335
+    },
+    "item_equip_script_2": {
+      "sha256": "b95b6cc9b2d242ebe11096ef4eb66bf5ac8bb78b53552dec06149eecf75f813f",
+      "size": 7924
+    },
+    "item_equip_script_3": {
+      "sha256": "60d7afdf12ec067bb001ad4374abe528878b0914f072be08d2b8a13ee1f6887a",
+      "size": 7358
+    },
+    "item_equip_script_4": {
+      "sha256": "dd6089d207b23a2a5f819bfeeafcee1171a7168567b43a7fab2a5942acb7ecc2",
+      "size": 10289
+    },
+    "item_equip_script_4_1": {
+      "sha256": "d293ff5d9284ba52f7697f4845ce33d95b31f47e9b70d11845efa5e56599c225",
+      "size": 10667
+    },
+    "item_equip_script_4_2": {
+      "sha256": "e3333429eaa3f3eb7da5df27bd4e476db7678f7d944be8cecb612be8310475c6",
+      "size": 10928
+    },
+    "item_equip_script_4_3": {
+      "sha256": "60d72e7b6970874b21e3d7fc64422cca7a3a67e14b5ee8207540b5a9f798ac09",
+      "size": 14433
+    },
+    "item_erhound_1_agmelee_1_moss_1_1": {
+      "sha256": "31086a4c0132e4228fe44f91abe7909cc70c550f90e5820a227b297441959813",
+      "size": 8619
+    },
+    "item_ethillu_1_wgslime_1_wgthorns_1_1": {
+      "sha256": "ea4041bbc0c18465374275f53474350a88fd40cad68a27ca8617b9cb3f454c7f",
+      "size": 8322
+    },
+    "item_fbottle_copper_acid": {
+      "sha256": "dced1d6630d65870b8f755c59046f5a406e4d092d6dba7c9e41a75d72733bbd5",
+      "size": 5569
+    },
+    "item_fbottle_copper_copper": {
+      "sha256": "dced1d6630d65870b8f755c59046f5a406e4d092d6dba7c9e41a75d72733bbd5",
+      "size": 5569
+    },
+    "item_fbottle_copper_copper_enr": {
+      "sha256": "dced1d6630d65870b8f755c59046f5a406e4d092d6dba7c9e41a75d72733bbd5",
+      "size": 5569
+    },
+    "item_fbottle_copper_grass_1": {
+      "sha256": "dced1d6630d65870b8f755c59046f5a406e4d092d6dba7c9e41a75d72733bbd5",
+      "size": 5569
+    },
+    "item_fbottle_copper_grass_2": {
+      "sha256": "dced1d6630d65870b8f755c59046f5a406e4d092d6dba7c9e41a75d72733bbd5",
+      "size": 5569
+    },
+    "item_fbottle_copper_sewage": {
+      "sha256": "dced1d6630d65870b8f755c59046f5a406e4d092d6dba7c9e41a75d72733bbd5",
+      "size": 5569
+    },
+    "item_fbottle_copper_water": {
+      "sha256": "dced1d6630d65870b8f755c59046f5a406e4d092d6dba7c9e41a75d72733bbd5",
+      "size": 5569
+    },
+    "item_fbottle_copper_xiranite": {
+      "sha256": "dced1d6630d65870b8f755c59046f5a406e4d092d6dba7c9e41a75d72733bbd5",
+      "size": 5569
+    },
+    "item_fbottle_copper_xiranite_enr": {
+      "sha256": "dced1d6630d65870b8f755c59046f5a406e4d092d6dba7c9e41a75d72733bbd5",
+      "size": 5569
+    },
+    "item_fbottle_copper_xiranite_lowpoly": {
+      "sha256": "dced1d6630d65870b8f755c59046f5a406e4d092d6dba7c9e41a75d72733bbd5",
+      "size": 5569
+    },
+    "item_fbottle_copper_xiranite_poly": {
+      "sha256": "dced1d6630d65870b8f755c59046f5a406e4d092d6dba7c9e41a75d72733bbd5",
+      "size": 5569
+    },
+    "item_fbottle_copperenr_acid": {
+      "sha256": "21213b8eedb07de2b203584eba978025a9d0bd253fb1ce7a89ea0d20e86e19d9",
+      "size": 5739
+    },
+    "item_fbottle_copperenr_copper": {
+      "sha256": "21213b8eedb07de2b203584eba978025a9d0bd253fb1ce7a89ea0d20e86e19d9",
+      "size": 5739
+    },
+    "item_fbottle_copperenr_copper_enr": {
+      "sha256": "21213b8eedb07de2b203584eba978025a9d0bd253fb1ce7a89ea0d20e86e19d9",
+      "size": 5739
+    },
+    "item_fbottle_copperenr_grass_1": {
+      "sha256": "21213b8eedb07de2b203584eba978025a9d0bd253fb1ce7a89ea0d20e86e19d9",
+      "size": 5739
+    },
+    "item_fbottle_copperenr_grass_2": {
+      "sha256": "21213b8eedb07de2b203584eba978025a9d0bd253fb1ce7a89ea0d20e86e19d9",
+      "size": 5739
+    },
+    "item_fbottle_copperenr_sewage": {
+      "sha256": "21213b8eedb07de2b203584eba978025a9d0bd253fb1ce7a89ea0d20e86e19d9",
+      "size": 5739
+    },
+    "item_fbottle_copperenr_water": {
+      "sha256": "21213b8eedb07de2b203584eba978025a9d0bd253fb1ce7a89ea0d20e86e19d9",
+      "size": 5739
+    },
+    "item_fbottle_copperenr_xiranite": {
+      "sha256": "21213b8eedb07de2b203584eba978025a9d0bd253fb1ce7a89ea0d20e86e19d9",
+      "size": 5739
+    },
+    "item_fbottle_copperenr_xiranite_enr": {
+      "sha256": "21213b8eedb07de2b203584eba978025a9d0bd253fb1ce7a89ea0d20e86e19d9",
+      "size": 5739
+    },
+    "item_fbottle_copperenr_xiranite_lowpoly": {
+      "sha256": "21213b8eedb07de2b203584eba978025a9d0bd253fb1ce7a89ea0d20e86e19d9",
+      "size": 5739
+    },
+    "item_fbottle_copperenr_xiranite_poly": {
+      "sha256": "21213b8eedb07de2b203584eba978025a9d0bd253fb1ce7a89ea0d20e86e19d9",
+      "size": 5739
+    },
+    "item_fbottle_glass_acid": {
+      "sha256": "7cab106d19a43855e784953c662af5562e25a10bb796c5aea3918fd95951bb9c",
+      "size": 5595
+    },
+    "item_fbottle_glass_copper": {
+      "sha256": "7cab106d19a43855e784953c662af5562e25a10bb796c5aea3918fd95951bb9c",
+      "size": 5595
+    },
+    "item_fbottle_glass_copper_enr": {
+      "sha256": "7cab106d19a43855e784953c662af5562e25a10bb796c5aea3918fd95951bb9c",
+      "size": 5595
+    },
+    "item_fbottle_glass_grass_1": {
+      "sha256": "7cab106d19a43855e784953c662af5562e25a10bb796c5aea3918fd95951bb9c",
+      "size": 5595
+    },
+    "item_fbottle_glass_grass_2": {
+      "sha256": "7cab106d19a43855e784953c662af5562e25a10bb796c5aea3918fd95951bb9c",
+      "size": 5595
+    },
+    "item_fbottle_glass_sewage": {
+      "sha256": "7cab106d19a43855e784953c662af5562e25a10bb796c5aea3918fd95951bb9c",
+      "size": 5595
+    },
+    "item_fbottle_glass_water": {
+      "sha256": "7cab106d19a43855e784953c662af5562e25a10bb796c5aea3918fd95951bb9c",
+      "size": 5595
+    },
+    "item_fbottle_glass_xiranite": {
+      "sha256": "7cab106d19a43855e784953c662af5562e25a10bb796c5aea3918fd95951bb9c",
+      "size": 5595
+    },
+    "item_fbottle_glass_xiranite_enr": {
+      "sha256": "7cab106d19a43855e784953c662af5562e25a10bb796c5aea3918fd95951bb9c",
+      "size": 5595
+    },
+    "item_fbottle_glass_xiranite_lowpoly": {
+      "sha256": "7cab106d19a43855e784953c662af5562e25a10bb796c5aea3918fd95951bb9c",
+      "size": 5595
+    },
+    "item_fbottle_glass_xiranite_poly": {
+      "sha256": "7cab106d19a43855e784953c662af5562e25a10bb796c5aea3918fd95951bb9c",
+      "size": 5595
+    },
+    "item_fbottle_glassenr_acid": {
+      "sha256": "c5b91ab1a5c6c6ec1ceb57b60bda84025d462449adb1c73e31818450cca40f6d",
+      "size": 5785
+    },
+    "item_fbottle_glassenr_copper": {
+      "sha256": "c5b91ab1a5c6c6ec1ceb57b60bda84025d462449adb1c73e31818450cca40f6d",
+      "size": 5785
+    },
+    "item_fbottle_glassenr_copper_enr": {
+      "sha256": "c5b91ab1a5c6c6ec1ceb57b60bda84025d462449adb1c73e31818450cca40f6d",
+      "size": 5785
+    },
+    "item_fbottle_glassenr_grass_1": {
+      "sha256": "c5b91ab1a5c6c6ec1ceb57b60bda84025d462449adb1c73e31818450cca40f6d",
+      "size": 5785
+    },
+    "item_fbottle_glassenr_grass_2": {
+      "sha256": "c5b91ab1a5c6c6ec1ceb57b60bda84025d462449adb1c73e31818450cca40f6d",
+      "size": 5785
+    },
+    "item_fbottle_glassenr_sewage": {
+      "sha256": "c5b91ab1a5c6c6ec1ceb57b60bda84025d462449adb1c73e31818450cca40f6d",
+      "size": 5785
+    },
+    "item_fbottle_glassenr_water": {
+      "sha256": "c5b91ab1a5c6c6ec1ceb57b60bda84025d462449adb1c73e31818450cca40f6d",
+      "size": 5785
+    },
+    "item_fbottle_glassenr_xiranite": {
+      "sha256": "c5b91ab1a5c6c6ec1ceb57b60bda84025d462449adb1c73e31818450cca40f6d",
+      "size": 5785
+    },
+    "item_fbottle_glassenr_xiranite_enr": {
+      "sha256": "c5b91ab1a5c6c6ec1ceb57b60bda84025d462449adb1c73e31818450cca40f6d",
+      "size": 5785
+    },
+    "item_fbottle_glassenr_xiranite_lowpoly": {
+      "sha256": "c5b91ab1a5c6c6ec1ceb57b60bda84025d462449adb1c73e31818450cca40f6d",
+      "size": 5785
+    },
+    "item_fbottle_glassenr_xiranite_poly": {
+      "sha256": "c5b91ab1a5c6c6ec1ceb57b60bda84025d462449adb1c73e31818450cca40f6d",
+      "size": 5785
+    },
+    "item_fbottle_iron_acid": {
+      "sha256": "931f13c35314849156301832bae800ec1743358294bcc52f37df75ab64971232",
+      "size": 5691
+    },
+    "item_fbottle_iron_copper": {
+      "sha256": "931f13c35314849156301832bae800ec1743358294bcc52f37df75ab64971232",
+      "size": 5691
+    },
+    "item_fbottle_iron_copper_enr": {
+      "sha256": "931f13c35314849156301832bae800ec1743358294bcc52f37df75ab64971232",
+      "size": 5691
+    },
+    "item_fbottle_iron_grass_1": {
+      "sha256": "931f13c35314849156301832bae800ec1743358294bcc52f37df75ab64971232",
+      "size": 5691
+    },
+    "item_fbottle_iron_grass_2": {
+      "sha256": "931f13c35314849156301832bae800ec1743358294bcc52f37df75ab64971232",
+      "size": 5691
+    },
+    "item_fbottle_iron_sewage": {
+      "sha256": "931f13c35314849156301832bae800ec1743358294bcc52f37df75ab64971232",
+      "size": 5691
+    },
+    "item_fbottle_iron_water": {
+      "sha256": "931f13c35314849156301832bae800ec1743358294bcc52f37df75ab64971232",
+      "size": 5691
+    },
+    "item_fbottle_iron_xiranite": {
+      "sha256": "931f13c35314849156301832bae800ec1743358294bcc52f37df75ab64971232",
+      "size": 5691
+    },
+    "item_fbottle_iron_xiranite_enr": {
+      "sha256": "931f13c35314849156301832bae800ec1743358294bcc52f37df75ab64971232",
+      "size": 5691
+    },
+    "item_fbottle_iron_xiranite_lowpoly": {
+      "sha256": "931f13c35314849156301832bae800ec1743358294bcc52f37df75ab64971232",
+      "size": 5691
+    },
+    "item_fbottle_iron_xiranite_poly": {
+      "sha256": "931f13c35314849156301832bae800ec1743358294bcc52f37df75ab64971232",
+      "size": 5691
+    },
+    "item_fbottle_ironenr_acid": {
+      "sha256": "01fc75974ffdd0fc2e105d9fcd655c942b2ce5dccb02d19d2dcb7cf1ac02430d",
+      "size": 5745
+    },
+    "item_fbottle_ironenr_copper": {
+      "sha256": "01fc75974ffdd0fc2e105d9fcd655c942b2ce5dccb02d19d2dcb7cf1ac02430d",
+      "size": 5745
+    },
+    "item_fbottle_ironenr_copper_enr": {
+      "sha256": "01fc75974ffdd0fc2e105d9fcd655c942b2ce5dccb02d19d2dcb7cf1ac02430d",
+      "size": 5745
+    },
+    "item_fbottle_ironenr_grass_1": {
+      "sha256": "01fc75974ffdd0fc2e105d9fcd655c942b2ce5dccb02d19d2dcb7cf1ac02430d",
+      "size": 5745
+    },
+    "item_fbottle_ironenr_grass_2": {
+      "sha256": "01fc75974ffdd0fc2e105d9fcd655c942b2ce5dccb02d19d2dcb7cf1ac02430d",
+      "size": 5745
+    },
+    "item_fbottle_ironenr_sewage": {
+      "sha256": "01fc75974ffdd0fc2e105d9fcd655c942b2ce5dccb02d19d2dcb7cf1ac02430d",
+      "size": 5745
+    },
+    "item_fbottle_ironenr_water": {
+      "sha256": "01fc75974ffdd0fc2e105d9fcd655c942b2ce5dccb02d19d2dcb7cf1ac02430d",
+      "size": 5745
+    },
+    "item_fbottle_ironenr_xiranite": {
+      "sha256": "01fc75974ffdd0fc2e105d9fcd655c942b2ce5dccb02d19d2dcb7cf1ac02430d",
+      "size": 5745
+    },
+    "item_fbottle_ironenr_xiranite_enr": {
+      "sha256": "01fc75974ffdd0fc2e105d9fcd655c942b2ce5dccb02d19d2dcb7cf1ac02430d",
+      "size": 5745
+    },
+    "item_fbottle_ironenr_xiranite_lowpoly": {
+      "sha256": "01fc75974ffdd0fc2e105d9fcd655c942b2ce5dccb02d19d2dcb7cf1ac02430d",
+      "size": 5745
+    },
+    "item_fbottle_ironenr_xiranite_poly": {
+      "sha256": "01fc75974ffdd0fc2e105d9fcd655c942b2ce5dccb02d19d2dcb7cf1ac02430d",
+      "size": 5745
+    },
+    "item_fbottle_xiranenr_grass_2": {
+      "sha256": "338ad16fb7e48f74936d92bf4875a2a59d6b681ac3623ff5f8aec5fe2b502378",
+      "size": 7982
+    },
+    "item_filter_core": {
+      "sha256": "ce2c0ab2c8a8d626016c615b16ce94eff822abcc82d1505dacb60b0f6572ec90",
+      "size": 7154
+    },
+    "item_firebat_1_agrange_1_1": {
+      "sha256": "03bfddd8869d9f6c00e008f7cc9dc988bac3c5227365d5aa9ae088e6ed262c5e",
+      "size": 8919
+    },
+    "item_gas_acid": {
+      "sha256": "e194125d1e33caa9b25975ddcbb02f09cc5db6cc29dfdb0d8eb227d59f2a7dff",
+      "size": 9765
+    },
+    "item_gas_copper": {
+      "sha256": "ca4352231c8a7e38157e97a777550b62d1f999ae2abec397fc70bbb393b7858a",
+      "size": 9085
+    },
+    "item_gas_copper_enr": {
+      "sha256": "49ee04a81e45136947fd786df3bb3e85c95af4c5ceeb5c2cf38bbc33f5b83481",
+      "size": 10671
+    },
+    "item_gas_copper_enr2": {
+      "sha256": "d17a90f23ef375f05c9b84227db308627f298e5921d60e1c505874f5b50e6968",
+      "size": 23329
+    },
+    "item_gas_inert": {
+      "sha256": "76f280e4a5dfe3499239391e5067c6ab816e0db7c32cddb63e46ec2f6c8302d4",
+      "size": 6953
+    },
+    "item_gas_water": {
+      "sha256": "dd485d6020741ec8cf5741a1b5769afa1f8f3c66d8b68ce16740e24600474cea",
+      "size": 8072
+    },
+    "item_gas_xiranite": {
+      "sha256": "14193b0f859c327ab395c468b916501fd73f38e806c84acff0262bb1080f6a26",
+      "size": 16666
+    },
+    "item_gas_xiranite_enr": {
+      "sha256": "eab60e8724790834b9684e67e351a2a6057acc07fb8896e917a0193ac54af375",
+      "size": 21085
+    },
+    "item_gasjar_copper_gas_acid": {
+      "sha256": "b022cf7ab06aa38c4e3f4b9f8c04d19ad5626f83747af587dd9b0988509c98bc",
+      "size": 7728
+    },
+    "item_gasjar_copper_gas_copper": {
+      "sha256": "b022cf7ab06aa38c4e3f4b9f8c04d19ad5626f83747af587dd9b0988509c98bc",
+      "size": 7728
+    },
+    "item_gasjar_copper_gas_copper_enr": {
+      "sha256": "b022cf7ab06aa38c4e3f4b9f8c04d19ad5626f83747af587dd9b0988509c98bc",
+      "size": 7728
+    },
+    "item_gasjar_copper_gas_copper_enr2": {
+      "sha256": "b022cf7ab06aa38c4e3f4b9f8c04d19ad5626f83747af587dd9b0988509c98bc",
+      "size": 7728
+    },
+    "item_gasjar_copper_gas_inert": {
+      "sha256": "b022cf7ab06aa38c4e3f4b9f8c04d19ad5626f83747af587dd9b0988509c98bc",
+      "size": 7728
+    },
+    "item_gasjar_copper_gas_water": {
+      "sha256": "b022cf7ab06aa38c4e3f4b9f8c04d19ad5626f83747af587dd9b0988509c98bc",
+      "size": 7728
+    },
+    "item_gasjar_copper_gas_xiranite": {
+      "sha256": "b022cf7ab06aa38c4e3f4b9f8c04d19ad5626f83747af587dd9b0988509c98bc",
+      "size": 7728
+    },
+    "item_gasjar_copper_gas_xiranite_enr": {
+      "sha256": "b022cf7ab06aa38c4e3f4b9f8c04d19ad5626f83747af587dd9b0988509c98bc",
+      "size": 7728
+    },
+    "item_glass_bottle": {
+      "sha256": "7cab106d19a43855e784953c662af5562e25a10bb796c5aea3918fd95951bb9c",
+      "size": 5595
+    },
+    "item_glass_cmpt": {
+      "sha256": "bb43bba2b06a4eeb20e1485a6b2516f6e4356c6c48164e93167a7824fc3947e6",
+      "size": 10578
+    },
+    "item_glass_enr_bottle": {
+      "sha256": "c5b91ab1a5c6c6ec1ceb57b60bda84025d462449adb1c73e31818450cca40f6d",
+      "size": 5785
+    },
+    "item_glass_enr_cmpt": {
+      "sha256": "9db413807d125e13f8905fb81a66988744757313aa23265dda0e5ad7c804061c",
+      "size": 10319
+    },
+    "item_gold": {
+      "sha256": "b14767de26c51b2c03acf02b4956c61cb007273ceb059bae1081537f88d8ef4c",
+      "size": 9344
+    },
+    "item_hscrane_1_hsmob_1_grass_1_1": {
+      "sha256": "2831f489aff27612c5dfba800e59a744c5de2dfbeec7dce0597645c1591e7a63",
+      "size": 17698
+    },
+    "item_hsfly_1_slimeml_1_hsmob_1_1": {
+      "sha256": "397b56f88e5b5a89e7f916957fa2a87f067cbc3105f62b2e04f97bb10ab33a73",
+      "size": 9099
+    },
+    "item_hshog_1_hsmob_1_slimeml_1_1": {
+      "sha256": "1f8d592093f15aff426e199eb6909de850d7ed4a7bcd402bcfe8e9b008a95812",
+      "size": 8401
+    },
+    "item_hsmob_1_dog_1_1": {
+      "sha256": "25ca086172aa6f19f0aa4864adb1fc15940ca065ce2cdad760834ea66ad74bd7",
+      "size": 17493
+    },
+    "item_hsmob_1_grass_2_1": {
+      "sha256": "ca14741f566d4149c0be7e8459b61f065f4d26c0e41e3ac8cc18c5b8e24dd040",
+      "size": 12354
+    },
+    "item_inn_drink_2": {
+      "sha256": "278582a8054b2e1dc615883463f18b45b7b7b6aedeb61f78604688fcfab86d48",
+      "size": 4259
+    },
+    "item_iron_bottle": {
+      "sha256": "931f13c35314849156301832bae800ec1743358294bcc52f37df75ab64971232",
+      "size": 5691
+    },
+    "item_iron_cmpt": {
+      "sha256": "c9dcd0eaf8c0590eb8ff1792426e3cb60218ffa0d95724c6dfb4aba3ed89c6f9",
+      "size": 10479
+    },
+    "item_iron_enr": {
+      "sha256": "aa05b319dca6cffb1cdf8484b4fb7a2ede39e8db1f38e3279e83ef79e1b3fdb8",
+      "size": 10652
+    },
+    "item_iron_enr_bottle": {
+      "sha256": "01fc75974ffdd0fc2e105d9fcd655c942b2ce5dccb02d19d2dcb7cf1ac02430d",
+      "size": 5745
+    },
+    "item_iron_enr_cmpt": {
+      "sha256": "19c7c7f68ace6c7193cc1a80e18f1fe11429d9a11cef43f9b8996fd808e7738f",
+      "size": 10222
+    },
+    "item_iron_enr_powder": {
+      "sha256": "511c62174bcba5ebc9db66d661e96f0fc187265c83ac608b162d5955d72a8a4e",
+      "size": 10039
+    },
+    "item_iron_nugget": {
+      "sha256": "933f4679a1e2d630c308ad0f0f6fa5e88770f427637e9521382d3fdc8c295ef9",
+      "size": 11891
+    },
+    "item_iron_ore": {
+      "sha256": "2a2375c14448036f5b97f0b08412cf206a499cd10669801743848051fc729531",
+      "size": 10016
+    },
+    "item_iron_powder": {
+      "sha256": "88b21b803378fe535bde6bac744c607feb4aebae492a72a80be4a92303d3106d",
+      "size": 7080
+    },
+    "item_jzmonk_1_hsmob_1_1": {
+      "sha256": "9b1d8b2d496fdc219b5adeeeb4d60e4687874d3e681bfb91720deeb89dc7cd0b",
+      "size": 10958
+    },
+    "item_klbuds_1_hsfly_1_1": {
+      "sha256": "b369b700440a4d8b4fcc85f64e4742e53e986e5e69fa9ffc4fc8e3fd3a2e68d0",
+      "size": 8057
+    },
+    "item_klcreatures_1_wgthorns_1_1": {
+      "sha256": "891b27cbc4b35ee215c61a0b0d902bc5cbd1b5792cda6d2c33744bd6618f1b3b",
+      "size": 9619
+    },
+    "item_lbmob_1_dog_1_moss_1_1": {
+      "sha256": "866ab44231a571a121ab8be4657962afe2426340667fe1a6d855e6f814c07898",
+      "size": 11989
+    },
+    "item_lbmob_1_lbshamman_1_sp_1_1": {
+      "sha256": "9fa5e13c0de67754ff290645a697082d495bfa8e1d561cb0864b4270fc1c1f13",
+      "size": 11702
+    },
+    "item_lbmob_1_moss_2_bottled_1": {
+      "sha256": "0b24d5b8b74bef8cda4c869dd266e5f55822cba02789ec423ca78b0b49c049d5",
+      "size": 9736
+    },
+    "item_lbshamman_1_agmelee_1_1": {
+      "sha256": "54057f1e5abfdd25df6602489a483f870e78a6f3b82b97f11c5cf475f4082187",
+      "size": 11076
+    },
+    "item_lbshield_1_slimeml_1_dog_1_1": {
+      "sha256": "b22a9ca66f44e025f7b58c0decbb235b9f37c50d4be0ead5c8d516ab7e12660f",
+      "size": 11084
+    },
+    "item_liquid_acid": {
+      "sha256": "725c2a44ab1b06e25a1da890e6f4feb42b6e626e2c6b387f31b719398cd262b5",
+      "size": 6292
+    },
+    "item_liquid_copper": {
+      "sha256": "52cd7912e7c090b9b979022d583796577e4c8b96bef22e7534cec8125c236e42",
+      "size": 5139
+    },
+    "item_liquid_copper_enr": {
+      "sha256": "2343289bf1950680e04c8cf21a4937bc4f81aea441ce41cacdac6014dbddc711",
+      "size": 5166
+    },
+    "item_liquid_plant_grass_1": {
+      "sha256": "ed0f6a36caa655b1397e7147a49b9701e8b67e7ee883c7444bc9a295249b59fc",
+      "size": 3914
+    },
+    "item_liquid_plant_grass_2": {
+      "sha256": "e1f0e03e1c5915fcb7139dbdb62707fac9172aa7f85d35cf7800e9836dab407b",
+      "size": 5284
+    },
+    "item_liquid_sewage": {
+      "sha256": "9991d89578d9c91451661a8cf00d97f0c8d09ca6b6c664f9c442ecee1a81e79d",
+      "size": 2752
+    },
+    "item_liquid_water": {
+      "sha256": "61d3748dc6005c4b96dbfb3d5c401df5ccbbcaf1a066850e9ca8c7ea2a2a84f0",
+      "size": 3944
+    },
+    "item_liquid_xiranite": {
+      "sha256": "c221bcd079966b51a313a30eba38e21980ca4b421441777efaf6c1a1f186826c",
+      "size": 17710
+    },
+    "item_liquid_xiranite_enr": {
+      "sha256": "c6592279dcbc944edc328223facf162bc55bda1339e04e3545aa5ea979a82c01",
+      "size": 24272
+    },
+    "item_liquid_xiranite_lowpoly": {
+      "sha256": "3af2ec7a8b06d307e37ce2d4baa09d0b32a5a939d05f5b859c8b2b1cf826d5b2",
+      "size": 3676
+    },
+    "item_liquid_xiranite_poly": {
+      "sha256": "75c951edbe481abc74b52266001acb1ad1be850314cdc8c31395b17efa825bde",
+      "size": 5715
+    },
+    "item_mimicw_1_moss_1_moss_2_1": {
+      "sha256": "232edd8a09b4e751f2dda73274c0decc43fa57da91462e32c63f8d177e94d706",
+      "size": 11969
+    },
+    "item_muck_feces_1": {
+      "sha256": "009813fadcd40deaa7558b49812fde620c81dae6668dba75d772cb8db9c96759",
+      "size": 8917
+    },
+    "item_muck_xiranite_1": {
+      "sha256": "1260570886104f9ad1942de8297e5676c7110983b874dd1684956e4376313254",
+      "size": 7172
+    },
+    "item_originium_enr_powder": {
+      "sha256": "9609b9eadd973128b3fc124bb003d15d40ab9054898f9b8a10c42817c88bf920",
+      "size": 10540
+    },
+    "item_originium_ore": {
+      "sha256": "a71e824ab588b27ddc661455c623bbf8e82229adfb518a71140b117c72b200ce",
+      "size": 11386
+    },
+    "item_originium_powder": {
+      "sha256": "57544f8d707032c738a70d191d56d3923667c44d1aefbbdfa95ed2045451ca0e",
+      "size": 6654
+    },
+    "item_plant_bbflower_1": {
+      "sha256": "77c92a23c3a0523af8c1474901856f2f16d149bb66c0abe3a73092e0df39ccb3",
+      "size": 9475
+    },
+    "item_plant_bbflower_powder_1": {
+      "sha256": "4418654d4a89b43dab949d4f6b49aaa8a2504f7f08b8a19e63717e0fa0b63218",
+      "size": 6388
+    },
+    "item_plant_bbflower_seed_1": {
+      "sha256": "271663a2d1a3a367cdca3e0c7d8d0d74e593be1cf4137079dbe9fee77f350521",
+      "size": 8188
+    },
+    "item_plant_crylplant_1_1": {
+      "sha256": "bede3153cafce0d57e65c75ee8c742f93ad1a4836c05b75f8cca41e0aef8eb8e",
+      "size": 8633
+    },
+    "item_plant_crylplant_1_2": {
+      "sha256": "264a927de9b31320c0173f5dae4db1f1d66c08fea858c6e125de453e6c2fe1a6",
+      "size": 10562
+    },
+    "item_plant_crylplant_1_3": {
+      "sha256": "178bd99892e9ac8f688c53d0693231c6ac8b581b95b1855fdd108ef0ad9ec73d",
+      "size": 10592
+    },
+    "item_plant_crylplant_2_1": {
+      "sha256": "20be38f2d8f2faa645af25fc56f7291160e64665406b8d519d402d8c4e0774f4",
+      "size": 9698
+    },
+    "item_plant_crylplant_2_2": {
+      "sha256": "3df85644ba9cd9b86e3aaf7e3c98e1ad7f3ebb9b42d783082d5474a3bf6e3aca",
+      "size": 8329
+    },
+    "item_plant_crylplant_2_3": {
+      "sha256": "6d980de55b83da816e92fde4d46d2b7cbb577eb83c33aaffc5fd1d226633de99",
+      "size": 6877
+    },
+    "item_plant_grass_1": {
+      "sha256": "c4ea13559c98146334767faf51326cd9d94e0446239f825a1be404659c6cd334",
+      "size": 9290
+    },
+    "item_plant_grass_2": {
+      "sha256": "248bad3898cbe6919bdba57bdae41f586316a73721ad817f96be2de206e3d86e",
+      "size": 8709
+    },
+    "item_plant_grass_powder_1": {
+      "sha256": "1523aefa03ef8fc18e064f88eee0478fa91bdeec620d499107ffc75971ba2f51",
+      "size": 8800
+    },
+    "item_plant_grass_powder_2": {
+      "sha256": "3776a54c34de10e33d50ce6a789228b088ab8a24f40fd4eebac839f72f352561",
+      "size": 8639
+    },
+    "item_plant_grass_seed_1": {
+      "sha256": "e3c5f72ace36ff9b0443420bc948b58372e773f64b28dd9baa8faa7059fff297",
+      "size": 7492
+    },
+    "item_plant_grass_seed_2": {
+      "sha256": "1d0e963a6e9dd0e041766610598564be7af480cecd79e915f2023c9c8f80134e",
+      "size": 5964
+    },
+    "item_plant_grass_spc_1": {
+      "sha256": "8285ee6ebcf8a1e1dfd39fc39450eabb98fa6e77b9d0d851387da6bda7533bf4",
+      "size": 9129
+    },
+    "item_plant_grass_spc_2": {
+      "sha256": "1e618aea96c0f0e5885f8290badf8ec88e975ca7ecb83e7f059c35308e9ae8f5",
+      "size": 8665
+    },
+    "item_plant_grass_spc_powder_1": {
+      "sha256": "f4a28230345b3b96eb019db94cca9a03e42309ba7113bd88acfa0849d5c81348",
+      "size": 9630
+    },
+    "item_plant_grass_spc_powder_2": {
+      "sha256": "f62a06b38ca92012899c48c93a5a8e08f3dc84b14ad406ed8519cf007ac2ad74",
+      "size": 8856
+    },
+    "item_plant_moss_1": {
+      "sha256": "8a7468b266cba6a065099461eb0c1bc62069dbb44c60c7424a2ac0c4e9e7a0f2",
+      "size": 14428
+    },
+    "item_plant_moss_2": {
+      "sha256": "3b586f5a9dfa488b9a66cf114d8682cb93aa6292d1b49fd42412e9fb3958459e",
+      "size": 11665
+    },
+    "item_plant_moss_3": {
+      "sha256": "2121f5d8d07605edcca8a466d37ba00e9fcd4adcfd18bd1b5570db2a04f1e48b",
+      "size": 9735
+    },
+    "item_plant_moss_enr_powder_1": {
+      "sha256": "c7559c4f9047dbd3cbba678e499312bc6445f7d600258bf937c6b330640af577",
+      "size": 8533
+    },
+    "item_plant_moss_enr_powder_2": {
+      "sha256": "4d281b1724de20eeb43adc6f8a57004600a2d5107e3624fd9216edd4bee2a3b9",
+      "size": 8303
+    },
+    "item_plant_moss_powder_1": {
+      "sha256": "83b32a1a3b0c3eee9649b5eda7f8415ae1c22bdb1a1aacf15cba4c78d7b39eaf",
+      "size": 8068
+    },
+    "item_plant_moss_powder_2": {
+      "sha256": "a6dc873d15a911465cabb710eeed1cf29909b7403cc165051cda0b1d58a91b8b",
+      "size": 9238
+    },
+    "item_plant_moss_powder_3": {
+      "sha256": "cba479373781e4b92a268547e89ec56dcb00e4db5f520f33de17dd289c874b9f",
+      "size": 5751
+    },
+    "item_plant_moss_seed_1": {
+      "sha256": "40695e1922e3c0218f3962f76aa8581c78cd2c2f519625ea7937fe3193af2fc2",
+      "size": 6524
+    },
+    "item_plant_moss_seed_2": {
+      "sha256": "4e8b4aa5606e42487a9b5ce497a7328cb791f10afca45e2e41195a20fbcae0f3",
+      "size": 7899
+    },
+    "item_plant_moss_seed_3": {
+      "sha256": "1e58f9dc966f8d7f37a7d2b97d718a0f0dfaae52af427893577fa217c63f161a",
+      "size": 6768
+    },
+    "item_plant_moss_spc_1": {
+      "sha256": "d878f310106b364f65a1effd7436b05d20ba51d5676f1fcb894ff332dc9122a5",
+      "size": 14947
+    },
+    "item_plant_moss_spc_2": {
+      "sha256": "37219c88611b1cd3ae7d45cc04703451695ae66ac5a6e301ed88c2e48b27fbbf",
+      "size": 13903
+    },
+    "item_plant_moss_spc_powder_1": {
+      "sha256": "51abd37f59e08e62c9b7ed666e6b0901a2bb4e1333801852c7c4892e4e8644a1",
+      "size": 8767
+    },
+    "item_plant_moss_spc_powder_2": {
+      "sha256": "70c259e0897a8055d476f6a6718ea12283b202cad800466bc23c37dad2fd4013",
+      "size": 8646
+    },
+    "item_plant_mushroom_1_1": {
+      "sha256": "6ebfc57c2c9d0a340a7f394aad2b8fc2f9aaa9860da8b15a88eeac38610ea762",
+      "size": 8704
+    },
+    "item_plant_mushroom_1_2": {
+      "sha256": "76f9743f32944228d5600acdd0c526c668eccf84a6c6a5b8cc2a316838d17bdf",
+      "size": 11004
+    },
+    "item_plant_mushroom_1_3": {
+      "sha256": "88d8543c7fb49c534c5f88e796057ad88cc3adf8d2edd7e83478c6a8b3f5a84f",
+      "size": 12542
+    },
+    "item_plant_mushroom_2_1": {
+      "sha256": "abcb435f8a5ab331ec0af9d2bd0f8a414172b7df20b0498e52a7e422bf8be86b",
+      "size": 11360
+    },
+    "item_plant_mushroom_2_2": {
+      "sha256": "996c17489e196b8ce33f504b228074a001ad9f2d83bdb5b51d9f28c12b6a6180",
+      "size": 9142
+    },
+    "item_plant_mushroom_2_3": {
+      "sha256": "a6a48b1e4fdb1228278dc379c3898d2d6e7b95aa1a275151bc38a616155589bb",
+      "size": 9614
+    },
+    "item_plant_sp_1": {
+      "sha256": "d43360bba10550e81e8f14134fa40e823dad62d8057ac9cc25fead76da8ece16",
+      "size": 8254
+    },
+    "item_plant_sp_2": {
+      "sha256": "e9d1afc7d4947d8c578398a6c8bbd57d9a2a825739004c4bdf0aefb98d432573",
+      "size": 10753
+    },
+    "item_plant_sp_3": {
+      "sha256": "7da5f2550b7a73bd91ae687a632bb1696cce80edb6055de8f8712ca7505be99a",
+      "size": 12171
+    },
+    "item_plant_sp_4": {
+      "sha256": "42848c90f2b7697bdae0eabeee3c4fafad502eb9411324869dca46ec0424f2b6",
+      "size": 7727
+    },
+    "item_plant_sp_seed_1": {
+      "sha256": "ea940a3605fbe3dd70f471e61e033803fb7e6c9fe04c4eeb61ae89f9a9139384",
+      "size": 11693
+    },
+    "item_plant_sp_seed_2": {
+      "sha256": "5eab3cfb35bbac5c3d7df756879c359218b912a3c5d5c57fa32d40af023e9f75",
+      "size": 14149
+    },
+    "item_plant_sp_seed_3": {
+      "sha256": "cda6f572582471b3e31382e1060dd8a0eb4051989b338abc9014b525879df6eb",
+      "size": 12455
+    },
+    "item_plant_sp_seed_4": {
+      "sha256": "d97bbf9557ba5ffc1f26d3a5db10271601811f4d1121a463b4be2579989ef604",
+      "size": 12361
+    },
+    "item_plant_spcstone_1_1": {
+      "sha256": "710b859d7d99745324fcc178ac69295a10084b30de239f0dbceba353dcc72311",
+      "size": 5864
+    },
+    "item_plant_spcstone_1_2": {
+      "sha256": "cdacbe60447ce687df3d79dedfaeeb34a1a9581734be6e6142a5391ce55e3614",
+      "size": 8620
+    },
+    "item_plant_spcstone_1_3": {
+      "sha256": "9a0b34df5a39db7e7326cb6dfac84f933b273fa8194fcc5b204731b99a7d90a5",
+      "size": 8835
+    },
+    "item_plant_spcstone_2_1": {
+      "sha256": "b88d0ff6848b0467d3cb17327ff4aca28e97f8121d608243f5a836714d0d1469",
+      "size": 9175
+    },
+    "item_plant_spcstone_2_2": {
+      "sha256": "173bbcf96b9485f91ab26f49bac4e584482543e00a1878c31e76090e9e765e54",
+      "size": 11247
+    },
+    "item_plant_spcstone_2_3": {
+      "sha256": "0f340fc0d87e882c9810047629823f43853acd861b83d768bcfed28d0bb1b821",
+      "size": 8579
+    },
+    "item_plant_tundra_insect_1": {
+      "sha256": "3ff124909731c99196680c75b4d18565a60a3e07862ede2ac963b090674e1f9d",
+      "size": 6677
+    },
+    "item_plant_tundra_insect_2": {
+      "sha256": "6b6a888a354e398fc949860145847b5c5a14764b1a63d79c276326a552cff3d0",
+      "size": 7260
+    },
+    "item_plant_tundra_wood": {
+      "sha256": "5bedaf1fe912ab8e8e763080d133361ecb32f3115cfe79c948e1449a3e2801ab",
+      "size": 8597
+    },
+    "item_proc_battery_1": {
+      "sha256": "ecb3e615819c718268a85c7fe4a4ad6f30127a79d0b199a3b9d497a8471f8707",
+      "size": 8239
+    },
+    "item_proc_battery_2": {
+      "sha256": "e09d074c2c50877ab717e138998838e8d7f1543d9557331242556a37cbb8336e",
+      "size": 8379
+    },
+    "item_proc_battery_3": {
+      "sha256": "09dd8a8e986a097815cc4f45839fc8d25b29e6a1d6235b758486b5f91ceecf09",
+      "size": 7786
+    },
+    "item_proc_battery_4": {
+      "sha256": "aa3f14f443e0554658a48c1a8c83dcb90eb028a3c6cb784e297cdb85897659cd",
+      "size": 7371
+    },
+    "item_proc_battery_5": {
+      "sha256": "17de3f0dad753e5cf6e0157d36c568b2926e98a81aaf2e154dca875f840f516c",
+      "size": 8650
+    },
+    "item_proc_bomb_1": {
+      "sha256": "c093c604e1110f2a8d7b81bb0f685d11569458de8cf08e2aef2b3926608446eb",
+      "size": 8000
+    },
+    "item_quartz_enr": {
+      "sha256": "5ad4f8040f60f1a5bc130f85eb8399eaa8aed39fa4d6b8b9088541ca5a24cd96",
+      "size": 16303
+    },
+    "item_quartz_enr_powder": {
+      "sha256": "12ca232fa03aee8819c259939f6b2485bca23d8082efb04f1b48f89f426203b4",
+      "size": 10096
+    },
+    "item_quartz_glass": {
+      "sha256": "396a3a0e11ae630775c21f263307de32a1d1c1ab2a870ce163761c7b8a37e966",
+      "size": 7237
+    },
+    "item_quartz_powder": {
+      "sha256": "ea9e7cfbed9348b6862ae46b783f13d21673abd1b3c6de326329ebd3308c3ea2",
+      "size": 7886
+    },
+    "item_quartz_sand": {
+      "sha256": "6d05fdd1f0cdf1187e8e7ca87539b114ef5c7153fa0082240dfc294b2774f66a",
+      "size": 10191
+    },
+    "item_ranch_milk_1": {
+      "sha256": "972189afa280c1aa4a159badde9df0ae1be1c7e868893ec2f3804de361589048",
+      "size": 6094
+    },
+    "item_ranch_milk_2": {
+      "sha256": "8dff66c7ce122581051b0f1292d87e767c1f914591b710d8e0e6f4e614216db7",
+      "size": 5229
+    },
+    "item_settlement_exp": {
+      "sha256": "ad545545bd3cc4a91f525f7dd0eeae5ba9ddc4c15a5e318dc3bda624a88e8cd3",
+      "size": 9668
+    },
+    "item_slimeml_1_agrange_1_moss_2_1": {
+      "sha256": "45153bfcd1203e00b66357de55b85a1576aa54c21798f0411c9d54d22652add8",
+      "size": 9603
+    },
+    "item_slimeml_1_erhound_1_agfly_1_1": {
+      "sha256": "821c0ac7b27c91664696ef4203ea61892e963430a8e8fd048657f2310e8c9e79",
+      "size": 10414
+    },
+    "item_slwood_1_hshog_1_1": {
+      "sha256": "f13a1435304fda4b5f941ec10f0d13296359258e10fe37efaadb55a3a9e19795",
+      "size": 8908
+    },
+    "item_sp_1_moss_1_agmelee_1_1": {
+      "sha256": "3ce1ffdaed7c145689a26fe763388d0e67aeca4079c51880c68adbcd1e2f61cd",
+      "size": 10373
+    },
+    "item_sp_2_moss_2_agrange_1_1": {
+      "sha256": "8a1ee44822c3948abd8d5040b624d8d9ee32946ba8dba707704c3d26940c7913",
+      "size": 12580
+    },
+    "item_spaceship_cmpt_1": {
+      "sha256": "1bf7d9acc1ccc0c94352c94a547eef3d515b3f7fb1f20ffdbb3a31b4cf84fe91",
+      "size": 9338
+    },
+    "item_spaceship_cmpt_2": {
+      "sha256": "d9f6b8c23161e66cdcfdc34423bf6c86d2a54e48a8a70df6be8fbe78523d2a2c",
+      "size": 12109
+    },
+    "item_spaceship_credit": {
+      "sha256": "dd0653087527918018c4c190967a2e5fe5fe7fb7df2e14de465d299cf3398bc8",
+      "size": 9796
+    },
+    "item_wgshoal_1_grass_1_grass_2_1": {
+      "sha256": "92b50a054106f47a52ef4453decf67d702f06cd92b0da169265d15c9e17a49a4",
+      "size": 6241
+    },
+    "item_wgslime_1_hsmob_1_grass_2_1": {
+      "sha256": "449339a345fd8311dd74736fdd73d88de846b3218723facfa8d83fdaf89a9de0",
+      "size": 8815
+    },
+    "item_wgslime_1_wgthorns_1_1": {
+      "sha256": "4d785ff4f1f43f3d1614a50e0aaf2ae5c1e5ab3e18c91f7970bbaaba702a6a16",
+      "size": 8289
+    },
+    "item_wgthorns_1_hshog_1_hsmob_1_1": {
+      "sha256": "05e674ea9cfd03a9494cbdbdb6e386a5db458156f332efc5a8d2f8b7b33acb57",
+      "size": 11432
+    },
+    "item_xiranite_enr_powder": {
+      "sha256": "5ec3a97c799274efdfecf70d06aca9d2fc36a71abe2ec046f140794d804d5622",
+      "size": 23163
+    },
+    "item_xiranite_poly": {
+      "sha256": "bbfeeeb46f2e9ad5ae989c695246e9f8ae3f3de7895e80b37f6b92aaaa812767",
+      "size": 6571
+    },
+    "item_xiranite_powder": {
+      "sha256": "4dd05c1cd5d9c7c4e8688c09ff0f4ab3ad3d6221278657802509c897ca830764",
+      "size": 21861
+    }
+  }
+}

@@ -69,18 +69,11 @@ enum BuildingParser {
     private static let hiddenDeviceIDs: Set<String> = ["power_pole_2", "power_pole_3"]
 
     static func loadAll() -> [BuildingDefinition] {
-        guard let url = Bundle.main.url(forResource: "devices", withExtension: "json") else {
-            print("未找到 devices.json")
+        guard let file = DataPackStore.decode(DevicesFile.self, resource: "devices") else {
+            print("建筑数据读取失败")
             return []
         }
-        do {
-            let data = try Data(contentsOf: url)
-            let file = try JSONDecoder().decode(DevicesFile.self, from: data)
-            return file.devices.compactMap(parseDevice)
-        } catch {
-            print("建筑数据解析失败:", error)
-            return []
-        }
+        return file.devices.compactMap(parseDevice)
     }
 
     private static func parseDevice(_ device: DeviceRecord) -> BuildingDefinition? {

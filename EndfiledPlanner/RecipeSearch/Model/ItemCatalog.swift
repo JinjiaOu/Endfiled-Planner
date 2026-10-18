@@ -16,10 +16,7 @@ struct ItemInfo: Decodable, Hashable {
 /// 中文名在这份表里唯一，名字和 itemId 可以互查
 enum ItemCatalog {
     static let all: [ItemInfo] = {
-        guard let url = Bundle.main.url(forResource: "items", withExtension: "json"),
-              let data = try? Data(contentsOf: url),
-              let items = try? JSONDecoder().decode([ItemInfo].self, from: data)
-        else {
+        guard let items = DataPackStore.decode([ItemInfo].self, resource: "items") else {
             print("未找到 items.json")
             return []
         }
@@ -51,10 +48,7 @@ enum FuelCatalog {
     private struct File: Decodable { let fuels: [FuelInfo] }
 
     static let all: [FuelInfo] = {
-        guard let url = Bundle.main.url(forResource: "fuels", withExtension: "json"),
-              let data = try? Data(contentsOf: url),
-              let file = try? JSONDecoder().decode(File.self, from: data)
-        else {
+        guard let file = DataPackStore.decode(File.self, resource: "fuels") else {
             print("未找到 fuels.json")
             return []
         }

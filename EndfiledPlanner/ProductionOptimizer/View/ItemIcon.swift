@@ -8,15 +8,16 @@ struct ItemIcon: View {
     let size: CGFloat
 
     private static let fallbacks: [String: String] = {
-        guard let url = Bundle.main.url(forResource: "icon_fallbacks", withExtension: "json"),
-              let data = try? Data(contentsOf: url) else { return [:] }
-        return (try? JSONDecoder().decode([String: String].self, from: data)) ?? [:]
+        DataPackStore.decode([String: String].self, resource: "icon_fallbacks") ?? [:]
     }()
 
-    private var assetID: String? {
+    /// 先找自己的图、再找借用的空容器图；每个 id 先看下载的数据包（DataPackStore），再看安装包
+    private var image: Image? {
         guard let item = ItemCatalog.byName[name] else { return nil }
-        if UIImage(named: item.itemId) != nil { return item.itemId }
-        if let baseID = Self.fallbacks[item.itemId], UIImage(named: baseID) != nil { return baseID }
+        for id in [item.itemId, Self.fallbacks[item.itemId]].compactMap({ $0 }) {
+            if let downloaded = DataPackStore.icon(for: id) { return Image(uiImage: downloaded) }
+            if UIImage(named: id) != nil { return Image(id) }
+        }
         return nil
     }
 
@@ -30,8 +31,8 @@ struct ItemIcon: View {
 
     var body: some View {
         Group {
-            if let assetID {
-                Image(assetID)
+            if let image {
+                image
                     .resizable()
                     .scaledToFit()
             } else {

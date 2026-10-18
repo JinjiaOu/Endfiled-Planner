@@ -16,6 +16,7 @@ struct ContentView: View {
 
 // 主页视图 - Endfield 风格
 struct HomeView: View {
+    @ObservedObject private var dataUpdater = DataPackUpdater.shared
     
     var body: some View {
         NavigationStack {
@@ -88,6 +89,12 @@ struct HomeView: View {
                         Image(systemName: "gearshape.fill")
                             .foregroundColor(Color(red: 1.0, green: 0.8, blue: 0.0))
                             .font(.system(size: 20))
+                            .overlay(alignment: .topTrailing) {
+                                // 有新数据可下载
+                                if dataUpdater.hasUpdate {
+                                    Circle().fill(Color.red).frame(width: 8, height: 8).offset(x: 2, y: -2)
+                                }
+                            }
                     }
                 }
             }

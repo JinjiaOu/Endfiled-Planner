@@ -43,24 +43,20 @@ class RecipeViewModel: ObservableObject {
     }
 
     func loadRecipes() {
-        guard let url = Bundle.main.url(forResource: "recipes", withExtension: "json") else {
+        // 下载的数据包优先，读不出来退回安装包自带的（DataPackStore）
+        guard let file = DataPackStore.decode(RecipesFile.self, resource: "recipes") else {
             print("未找到 recipes.json")
             return
         }
-        do {
-            let file = try JSONDecoder().decode(RecipesFile.self, from: Data(contentsOf: url))
-            allRecipes = file.recipes.compactMap(makeRecipe)
-            var grouped: [String: [Recipe]] = [:]
-            for recipe in allRecipes {
-                for output in recipe.outputs {
-                    grouped[output.name, default: []].append(recipe)
-                }
+        allRecipes = file.recipes.compactMap(makeRecipe)
+        var grouped: [String: [Recipe]] = [:]
+        for recipe in allRecipes {
+            for output in recipe.outputs {
+                grouped[output.name, default: []].append(recipe)
             }
-            recipes = grouped
-            print("已加载配方数量:", allRecipes.count)
-        } catch {
-            print("读取失败:", error)
         }
+        recipes = grouped
+        print("已加载配方数量:", allRecipes.count)
     }
 
     private func makeRecipe(_ record: RecipeRecord) -> Recipe? {

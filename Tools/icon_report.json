@@ -1,5 +1,10 @@
 {
   "matched": [
+    "item_Ingredient_flour_1",
+    "item_Ingredient_oil_1",
+    "item_Ingredient_paprika_1",
+    "item_Ingredient_starch_1",
+    "item_Ingredient_sugar_1",
     "item_activity_copper_poly",
     "item_activity_copper_poly_cmpt",
     "item_activity_copper_poly_gas",
@@ -28,6 +33,10 @@
     "item_bottled_rec_hp_3",
     "item_bottled_rec_hp_4",
     "item_bottled_rec_hp_5",
+    "item_byproduct_bean_1",
+    "item_byproduct_bean_moss_1",
+    "item_byproduct_potato_1",
+    "item_byproduct_potato_moss_1",
     "item_carbon_enr",
     "item_carbon_enr_powder",
     "item_carbon_mtl",
@@ -43,6 +52,24 @@
     "item_copper_nugget",
     "item_copper_ore",
     "item_copper_powder",
+    "item_corp_bean_1",
+    "item_corp_bean_seed_1",
+    "item_corp_cabbage_1",
+    "item_corp_cabbage_seed_1",
+    "item_corp_canolaflower_1",
+    "item_corp_canolaflower_seed_1",
+    "item_corp_mushroom_1",
+    "item_corp_mushroom_seed_1",
+    "item_corp_potato_1",
+    "item_corp_potato_seed_1",
+    "item_corp_strawberry_1",
+    "item_corp_strawberry_seed_1",
+    "item_corp_sugarcane_1",
+    "item_corp_sugarcane_seed_1",
+    "item_corp_tomato_1",
+    "item_corp_tomato_seed_1",
+    "item_corp_whitegourd_1",
+    "item_corp_whitegourd_seed_1",
     "item_crystal_enr",
     "item_crystal_enr_powder",
     "item_crystal_powder",
@@ -67,6 +94,7 @@
     "item_glass_cmpt",
     "item_glass_enr_bottle",
     "item_glass_enr_cmpt",
+    "item_inn_drink_2",
     "item_iron_bottle",
     "item_iron_cmpt",
     "item_iron_enr",
@@ -132,6 +160,8 @@
     "item_quartz_glass",
     "item_quartz_powder",
     "item_quartz_sand",
+    "item_ranch_milk_1",
+    "item_ranch_milk_2",
     "item_xiranite_enr_powder",
     "item_xiranite_poly",
     "item_xiranite_powder"
@@ -213,7 +243,28 @@
     "item_gasjar_copper_gas_xiranite": "item_copper_jar",
     "item_gasjar_copper_gas_xiranite_enr": "item_copper_jar"
   },
-  "unmatched": [],
+  "unmatched": [
+    {
+      "itemId": "item_inn_drink_10",
+      "name": "瓶装霞莓饮"
+    },
+    {
+      "itemId": "item_inn_drink_4",
+      "name": "瓶装脆蔗汁"
+    },
+    {
+      "itemId": "item_inn_drink_7",
+      "name": "瓶装优质兽奶"
+    },
+    {
+      "itemId": "item_ranch_fodder_1",
+      "name": "饱食饲料"
+    },
+    {
+      "itemId": "item_ranch_fodder_2",
+      "name": "双效饱食饲料"
+    }
+  ],
   "wikiUnused": [
     "枢壤仪•扩容Ⅰ型_1903.png",
     "枢壤仪•扩容Ⅱ型_1908.png"

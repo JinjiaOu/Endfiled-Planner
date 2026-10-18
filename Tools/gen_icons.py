@@ -5,7 +5,8 @@ from collections import defaultdict
 import json
 from pathlib import Path
 import shutil
-import subprocess
+
+from gen_manifest import write_manifest
 import tempfile
 from PIL import Image
 
@@ -22,8 +23,8 @@ def main():
     parser.add_argument('--originals', type=Path, default=ROOT / '素材原图/物品')
     parser.add_argument('--output', type=Path, default=ROOT / 'EndfiledPlanner/other/ItemIcons.xcassets')
     args = parser.parse_args()
-    items = json.loads(args.items.read_text())
-    aliases = json.loads((ROOT / 'Tools/icon_alias.json').read_text())
+    items = json.loads(args.items.read_text(encoding='utf-8'))
+    aliases = json.loads((ROOT / 'Tools/icon_alias.json').read_text(encoding='utf-8'))
     wiki = defaultdict(list)
     for path in sorted(args.originals.glob('*.png')):
         wiki_name, separator, number = path.stem.rpartition('_')
@@ -52,8 +53,8 @@ def main():
             used.add(source)
         else:
             report['unmatched'].append({'itemId': item_id, 'name': name})
-    table = json.loads((args.tablecfg / 'ItemTable.json').read_text())
-    texts = json.loads((args.tablecfg / 'I18nTextTable_CN.json').read_text())
+    table = json.loads((args.tablecfg / 'ItemTable.json').read_text(encoding='utf-8'))
+    texts = json.loads((args.tablecfg / 'I18nTextTable_CN.json').read_text(encoding='utf-8'))
     game_names = defaultdict(list)
     for key, row in table.items():
         if not key.startswith('sysbp_'):
@@ -74,12 +75,13 @@ def main():
         for item_id, source in sorted(textures.items()):
             folder = catalog / (item_id + '.imageset')
             folder.mkdir()
-            subprocess.run(['sips', '-Z', '192', str(source), '--out', str(folder / 'icon.png')],
-                           check=True, stdout=subprocess.DEVNULL)
+            # 长边缩到 192（原来用 macOS 的 sips，改 PIL 后 Windows 上也能跑）。
             # A 256-colour transparent palette keeps the full 192px silhouette compact.
-            with Image.open(folder / 'icon.png') as image:
-                image.convert('RGBA').quantize(colors=256, method=Image.Quantize.FASTOCTREE,
-                                               dither=Image.Dither.NONE).save(folder / 'icon.png', optimize=True)
+            with Image.open(source) as image:
+                image = image.convert('RGBA')
+                image.thumbnail((192, 192), Image.Resampling.LANCZOS)
+                image.quantize(colors=256, method=Image.Quantize.FASTOCTREE,
+                               dither=Image.Dither.NONE).save(folder / 'icon.png', optimize=True)
             write_json(folder / 'Contents.json', {'images': [{'filename': 'icon.png', 'idiom': 'universal', 'scale': '1x'}],
                                                   'info': {'author': 'xcode', 'version': 1}})
         size = sum(p.stat().st_size for p in catalog.rglob('*') if p.is_file())
@@ -91,8 +93,11 @@ def main():
     print(f'matched={len(report["matched"])}, fallback={len(report["fallback"])}, unmatched={len(report["unmatched"])}, wikiUnused={len(report["wikiUnused"])}')
     print(f'imagesets={len(textures)}, bytes={size}, sizeMB={size / 1_000_000:.3f}, below6MB={size < 6_000_000}')
     print(f'originalsMoved={not (ROOT / "EndfiledPlanner/物品").exists()}')
-    assert not report['unmatched'], report['unmatched']
+    # 新版本物品 wiki 可能还没传图，App 里会显示占位图标，这里只提示不报错
+    if report['unmatched']:
+        print('WARNING 缺图: ' + ', '.join(x['name'] for x in report['unmatched']))
     assert size < 6_000_000
+    write_manifest()
 
 if __name__ == '__main__':
     main()

@@ -3980,6 +3980,142 @@
       "sourceTable": "FactoryMachineCraftTable.json"
     },
     {
+      "id": "filling_bottled_drink_10_1",
+      "type": "machineCraft",
+      "machineId": "filling_powder_mc_1",
+      "machineName": "灌装机",
+      "formulaGroupId": "group_filling_normal",
+      "seconds": 10.0,
+      "progressRound": 10,
+      "totalProgress": 60000,
+      "sortId": 1,
+      "gasEnv": 0,
+      "gasEnvName": "",
+      "ingredients": [
+        {
+          "itemId": "item_iron_bottle",
+          "name": "蓝铁瓶",
+          "count": 1
+        },
+        {
+          "itemId": "item_corp_strawberry_1",
+          "name": "青叶莓",
+          "count": 1
+        }
+      ],
+      "outcomes": [
+        {
+          "itemId": "item_inn_drink_10",
+          "name": "瓶装霞莓饮",
+          "count": 1
+        }
+      ],
+      "primaryOutcomeName": "瓶装霞莓饮",
+      "sourceTable": "FactoryMachineCraftTable.json"
+    },
+    {
+      "id": "filling_bottled_drink_2_1",
+      "type": "machineCraft",
+      "machineId": "filling_powder_mc_1",
+      "machineName": "灌装机",
+      "formulaGroupId": "group_filling_normal",
+      "seconds": 10.0,
+      "progressRound": 10,
+      "totalProgress": 60000,
+      "sortId": 1,
+      "gasEnv": 0,
+      "gasEnvName": "",
+      "ingredients": [
+        {
+          "itemId": "item_iron_bottle",
+          "name": "蓝铁瓶",
+          "count": 1
+        },
+        {
+          "itemId": "item_ranch_milk_1",
+          "name": "兽奶",
+          "count": 1
+        }
+      ],
+      "outcomes": [
+        {
+          "itemId": "item_inn_drink_2",
+          "name": "瓶装兽奶",
+          "count": 1
+        }
+      ],
+      "primaryOutcomeName": "瓶装兽奶",
+      "sourceTable": "FactoryMachineCraftTable.json"
+    },
+    {
+      "id": "filling_bottled_drink_4_1",
+      "type": "machineCraft",
+      "machineId": "filling_powder_mc_1",
+      "machineName": "灌装机",
+      "formulaGroupId": "group_filling_normal",
+      "seconds": 10.0,
+      "progressRound": 10,
+      "totalProgress": 60000,
+      "sortId": 1,
+      "gasEnv": 0,
+      "gasEnvName": "",
+      "ingredients": [
+        {
+          "itemId": "item_iron_bottle",
+          "name": "蓝铁瓶",
+          "count": 1
+        },
+        {
+          "itemId": "item_corp_sugarcane_1",
+          "name": "脆蔗",
+          "count": 1
+        }
+      ],
+      "outcomes": [
+        {
+          "itemId": "item_inn_drink_4",
+          "name": "瓶装脆蔗汁",
+          "count": 1
+        }
+      ],
+      "primaryOutcomeName": "瓶装脆蔗汁",
+      "sourceTable": "FactoryMachineCraftTable.json"
+    },
+    {
+      "id": "filling_bottled_drink_7_1",
+      "type": "machineCraft",
+      "machineId": "filling_powder_mc_1",
+      "machineName": "灌装机",
+      "formulaGroupId": "group_filling_normal",
+      "seconds": 10.0,
+      "progressRound": 10,
+      "totalProgress": 60000,
+      "sortId": 1,
+      "gasEnv": 0,
+      "gasEnvName": "",
+      "ingredients": [
+        {
+          "itemId": "item_iron_bottle",
+          "name": "蓝铁瓶",
+          "count": 1
+        },
+        {
+          "itemId": "item_ranch_milk_2",
+          "name": "优质兽奶",
+          "count": 1
+        }
+      ],
+      "outcomes": [
+        {
+          "itemId": "item_inn_drink_7",
+          "name": "瓶装优质兽奶",
+          "count": 1
+        }
+      ],
+      "primaryOutcomeName": "瓶装优质兽奶",
+      "sourceTable": "FactoryMachineCraftTable.json"
+    },
+    {
       "id": "filling_bottled_food_1_1",
       "type": "machineCraft",
       "machineId": "filling_powder_mc_1",
@@ -7122,6 +7258,180 @@
       "sourceTable": "FactoryMachineCraftTable.json"
     },
     {
+      "id": "grinder_Ingredient_flour_1",
+      "type": "machineCraft",
+      "machineId": "grinder_1",
+      "machineName": "粉碎机",
+      "formulaGroupId": "group_grinder_normal",
+      "seconds": 2.0,
+      "progressRound": 2,
+      "totalProgress": 12000,
+      "sortId": 1,
+      "gasEnv": 0,
+      "gasEnvName": "",
+      "ingredients": [
+        {
+          "itemId": "item_plant_sp_1",
+          "name": "灰芦麦",
+          "count": 1
+        }
+      ],
+      "outcomes": [
+        {
+          "itemId": "item_Ingredient_flour_1",
+          "name": "面粉",
+          "count": 3
+        }
+      ],
+      "primaryOutcomeName": "面粉",
+      "sourceTable": "FactoryMachineCraftTable.json"
+    },
+    {
+      "id": "grinder_Ingredient_paprika_1",
+      "type": "machineCraft",
+      "machineId": "grinder_1",
+      "machineName": "粉碎机",
+      "formulaGroupId": "group_grinder_normal",
+      "seconds": 2.0,
+      "progressRound": 2,
+      "totalProgress": 12000,
+      "sortId": 1,
+      "gasEnv": 0,
+      "gasEnvName": "",
+      "ingredients": [
+        {
+          "itemId": "item_plant_sp_2",
+          "name": "苦叶椒",
+          "count": 1
+        }
+      ],
+      "outcomes": [
+        {
+          "itemId": "item_Ingredient_paprika_1",
+          "name": "辣椒粉",
+          "count": 3
+        }
+      ],
+      "primaryOutcomeName": "辣椒粉",
+      "sourceTable": "FactoryMachineCraftTable.json"
+    },
+    {
+      "id": "grinder_Ingredient_starch_1",
+      "type": "machineCraft",
+      "machineId": "grinder_1",
+      "machineName": "粉碎机",
+      "formulaGroupId": "group_grinder_normal",
+      "seconds": 2.0,
+      "progressRound": 2,
+      "totalProgress": 12000,
+      "sortId": 1,
+      "gasEnv": 0,
+      "gasEnvName": "",
+      "ingredients": [
+        {
+          "itemId": "item_corp_potato_1",
+          "name": "平薯",
+          "count": 1
+        }
+      ],
+      "outcomes": [
+        {
+          "itemId": "item_Ingredient_starch_1",
+          "name": "淀粉",
+          "count": 3
+        }
+      ],
+      "primaryOutcomeName": "淀粉",
+      "sourceTable": "FactoryMachineCraftTable.json"
+    },
+    {
+      "id": "grinder_Ingredient_sugar_1",
+      "type": "machineCraft",
+      "machineId": "grinder_1",
+      "machineName": "粉碎机",
+      "formulaGroupId": "group_grinder_normal",
+      "seconds": 2.0,
+      "progressRound": 2,
+      "totalProgress": 12000,
+      "sortId": 1,
+      "gasEnv": 0,
+      "gasEnvName": "",
+      "ingredients": [
+        {
+          "itemId": "item_corp_sugarcane_1",
+          "name": "脆蔗",
+          "count": 1
+        }
+      ],
+      "outcomes": [
+        {
+          "itemId": "item_Ingredient_sugar_1",
+          "name": "砂糖",
+          "count": 3
+        }
+      ],
+      "primaryOutcomeName": "砂糖",
+      "sourceTable": "FactoryMachineCraftTable.json"
+    },
+    {
+      "id": "grinder_byproduct_bean_moss_1",
+      "type": "machineCraft",
+      "machineId": "grinder_1",
+      "machineName": "粉碎机",
+      "formulaGroupId": "group_grinder_normal",
+      "seconds": 2.0,
+      "progressRound": 2,
+      "totalProgress": 12000,
+      "sortId": 1,
+      "gasEnv": 0,
+      "gasEnvName": "",
+      "ingredients": [
+        {
+          "itemId": "item_byproduct_bean_1",
+          "name": "球豆壳",
+          "count": 1
+        }
+      ],
+      "outcomes": [
+        {
+          "itemId": "item_byproduct_bean_moss_1",
+          "name": "球豆壳粉末",
+          "count": 3
+        }
+      ],
+      "primaryOutcomeName": "球豆壳粉末",
+      "sourceTable": "FactoryMachineCraftTable.json"
+    },
+    {
+      "id": "grinder_byproduct_potato_moss_1",
+      "type": "machineCraft",
+      "machineId": "grinder_1",
+      "machineName": "粉碎机",
+      "formulaGroupId": "group_grinder_normal",
+      "seconds": 2.0,
+      "progressRound": 2,
+      "totalProgress": 12000,
+      "sortId": 1,
+      "gasEnv": 0,
+      "gasEnvName": "",
+      "ingredients": [
+        {
+          "itemId": "item_byproduct_potato_1",
+          "name": "平薯叶",
+          "count": 1
+        }
+      ],
+      "outcomes": [
+        {
+          "itemId": "item_byproduct_potato_moss_1",
+          "name": "平薯叶粉末",
+          "count": 3
+        }
+      ],
+      "primaryOutcomeName": "平薯叶粉末",
+      "sourceTable": "FactoryMachineCraftTable.json"
+    },
+    {
       "id": "grinder_carbon_powder_1",
       "type": "machineCraft",
       "machineId": "grinder_1",
@@ -8748,6 +9058,74 @@
       "sourceTable": "FactoryMachineCraftTable.json"
     },
     {
+      "id": "pool_Ingredient_oil_1",
+      "type": "machineCraft",
+      "machineId": "mix_pool_1",
+      "machineName": "反应池",
+      "formulaGroupId": "group_mix_pool_1_liquid",
+      "seconds": 2.0,
+      "progressRound": 2,
+      "totalProgress": 12000,
+      "sortId": 1,
+      "gasEnv": 0,
+      "gasEnvName": "",
+      "ingredients": [
+        {
+          "itemId": "item_corp_canolaflower_1",
+          "name": "籽油花",
+          "count": 1
+        },
+        {
+          "itemId": "item_liquid_water",
+          "name": "清水",
+          "count": 1
+        }
+      ],
+      "outcomes": [
+        {
+          "itemId": "item_Ingredient_oil_1",
+          "name": "菜籽油",
+          "count": 1
+        }
+      ],
+      "primaryOutcomeName": "菜籽油",
+      "sourceTable": "FactoryMachineCraftTable.json"
+    },
+    {
+      "id": "pool_Ingredient_oil_1_2",
+      "type": "machineCraft",
+      "machineId": "mix_pool_2",
+      "machineName": "扩容反应池",
+      "formulaGroupId": "group_mix_pool_2_liquid",
+      "seconds": 2.0,
+      "progressRound": 2,
+      "totalProgress": 12000,
+      "sortId": 1,
+      "gasEnv": 0,
+      "gasEnvName": "",
+      "ingredients": [
+        {
+          "itemId": "item_corp_canolaflower_1",
+          "name": "籽油花",
+          "count": 1
+        },
+        {
+          "itemId": "item_liquid_water",
+          "name": "清水",
+          "count": 1
+        }
+      ],
+      "outcomes": [
+        {
+          "itemId": "item_Ingredient_oil_1",
+          "name": "菜籽油",
+          "count": 1
+        }
+      ],
+      "primaryOutcomeName": "菜籽油",
+      "sourceTable": "FactoryMachineCraftTable.json"
+    },
+    {
       "id": "pool_copper_enr_1",
       "type": "machineCraft",
       "machineId": "mix_pool_1",
@@ -9244,6 +9622,142 @@
       "sourceTable": "FactoryMachineCraftTable.json"
     },
     {
+      "id": "pool_ranch_fodder_1",
+      "type": "machineCraft",
+      "machineId": "mix_pool_1",
+      "machineName": "反应池",
+      "formulaGroupId": "group_mix_pool_1_liquid",
+      "seconds": 2.0,
+      "progressRound": 2,
+      "totalProgress": 12000,
+      "sortId": 1,
+      "gasEnv": 0,
+      "gasEnvName": "",
+      "ingredients": [
+        {
+          "itemId": "item_byproduct_potato_moss_1",
+          "name": "平薯叶粉末",
+          "count": 1
+        },
+        {
+          "itemId": "item_liquid_water",
+          "name": "清水",
+          "count": 1
+        }
+      ],
+      "outcomes": [
+        {
+          "itemId": "item_ranch_fodder_1",
+          "name": "饱食饲料",
+          "count": 1
+        }
+      ],
+      "primaryOutcomeName": "饱食饲料",
+      "sourceTable": "FactoryMachineCraftTable.json"
+    },
+    {
+      "id": "pool_ranch_fodder_1_2",
+      "type": "machineCraft",
+      "machineId": "mix_pool_2",
+      "machineName": "扩容反应池",
+      "formulaGroupId": "group_mix_pool_2_liquid",
+      "seconds": 2.0,
+      "progressRound": 2,
+      "totalProgress": 12000,
+      "sortId": 1,
+      "gasEnv": 0,
+      "gasEnvName": "",
+      "ingredients": [
+        {
+          "itemId": "item_byproduct_potato_moss_1",
+          "name": "平薯叶粉末",
+          "count": 1
+        },
+        {
+          "itemId": "item_liquid_water",
+          "name": "清水",
+          "count": 1
+        }
+      ],
+      "outcomes": [
+        {
+          "itemId": "item_ranch_fodder_1",
+          "name": "饱食饲料",
+          "count": 1
+        }
+      ],
+      "primaryOutcomeName": "饱食饲料",
+      "sourceTable": "FactoryMachineCraftTable.json"
+    },
+    {
+      "id": "pool_ranch_fodder_2",
+      "type": "machineCraft",
+      "machineId": "mix_pool_1",
+      "machineName": "反应池",
+      "formulaGroupId": "group_mix_pool_1_liquid",
+      "seconds": 2.0,
+      "progressRound": 2,
+      "totalProgress": 12000,
+      "sortId": 1,
+      "gasEnv": 0,
+      "gasEnvName": "",
+      "ingredients": [
+        {
+          "itemId": "item_byproduct_bean_moss_1",
+          "name": "球豆壳粉末",
+          "count": 1
+        },
+        {
+          "itemId": "item_liquid_water",
+          "name": "清水",
+          "count": 1
+        }
+      ],
+      "outcomes": [
+        {
+          "itemId": "item_ranch_fodder_2",
+          "name": "双效饱食饲料",
+          "count": 1
+        }
+      ],
+      "primaryOutcomeName": "双效饱食饲料",
+      "sourceTable": "FactoryMachineCraftTable.json"
+    },
+    {
+      "id": "pool_ranch_fodder_2_2",
+      "type": "machineCraft",
+      "machineId": "mix_pool_2",
+      "machineName": "扩容反应池",
+      "formulaGroupId": "group_mix_pool_2_liquid",
+      "seconds": 2.0,
+      "progressRound": 2,
+      "totalProgress": 12000,
+      "sortId": 1,
+      "gasEnv": 0,
+      "gasEnvName": "",
+      "ingredients": [
+        {
+          "itemId": "item_byproduct_bean_moss_1",
+          "name": "球豆壳粉末",
+          "count": 1
+        },
+        {
+          "itemId": "item_liquid_water",
+          "name": "清水",
+          "count": 1
+        }
+      ],
+      "outcomes": [
+        {
+          "itemId": "item_ranch_fodder_2",
+          "name": "双效饱食饲料",
+          "count": 1
+        }
+      ],
+      "primaryOutcomeName": "双效饱食饲料",
+      "sourceTable": "FactoryMachineCraftTable.json"
+    },
+    {
       "id": "pool_xiranite_poly_1",
       "type": "machineCraft",
       "machineId": "mix_pool_1",
@@ -9521,6 +10035,93 @@
       "sourceTable": "FactoryMachineCraftTable.json"
     },
     {
+      "id": "seedcollector_plant_bean_1",
+      "type": "machineCraft",
+      "machineId": "seedcollector_1",
+      "machineName": "采种机",
+      "formulaGroupId": "group_seedcollector_normal",
+      "seconds": 2.0,
+      "progressRound": 2,
+      "totalProgress": 12000,
+      "sortId": 15,
+      "gasEnv": 0,
+      "gasEnvName": "",
+      "ingredients": [
+        {
+          "itemId": "item_corp_bean_1",
+          "name": "球豆",
+          "count": 1
+        }
+      ],
+      "outcomes": [
+        {
+          "itemId": "item_corp_bean_seed_1",
+          "name": "球豆种子",
+          "count": 2
+        }
+      ],
+      "primaryOutcomeName": "球豆种子",
+      "sourceTable": "FactoryMachineCraftTable.json"
+    },
+    {
+      "id": "seedcollector_plant_cabbage_1",
+      "type": "machineCraft",
+      "machineId": "seedcollector_1",
+      "machineName": "采种机",
+      "formulaGroupId": "group_seedcollector_normal",
+      "seconds": 2.0,
+      "progressRound": 2,
+      "totalProgress": 12000,
+      "sortId": 13,
+      "gasEnv": 0,
+      "gasEnvName": "",
+      "ingredients": [
+        {
+          "itemId": "item_corp_cabbage_1",
+          "name": "青菜",
+          "count": 1
+        }
+      ],
+      "outcomes": [
+        {
+          "itemId": "item_corp_cabbage_seed_1",
+          "name": "青菜种子",
+          "count": 2
+        }
+      ],
+      "primaryOutcomeName": "青菜种子",
+      "sourceTable": "FactoryMachineCraftTable.json"
+    },
+    {
+      "id": "seedcollector_plant_canolaflower_1",
+      "type": "machineCraft",
+      "machineId": "seedcollector_1",
+      "machineName": "采种机",
+      "formulaGroupId": "group_seedcollector_normal",
+      "seconds": 2.0,
+      "progressRound": 2,
+      "totalProgress": 12000,
+      "sortId": 19,
+      "gasEnv": 0,
+      "gasEnvName": "",
+      "ingredients": [
+        {
+          "itemId": "item_corp_canolaflower_1",
+          "name": "籽油花",
+          "count": 1
+        }
+      ],
+      "outcomes": [
+        {
+          "itemId": "item_corp_canolaflower_seed_1",
+          "name": "籽油花种子",
+          "count": 2
+        }
+      ],
+      "primaryOutcomeName": "籽油花种子",
+      "sourceTable": "FactoryMachineCraftTable.json"
+    },
+    {
       "id": "seedcollector_plant_grass_1_1",
       "type": "machineCraft",
       "machineId": "seedcollector_1",
@@ -9666,6 +10267,64 @@
       "sourceTable": "FactoryMachineCraftTable.json"
     },
     {
+      "id": "seedcollector_plant_mushroom_1",
+      "type": "machineCraft",
+      "machineId": "seedcollector_1",
+      "machineName": "采种机",
+      "formulaGroupId": "group_seedcollector_normal",
+      "seconds": 2.0,
+      "progressRound": 2,
+      "totalProgress": 12000,
+      "sortId": 16,
+      "gasEnv": 0,
+      "gasEnvName": "",
+      "ingredients": [
+        {
+          "itemId": "item_corp_mushroom_1",
+          "name": "多味菇",
+          "count": 1
+        }
+      ],
+      "outcomes": [
+        {
+          "itemId": "item_corp_mushroom_seed_1",
+          "name": "多味菇孢子",
+          "count": 2
+        }
+      ],
+      "primaryOutcomeName": "多味菇孢子",
+      "sourceTable": "FactoryMachineCraftTable.json"
+    },
+    {
+      "id": "seedcollector_plant_potato_1",
+      "type": "machineCraft",
+      "machineId": "seedcollector_1",
+      "machineName": "采种机",
+      "formulaGroupId": "group_seedcollector_normal",
+      "seconds": 2.0,
+      "progressRound": 2,
+      "totalProgress": 12000,
+      "sortId": 11,
+      "gasEnv": 0,
+      "gasEnvName": "",
+      "ingredients": [
+        {
+          "itemId": "item_corp_potato_1",
+          "name": "平薯",
+          "count": 1
+        }
+      ],
+      "outcomes": [
+        {
+          "itemId": "item_corp_potato_seed_1",
+          "name": "平薯块茎",
+          "count": 2
+        }
+      ],
+      "primaryOutcomeName": "平薯块茎",
+      "sourceTable": "FactoryMachineCraftTable.json"
+    },
+    {
       "id": "seedcollector_plant_sp_1",
       "type": "machineCraft",
       "machineId": "seedcollector_1",
@@ -9779,6 +10438,122 @@
         }
       ],
       "primaryOutcomeName": "金石稻种子",
+      "sourceTable": "FactoryMachineCraftTable.json"
+    },
+    {
+      "id": "seedcollector_plant_strawberry_1",
+      "type": "machineCraft",
+      "machineId": "seedcollector_1",
+      "machineName": "采种机",
+      "formulaGroupId": "group_seedcollector_normal",
+      "seconds": 2.0,
+      "progressRound": 2,
+      "totalProgress": 12000,
+      "sortId": 17,
+      "gasEnv": 0,
+      "gasEnvName": "",
+      "ingredients": [
+        {
+          "itemId": "item_corp_strawberry_1",
+          "name": "青叶莓",
+          "count": 1
+        }
+      ],
+      "outcomes": [
+        {
+          "itemId": "item_corp_strawberry_seed_1",
+          "name": "青叶莓种子",
+          "count": 2
+        }
+      ],
+      "primaryOutcomeName": "青叶莓种子",
+      "sourceTable": "FactoryMachineCraftTable.json"
+    },
+    {
+      "id": "seedcollector_plant_sugarcane_1",
+      "type": "machineCraft",
+      "machineId": "seedcollector_1",
+      "machineName": "采种机",
+      "formulaGroupId": "group_seedcollector_normal",
+      "seconds": 2.0,
+      "progressRound": 2,
+      "totalProgress": 12000,
+      "sortId": 14,
+      "gasEnv": 0,
+      "gasEnvName": "",
+      "ingredients": [
+        {
+          "itemId": "item_corp_sugarcane_1",
+          "name": "脆蔗",
+          "count": 1
+        }
+      ],
+      "outcomes": [
+        {
+          "itemId": "item_corp_sugarcane_seed_1",
+          "name": "脆蔗种子",
+          "count": 2
+        }
+      ],
+      "primaryOutcomeName": "脆蔗种子",
+      "sourceTable": "FactoryMachineCraftTable.json"
+    },
+    {
+      "id": "seedcollector_plant_tomato_1",
+      "type": "machineCraft",
+      "machineId": "seedcollector_1",
+      "machineName": "采种机",
+      "formulaGroupId": "group_seedcollector_normal",
+      "seconds": 2.0,
+      "progressRound": 2,
+      "totalProgress": 12000,
+      "sortId": 12,
+      "gasEnv": 0,
+      "gasEnvName": "",
+      "ingredients": [
+        {
+          "itemId": "item_corp_tomato_1",
+          "name": "茄果",
+          "count": 1
+        }
+      ],
+      "outcomes": [
+        {
+          "itemId": "item_corp_tomato_seed_1",
+          "name": "茄果种子",
+          "count": 2
+        }
+      ],
+      "primaryOutcomeName": "茄果种子",
+      "sourceTable": "FactoryMachineCraftTable.json"
+    },
+    {
+      "id": "seedcollector_plant_whitegourd_1",
+      "type": "machineCraft",
+      "machineId": "seedcollector_1",
+      "machineName": "采种机",
+      "formulaGroupId": "group_seedcollector_normal",
+      "seconds": 2.0,
+      "progressRound": 2,
+      "totalProgress": 12000,
+      "sortId": 18,
+      "gasEnv": 0,
+      "gasEnvName": "",
+      "ingredients": [
+        {
+          "itemId": "item_corp_whitegourd_1",
+          "name": "白瓜",
+          "count": 1
+        }
+      ],
+      "outcomes": [
+        {
+          "itemId": "item_corp_whitegourd_seed_1",
+          "name": "白瓜种子",
+          "count": 2
+        }
+      ],
+      "primaryOutcomeName": "白瓜种子",
       "sourceTable": "FactoryMachineCraftTable.json"
     },
     {

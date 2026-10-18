@@ -1,1 +1,4 @@
 .DS_Store
+__pycache__/
+Tools/update_config.json
+Tools/update_logs/

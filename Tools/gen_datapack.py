@@ -6,7 +6,11 @@ import json
 from pathlib import Path
 import subprocess
 
-OVERRIDES = {"pump_1": {"keepRecipeIds": ["pump_1:0"]}, "excludedDevices": ["sp_sub_hub_1"]}
+from gen_manifest import write_manifest
+
+OVERRIDES = {"pump_1": {"keepRecipeIds": ["pump_1:0"]}, "excludedDevices": ["sp_sub_hub_1"],
+             # 1.6 的田块（种植地）没有物流口，靠自动收获进仓库，规划里用不上（用户 2026-10-17 定）
+             "excludedCategories": ["soil"]}
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_TABLECFG = Path('/Users/owen/Desktop/Project/EndfieldData/TableCfg')
 ENV_NAMES = {0: '', 1: '稳定环境', 2: '潮湿环境', 3: '酸性环境', 4: '息壤环境'}
@@ -73,7 +77,7 @@ def generate(tablecfg):
                     recipes.append(recipe)
     recipes.sort(key=lambda x: x['id'])
     categories = [{'id': k, 'name': name(v['name']), 'priority': v['priority']}
-                  for k, v in load('FactoryQuickBarTypeTable').items()]
+                  for k, v in load('FactoryQuickBarTypeTable').items() if k not in OVERRIDES['excludedCategories']]
     categories.append({'id': 'hub', 'name': '核心', 'priority': 101})
     categories.sort(key=lambda x: (-x['priority'], x['id']))
     category_names = {x['id']: x['name'] for x in categories}
@@ -159,12 +163,12 @@ def main():
     args.output.mkdir(parents=True, exist_ok=True)
     # 存档按配方 ID 记：跟覆盖前的 recipes.json 对比，ID 消失或内容变化都要人工确认
     previous_recipes_path = args.output / 'recipes.json'
-    baseline = json.loads(previous_recipes_path.read_text())['recipes'] if previous_recipes_path.exists() else []
+    baseline = json.loads(previous_recipes_path.read_text(encoding='utf-8'))['recipes'] if previous_recipes_path.exists() else []
     commit = subprocess.check_output(['git', '-C', str(args.tablecfg), 'rev-parse', 'HEAD'], text=True).strip()
     meta_path = args.output / 'datapack_meta.json'
     # Preserve generation time when contents and source commit are unchanged.
-    unchanged = all((args.output / file).exists() and json.loads((args.output / file).read_text()) == value for file, value in pack.items())
-    previous = json.loads(meta_path.read_text()) if meta_path.exists() else {}
+    unchanged = all((args.output / file).exists() and json.loads((args.output / file).read_text(encoding='utf-8')) == value for file, value in pack.items())
+    previous = json.loads(meta_path.read_text(encoding='utf-8')) if meta_path.exists() else {}
     timestamp = previous.get('generatedAt') if unchanged and previous.get('sourceCommit') == commit else None
     pack['datapack_meta.json'] = {'schemaVersion': 1, 'sourceCommit': commit,
                                  'generatedAt': timestamp or datetime.datetime.now(datetime.timezone.utc).isoformat(timespec='seconds')}
@@ -183,9 +187,11 @@ def main():
         print('WARNING: 有配方 ID 消失，存档里选了这些配方的建筑读档后会变成未设置')
     devices = {d['id']: d for d in pack['devices.json']['devices']}
     assert 'sp_hub_1' in devices and 'sp_sub_hub_1' not in devices
+    assert not any(d['categoryId'] == 'soil' for d in devices.values())
     assert devices['power_station_1']['powerGenerate'] == 150 and devices['sp_hub_1']['powerGenerate'] == 200
     print('devices: sp_hub_1=true, sp_sub_hub_1=false, power_station_1.powerGenerate=150, sp_hub_1.powerGenerate=200')
     print(f'recipes={len(new)}, items={len(pack["items.json"])}, devices={len(devices)}, deterministic=true')
+    write_manifest()
 
 if __name__ == '__main__':
     main()
