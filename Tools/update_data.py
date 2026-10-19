@@ -6,7 +6,8 @@ datapack_manifest.json）→ 安全检查 → 没问题就提交并推送到 Git
 推送到 main 就等于把数据发给了 App 用户（App 内更新，PLAN.md M5）。
 
 安全检查：只有"只增不减"的更新（加配方、加物品、加图标）才自动推送。配方/物品/建筑/燃料有删除或改动、
-出现新建筑或新分类时停下，改动留在工作区等人看；下次运行发现工作区不干净也会直接停下。
+出现新建筑或新分类时停下，改动留在工作区等人看。上次中途断掉留下的数据改动，下次运行会先照同样规则
+检查，没问题就补推送；有问题或有数据目录以外的改动时继续停下。
 
 配置：复制 Tools/update_config.example.json 为 Tools/update_config.json（不进仓库）后填写。
 退出码：0 没更新或已推送；2 停下等人确认；1 出错。
@@ -40,17 +41,18 @@ def log(*parts):
 class Stop(Exception):
     """停下等人确认（退出码 2）"""
 
-def run(args, cwd=ROOT, check=True):
+def run(args, cwd=ROOT, check=True, strip=True):
     # 子进程强制 UTF-8：中文 Windows 默认编码是 GBK
     env = {**os.environ, 'PYTHONUTF8': '1', 'PYTHONIOENCODING': 'utf-8'}
     result = subprocess.run(args, cwd=cwd, env=env, capture_output=True, text=True, encoding='utf-8', errors='replace')
-    output = (result.stdout + result.stderr).strip()
+    output = result.stdout + result.stderr
+    output = output.strip() if strip else output
     if check and result.returncode != 0:
         raise RuntimeError(f'命令失败: {" ".join(map(str, args))}\n{output}')
     return output
 
-def git(*args, cwd=ROOT, check=True):
-    return run(['git', '-c', 'core.quotepath=false', *args], cwd=cwd, check=check)
+def git(*args, cwd=ROOT, check=True, strip=True):
+    return run(['git', '-c', 'core.quotepath=false', *args], cwd=cwd, check=check, strip=strip)
 
 def load_config():
     path = TOOLS / 'update_config.json'
@@ -129,14 +131,47 @@ def missing_icon_names():
     return [i['name'] for i in items
             if '（已盛装' not in i['name'] and i['name'] not in have and aliases.get(i['name']) not in have]
 
+def changed_paths():
+    """工作区里有改动的路径（含未跟踪文件）"""
+    # -z：路径不加引号、不转义；不能 strip，第一条开头的空格是状态位
+    entries = git('status', '--porcelain', '-z', '--untracked-files=all', strip=False).split('\0')
+    return [entry[3:] for entry in entries if len(entry) > 3]
+
+def publish(cfg, summary, problems, data_commit):
+    """检查通过就提交并推送；有问题或没开自动推送时停下（Stop）"""
+    for line in summary:
+        log('·', line)
+    if problems:
+        raise Stop('有需要确认的变化，没有推送：\n' + '\n'.join('！' + p for p in problems))
+    if not cfg.get('auto_push', True):
+        raise Stop('auto_push 关着，没有推送')
+    git('add', '--', *COMMIT_PATHS)
+    message = f'Data update from EndfieldData {data_commit[:7]}\n\n' + '\n'.join(summary)
+    git('commit', '-m', message)
+    for remote in cfg.get('remotes', ['origin', 'gitee']):
+        log(f'推送 {remote}…', git('push', remote, 'HEAD:main'))
+    log('已推送，App 用户可以在设置里更新到这份数据')
+
+def resume_leftover(cfg, data_dir):
+    """上次运行中途断了（关窗口、断网、重启）留下的改动：只在数据/图标目录里就照常检查，
+    只增不减就先推送掉再继续；有别的文件或需要确认的变化时停下"""
+    paths = changed_paths()
+    if not paths:
+        return
+    outside = [p for p in paths if not any(p == c or p.startswith(c + '/') for c in COMMIT_PATHS)]
+    if outside:
+        raise Stop('工作区有数据目录以外的改动，处理完再跑：\n' + '\n'.join(outside))
+    log('发现上次没推送完的数据改动，先检查：')
+    summary, problems = check_changes({name: head_json(name) for name in DATA_FILES})
+    publish(cfg, summary, problems, git('rev-parse', 'HEAD', cwd=data_dir))
+
 def main():
     log('=' * 60)
     log('开始', datetime.datetime.now().isoformat(timespec='seconds'))
     cfg = load_config()
     data_dir = cfg['endfield_data']
 
-    if git('status', '--porcelain'):
-        raise Stop('工作区有没提交的改动（多半是上次停下等确认的更新），处理完再跑：\n' + git('status', '--short'))
+    resume_leftover(cfg, data_dir)
 
     log('拉取本仓库…', git('pull', '--ff-only', 'origin', 'main'))
     old_commit = git('rev-parse', 'HEAD', cwd=data_dir)
@@ -166,19 +201,7 @@ def main():
     summary, problems = check_changes(before)
     if still_missing:
         summary.append('暂时没图（显示占位图）：' + '、'.join(still_missing))
-    for line in summary:
-        log('·', line)
-    if problems:
-        raise Stop('有需要确认的变化，没有推送：\n' + '\n'.join('！' + p for p in problems))
-    if not cfg.get('auto_push', True):
-        raise Stop('auto_push 关着，没有推送')
-
-    git('add', '--', *COMMIT_PATHS)
-    message = f'Data update from EndfieldData {new_commit[:7]}\n\n' + '\n'.join(summary)
-    git('commit', '-m', message)
-    for remote in cfg.get('remotes', ['origin', 'gitee']):
-        log(f'推送 {remote}…', git('push', remote, 'HEAD:main'))
-    log('已推送，App 用户可以在设置里更新到这份数据')
+    publish(cfg, summary, problems, new_commit)
     return 0
 
 if __name__ == '__main__':
