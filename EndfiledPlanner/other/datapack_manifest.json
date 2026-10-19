@@ -1,7 +1,7 @@
 {
   "formatVersion": 1,
-  "dataVersion": "d222fc14b5a53a42",
-  "builtAt": "2026-10-18T02:02:26+00:00",
+  "dataVersion": "23dcbfe95c9f82a7",
+  "builtAt": "2026-10-19T04:21:32+00:00",
   "sourceCommit": "8b955ea78c6f04b6e5164b75f63f46b503c5f6f2",
   "files": {
     "recipes.json": {
@@ -1086,9 +1086,21 @@
       "sha256": "ca14741f566d4149c0be7e8459b61f065f4d26c0e41e3ac8cc18c5b8e24dd040",
       "size": 12354
     },
+    "item_inn_drink_10": {
+      "sha256": "52515e038a10f5dbc328c11b8ec676c4970f4a14a8f54a689abbd9dcc8ef6691",
+      "size": 5751
+    },
     "item_inn_drink_2": {
       "sha256": "278582a8054b2e1dc615883463f18b45b7b7b6aedeb61f78604688fcfab86d48",
       "size": 4259
+    },
+    "item_inn_drink_4": {
+      "sha256": "81d0a424da549143fcb9a93c551bc3eea187129aaa589dc2040b536ba8c9c812",
+      "size": 6836
+    },
+    "item_inn_drink_7": {
+      "sha256": "141cf4f9979e4fee3d311fef86f0753f19532a939aa017159cb25806e4a9a506",
+      "size": 5660
     },
     "item_iron_bottle": {
       "sha256": "931f13c35314849156301832bae800ec1743358294bcc52f37df75ab64971232",
@@ -1497,6 +1509,14 @@
     "item_quartz_sand": {
       "sha256": "6d05fdd1f0cdf1187e8e7ca87539b114ef5c7153fa0082240dfc294b2774f66a",
       "size": 10191
+    },
+    "item_ranch_fodder_1": {
+      "sha256": "06338c3087460e4edf638074df234e89c76f6722b4384676c658a348a24cd7e8",
+      "size": 5843
+    },
+    "item_ranch_fodder_2": {
+      "sha256": "1e856c26e76e09172bc7864d2ca7b9121e52a209e7500478c24ac01f51804f37",
+      "size": 6082
     },
     "item_ranch_milk_1": {
       "sha256": "972189afa280c1aa4a159badde9df0ae1be1c7e868893ec2f3804de361589048",
