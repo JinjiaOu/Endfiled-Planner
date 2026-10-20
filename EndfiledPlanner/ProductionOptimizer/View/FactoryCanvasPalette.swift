@@ -16,4 +16,9 @@ enum FactoryCanvasPalette {
     static let pipe = AppColors.primaryText
     static let beltArrow = AppColors.onAccent
     static let pipeArrow = AppColors.background
+    /// 物品图标徽章：游戏图标本身按深底设计，浅色/深色外观都用固定深底 + 蓝圈（跟官方蓝图一致）
+    static let badgeFill = Color(red: 0.11, green: 0.12, blue: 0.13)
+    static let badgeRing = Color(red: 0.22, green: 0.62, blue: 0.93)
+    /// 端口槽底色：比机身略深一档
+    static let portSlot = AppColors.disabledSurface
 }

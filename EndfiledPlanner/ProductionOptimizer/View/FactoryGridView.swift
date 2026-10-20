@@ -374,58 +374,72 @@ struct FactoryGridView: View {
         guard !chain.isEmpty else { return }
 
         // 合并同格拐角段为关键点
-        struct KP { var center: CGPoint; var inDir: GridPoint; var outDir: GridPoint; var blocked: Bool }
+        struct KP { var cell: GridPoint; var inDir: GridPoint; var outDir: GridPoint; var blocked: Bool }
         var kps: [KP] = []
         var i = 0
         while i < chain.count {
             let seg = chain[i]
-            let c = cellCenter(seg.cell)
-            let key = "\(seg.cell.col),\(seg.cell.row)"
-            let blocked = blockedSet.contains(key)
+            let blocked = blockedSet.contains("\(seg.cell.col),\(seg.cell.row)")
             if i + 1 < chain.count && chain[i + 1].cell == seg.cell {
-                kps.append(KP(center: c, inDir: seg.fromDir, outDir: chain[i+1].toDir, blocked: blocked))
+                kps.append(KP(cell: seg.cell, inDir: seg.fromDir, outDir: chain[i+1].toDir, blocked: blocked))
                 i += 2
             } else {
-                kps.append(KP(center: c, inDir: seg.fromDir, outDir: seg.toDir, blocked: blocked))
+                kps.append(KP(cell: seg.cell, inDir: seg.fromDir, outDir: seg.toDir, blocked: blocked))
                 i += 1
             }
         }
         guard !kps.isEmpty else { return }
 
-        // butt cap 不延伸，所以端点必须设在格子实际边缘。
-        // 起点 = 起始格入口边缘（格子外边缘，中心向入口方向偏移半格）
-        // 终点 = 终止格出口边缘（格子外边缘，中心向出口方向偏移半格）
-        // 中间各格：只保留真正拐角格的中心点作为折点，直线段不需要中间点
-        let first = kps[0]; let last = kps[kps.count - 1]
+        // 按格子实际位置切成几段相邻的连续走线：衔接到侧边的线存的方向和真实相邻关系对不上，
+        // 只看存的方向会把两个拐点直接连成斜线；中间断开的格子则单独起笔
+        var runs: [[KP]] = [[kps[0]]]
+        for kp in kps.dropFirst() {
+            let prev = runs[runs.count - 1].last!.cell
+            if abs(kp.cell.col - prev.col) + abs(kp.cell.row - prev.row) == 1 {
+                runs[runs.count - 1].append(kp)
+            } else {
+                runs.append([kp])
+            }
+        }
+
+        var path = Path()
+        for run in runs { addRun(run.map { (cell: $0.cell, inDir: $0.inDir, outDir: $0.outDir) }, radius: radius, to: &path) }
+
+        // 如果有阻碍格则用阻碍色，否则正常色
+        let hasBlocked = kps.contains { $0.blocked }
+        context.stroke(path, with: .color(hasBlocked ? blockedColor : color), style: style)
+    }
+
+    /// 一段相邻格子的圆角折线。中间格的进出方向取相邻格的真实位置差，只有首尾用存的方向，
+    /// 所以相邻折点一定同行或同列，不会出现斜线。
+    /// butt cap 不延伸，起点/终点设在首尾格的入口/出口边缘。
+    private func addRun(_ run: [(cell: GridPoint, inDir: GridPoint, outDir: GridPoint)],
+                        radius: CGFloat, to path: inout Path) {
+        func step(_ a: GridPoint, _ b: GridPoint) -> GridPoint { GridPoint(col: b.col - a.col, row: b.row - a.row) }
+        let first = run[0]; let last = run[run.count - 1]
+        let firstCenter = cellCenter(first.cell); let lastCenter = cellCenter(last.cell)
         var pts: [CGPoint] = []
         pts.append(CGPoint(
-            x: first.center.x - CGFloat(first.inDir.col) * cellSize * 0.5,
-            y: first.center.y - CGFloat(first.inDir.row) * cellSize * 0.5))
-        // 只加拐角格的中心（直线段的中间格不需要，连起来就是直线）
-        for idx in 0..<kps.count {
-            let kp = kps[idx]
-            let isFirst = idx == 0
-            let isLast  = idx == kps.count - 1
-            let prevDir = isFirst ? kp.inDir  : kps[idx - 1].outDir
-            let nextDir = isLast  ? kp.outDir : kps[idx + 1].inDir
-            // 方向变了才是拐角，需要保留中心点
-            let turning = (prevDir.col != nextDir.col) || (prevDir.row != nextDir.row)
-            if turning { pts.append(kp.center) }
+            x: firstCenter.x - CGFloat(first.inDir.col) * cellSize * 0.5,
+            y: firstCenter.y - CGFloat(first.inDir.row) * cellSize * 0.5))
+        // 只加方向变化格的中心（直线段的中间格连起来就是直线）
+        for idx in 0..<run.count {
+            let prevDir = idx == 0 ? run[idx].inDir : step(run[idx - 1].cell, run[idx].cell)
+            let nextDir = idx == run.count - 1 ? run[idx].outDir : step(run[idx].cell, run[idx + 1].cell)
+            if prevDir != nextDir { pts.append(cellCenter(run[idx].cell)) }
         }
         pts.append(CGPoint(
-            x: last.center.x + CGFloat(last.outDir.col) * cellSize * 0.5,
-            y: last.center.y + CGFloat(last.outDir.row) * cellSize * 0.5))
+            x: lastCenter.x + CGFloat(last.outDir.col) * cellSize * 0.5,
+            y: lastCenter.y + CGFloat(last.outDir.row) * cellSize * 0.5))
 
-        // 构建圆角路径
-        var path = Path()
         path.move(to: pts[0])
         for j in 1..<pts.count - 1 {
             let prev = pts[j-1]; let curr = pts[j]; let next = pts[j+1]
             let d1 = CGPoint(x: curr.x - prev.x, y: curr.y - prev.y)
             let d2 = CGPoint(x: next.x - curr.x, y: next.y - curr.y)
             let isCorner = (abs(d1.x) > 0.1) != (abs(d2.x) > 0.1)
-            if isCorner {
-                let lenIn = dist(prev, curr); let lenOut = dist(curr, next)
+            let lenIn = dist(prev, curr); let lenOut = dist(curr, next)
+            if isCorner, lenIn > 0.1, lenOut > 0.1 {
                 let rIn  = min(radius, lenIn  * 0.48)
                 let rOut = min(radius, lenOut * 0.48)
                 path.addLine(to: CGPoint(x: curr.x - d1.x/lenIn*rIn,  y: curr.y - d1.y/lenIn*rIn))
@@ -437,10 +451,6 @@ struct FactoryGridView: View {
             }
         }
         path.addLine(to: pts[pts.count - 1])
-
-        // 如果有阻碍格则用阻碍色，否则正常色
-        let hasBlocked = kps.contains { $0.blocked }
-        context.stroke(path, with: .color(hasBlocked ? blockedColor : color), style: style)
     }
 
     private func dist(_ a: CGPoint, _ b: CGPoint) -> CGFloat {
@@ -523,6 +533,11 @@ struct FactoryGridView: View {
         }
 
         let materialName = settingLabel?.isSet == true ? settingLabel?.text : nil
+        // 当前配方的主产物：画在机身中央（反应池同时跑多条配方，不显示）；
+        // 缩到接近最小、或图标本身小到看不清时换回类别图标
+        let showsProduct = cellSize >= Self.productIconMinCellSize && min(w, h) * 0.42 >= 14
+        let productName: String? = def.isMultiRecipeMachine || !showsProduct ? nil
+            : placed.selectedRecipeID.flatMap { id in vm.availableRecipes(for: def).first { $0.id == id } }?.outputs.first?.name
         return ZStack {
             FactoryBuildingShell(circularInset: def.powerRange != nil && size.width == size.height)
             if hasMapConflict {
@@ -550,6 +565,14 @@ struct FactoryGridView: View {
                 }
                 .padding(4)
                 .minimumScaleFactor(0.6)
+            } else if let productName {
+                VStack(spacing: 2) {
+                    itemBadge(productName, size: min(w, h) * 0.42)
+                        .opacity(displayedStatus == .running ? 1 : 0.55)
+                    Text(def.name)
+                        .font(.system(size: min(w, h) * 0.11, weight: .bold, design: .monospaced))
+                        .foregroundColor(FactoryCanvasPalette.secondaryInk).lineLimit(1)
+                }.padding(4)
             } else {
                 VStack(spacing: 3) {
                     buildingSymbol(for: def, material: materialName, size: min(w, h) * 0.28)
@@ -626,16 +649,24 @@ struct FactoryGridView: View {
     @ViewBuilder
     private func buildingSymbol(for def: BuildingDefinition, material: String?, size: CGFloat) -> some View {
         if let material {
-            ItemIcon(name: material, size: size)
-                .padding(2)
-                .background(FactoryCanvasPalette.building, in: Circle())
-                .overlay(Circle().stroke(AppColors.info, lineWidth: 1))
+            itemBadge(material, size: size)
         } else {
             Image(systemName: def.category.icon)
                 .font(.system(size: size * 0.8, weight: .medium))
                 .foregroundStyle(FactoryCanvasPalette.ink)
                 .frame(width: size, height: size)
         }
+    }
+
+    /// 低于这个格子尺寸（缩到接近最小 16）不画产物图标
+    static let productIconMinCellSize: CGFloat = 20
+
+    /// 官方蓝图式物品徽章：深色圆底 + 蓝色细圈
+    private func itemBadge(_ name: String, size: CGFloat) -> some View {
+        ItemIcon(name: name, size: size * 0.78)
+            .frame(width: size, height: size)
+            .background(FactoryCanvasPalette.badgeFill, in: Circle())
+            .overlay(Circle().stroke(FactoryCanvasPalette.badgeRing, lineWidth: max(1, size * 0.05)))
     }
 
     private func statusColor(_ status: FlowSimulator.MachineStatus) -> Color {
@@ -661,28 +692,39 @@ struct FactoryGridView: View {
     private func portMarker(port: BuildingPort, placed: PlacedBuilding, def: BuildingDefinition) -> some View {
         let (cell, facing) = port.resolvedPosition(placed: placed, definition: def)
         let center = cellCenter(cell)
-        // 往端口朝外的方向偏一点，让点落在建筑边缘上而不是格子正中心
-        let inset = cellSize * 0.34
-        let cx = center.x + CGFloat(facing.outputOffset.col) * inset
-        let cy = center.y + CGFloat(facing.outputOffset.row) * inset
         let connected = vm.isPortConnected(port, placed: placed, definition: def)
         let color = port.kind == .pipe ? pipeColor : beltColor
-        let dot = cellSize * 0.22
+        // 官方蓝图式端口槽：沿建筑边缘的长条凹槽，里面一个箭头标流向；管道口两端做成圆角
+        let length = cellSize * 0.7
+        let depth = cellSize * 0.24
+        let isVertical = facing == .left || facing == .right
+        let slotW = isVertical ? depth : length
+        let slotH = isVertical ? length : depth
+        // 槽外沿贴着机身边框内侧
+        let inset = cellSize * 0.5 - max(2, cellSize * 0.06) - depth / 2
+        let cx = center.x + CGFloat(facing.outputOffset.col) * inset
+        let cy = center.y + CGFloat(facing.outputOffset.row) * inset
+        let corner = port.kind == .pipe ? depth / 2 : max(1, depth * 0.12)
+        let stripe = max(1, depth * 0.14)
 
         return ZStack {
-            Rectangle().fill(FactoryCanvasPalette.building)
-            Rectangle().stroke(FactoryCanvasPalette.structure, lineWidth: max(0.75, cellSize * 0.02))
+            RoundedRectangle(cornerRadius: corner).fill(FactoryCanvasPalette.portSlot)
+            RoundedRectangle(cornerRadius: corner)
+                .stroke(FactoryCanvasPalette.structure, lineWidth: max(0.6, cellSize * 0.012))
             Image(systemName: port.ioDirection == .output ? "chevron.right" : "chevron.left")
-                .font(.system(size: max(4, dot * 0.5), weight: .bold))
+                .font(.system(size: max(4, depth * 0.5), weight: .bold))
                 .foregroundStyle(connected ? FactoryCanvasPalette.ink : FactoryCanvasPalette.secondaryInk)
                 .rotationEffect(.degrees(facing == .up ? -90 : facing == .down ? 90 : facing == .left ? 180 : 0))
-            Rectangle().fill(color)
-                .frame(width: dot * 0.35, height: max(1, dot * 0.12))
-                .offset(y: dot * 0.34)
-                .opacity(connected ? 1 : 0.35)
+            // 已连接：槽外沿一条线色短条
+            if connected {
+                Rectangle().fill(color)
+                    .frame(width: isVertical ? stripe : length * 0.5, height: isVertical ? length * 0.5 : stripe)
+                    .offset(x: CGFloat(facing.outputOffset.col) * (depth / 2 - stripe / 2),
+                            y: CGFloat(facing.outputOffset.row) * (depth / 2 - stripe / 2))
+            }
         }
-        .frame(width: dot, height: dot)
-        .offset(x: cx - dot / 2, y: cy - dot / 2)
+        .frame(width: slotW, height: slotH)
+        .offset(x: cx - slotW / 2, y: cy - slotH / 2)
         .allowsHitTesting(false)
     }
 
