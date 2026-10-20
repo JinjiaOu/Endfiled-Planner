@@ -40,9 +40,6 @@ struct SearchablePickerSheet: View {
     @State private var searchText = ""
     @State private var activeChip: String? = nil
 
-    private let accent = Color(red: 0.9, green: 0.5, blue: 0.2)
-    private let background = Color(red: 0.08, green: 0.09, blue: 0.12)
-
     private var filteredItems: [SearchablePickerItem] {
         var result = items
         if let activeChip {
@@ -85,110 +82,74 @@ struct SearchablePickerSheet: View {
                     }
                 }
                 if filteredItems.isEmpty {
-                    Text("没有匹配的结果")
-                        .font(.system(size: 14))
-                        .foregroundColor(.white.opacity(0.4))
-                        .frame(maxWidth: .infinity, alignment: .center)
+                    AppContentState(title: "没有匹配的结果",
+                                    message: filterChips.isEmpty ? "请尝试其他关键词。" : "请尝试其他关键词，或取消原料筛选。",
+                                    systemImage: "magnifyingglass")
                         .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
                 }
             }
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
-            .background(background)
+            .background(AppColors.background)
             .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: "搜索")
             .navigationTitle(title)
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(.visible, for: .navigationBar)
-            .toolbarBackground(background, for: .navigationBar)
-            .toolbarColorScheme(.dark, for: .navigationBar)
+            .toolbarBackground(AppColors.background, for: .navigationBar)
             .toolbar {
                 if multiSelect {
                     ToolbarItem(placement: .confirmationAction) {
                         Button("完成") { dismiss() }
-                            .foregroundColor(accent)
+                            .tint(AppColors.accent)
                     }
                 } else {
                     ToolbarItem(placement: .cancellationAction) {
                         Button("关闭") { dismiss() }
-                            .foregroundColor(accent)
+                            .tint(AppColors.accent)
                     }
                 }
             }
         }
-        .preferredColorScheme(.dark)
+        .appPageStyle()
     }
 
     private var chipRow: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: AppSpacing.xs) {
             Text(chipsLabel)
-                .font(.system(size: 10, weight: .bold, design: .monospaced))
-                .foregroundColor(.white.opacity(0.4))
+                .font(AppTypography.supporting)
+                .foregroundStyle(AppColors.secondaryText)
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 6) {
+                HStack(spacing: AppSpacing.xs) {
                     ForEach(filterChips, id: \.self) { chip in
                         let isOn = activeChip == chip
-                        Button {
+                        AppFilterChip(title: chip, isSelected: isOn, action: {
                             activeChip = isOn ? nil : chip
-                        } label: {
-                            HStack(spacing: 4) {
-                                ItemIcon(name: chip, size: 18)
-                                Text(chip)
-                            }
-                                .font(.system(size: 12, weight: .medium))
-                                .padding(.horizontal, 10).padding(.vertical, 6)
-                                .background(isOn ? accent : Color.white.opacity(0.1))
-                                .foregroundColor(isOn ? .black : .white.opacity(0.8))
-                                .clipShape(Capsule())
+                        }) {
+                            ItemIcon(name: chip, size: AppSize.icon)
                         }
-                        .buttonStyle(.plain)
                     }
                 }
             }
         }
         .listRowBackground(Color.clear)
+        .listRowSeparator(.hidden)
         .listRowInsets(EdgeInsets())
-        .padding(.horizontal, 4).padding(.vertical, 6)
+        .padding(.horizontal, AppSpacing.md).padding(.vertical, AppSpacing.sm)
     }
 
     private func row(title: String, subtitle: String?, iconName: String? = nil, isSelected: Bool,
                      disabledTag: String? = nil, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            HStack(spacing: 12) {
-                if multiSelect {
-                    Image(systemName: isSelected ? "checkmark.square.fill" : "square")
-                        .foregroundColor(isSelected ? accent : .white.opacity(0.3))
-                }
-                if let iconName {
-                    ItemIcon(name: iconName, size: 32)
-                }
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(title)
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(.white)
-                    if let subtitle {
-                        Text(subtitle)
-                            .font(.system(size: 12, design: .monospaced))
-                            .foregroundColor(.white.opacity(0.5))
-                    }
-                }
-                Spacer()
-                if let disabledTag {
-                    Text(disabledTag)
-                        .font(.system(size: 11, weight: .bold))
-                        .padding(.horizontal, 6).padding(.vertical, 2)
-                        .background(Color.white.opacity(0.12))
-                        .foregroundColor(.white.opacity(0.6))
-                }
-                if !multiSelect && isSelected {
-                    Image(systemName: "checkmark")
-                        .foregroundColor(accent)
-                }
+        AppSelectionRow(title: title, subtitle: subtitle, isSelected: isSelected,
+                        multiSelect: multiSelect, restriction: disabledTag,
+                        isSelectable: disabledTag == nil || (multiSelect && isSelected),
+                        hint: disabledTag != nil && multiSelect && isSelected ? "可取消选择" : "",
+                        action: action) {
+            if let iconName {
+                ItemIcon(name: iconName, size: AppSize.itemIcon)
             }
-            .padding(.vertical, 8)
-            .opacity(disabledTag == nil ? 1 : 0.45)
-            .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
-        .listRowBackground(isSelected ? accent.opacity(0.12) : Color.clear)
+        .listRowBackground(isSelected ? AppColors.accent.opacity(0.12) : AppColors.surface)
+        .listRowSeparatorTint(AppColors.border)
     }
 }

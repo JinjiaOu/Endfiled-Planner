@@ -85,12 +85,12 @@ struct RecipeFlowView: View {
             
             let start = CGPoint(
                 x: child.positionX * xSpacing + nodeWidth / 2,
-                y: CGFloat(child.level) * ySpacing + nodeHeight / 2
+                y: CGFloat(child.level) * ySpacing - nodeHeight / 2
             )
             
             let end = CGPoint(
                 x: node.positionX * xSpacing + nodeWidth / 2,
-                y: CGFloat(node.level) * ySpacing - nodeHeight / 2
+                y: CGFloat(node.level) * ySpacing + nodeHeight / 2
             )
             
             // 使用贝塞尔曲线使连线更优雅
@@ -125,10 +125,11 @@ struct RecipeFlowView: View {
     private func drawArrow(at point: CGPoint, context: inout GraphicsContext) {
         let arrowSize: CGFloat = 8
         var arrowPath = Path()
-        arrowPath.move(to: CGPoint(x: point.x - arrowSize/2, y: point.y - arrowSize))
+        arrowPath.move(to: CGPoint(x: point.x - arrowSize/2, y: point.y + arrowSize))
         arrowPath.addLine(to: point)
-        arrowPath.addLine(to: CGPoint(x: point.x + arrowSize/2, y: point.y - arrowSize))
+        arrowPath.addLine(to: CGPoint(x: point.x + arrowSize/2, y: point.y + arrowSize))
         
+        arrowPath.closeSubpath()
         context.fill(arrowPath, with: .color(.blue.opacity(0.5)))
     }
 }

@@ -5,6 +5,8 @@ import SwiftUI
 /// 打开生产优化模块时弹出的免责声明。每次进入弹一次，选"不再提示"后不再弹。
 /// 单独做成 ViewModifier：FactoryLayoutView 的修饰链再加 .alert 会类型检查超时
 struct OptimizerDisclaimerModifier: ViewModifier {
+    /// 平级导航保留编辑器实例，通过进入标记延续原来每次进入的提示规则。
+    var entryID: UUID? = nil
     @AppStorage("optimizerDisclaimerHidden") private var hidden = false
     @State private var showing = false
     /// 同一次进入只弹一次（从子页面、弹窗回来时 onAppear 会再触发）
@@ -14,6 +16,11 @@ struct OptimizerDisclaimerModifier: ViewModifier {
         content
             .onAppear {
                 guard !hidden, !presented else { return }
+                presented = true
+                showing = true
+            }
+            .onChange(of: entryID) { _, _ in
+                guard !hidden else { return }
                 presented = true
                 showing = true
             }

@@ -18,6 +18,8 @@ struct FactoryGridView: View {
     /// 框选拉框/拖整组时手指的全局坐标，父视图据此在手指靠近画面边缘时自动滚动；没在拖时为 nil
     @Binding var autoScrollFinger: CGPoint?
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     @State private var beltAnimPhase: CGFloat = 0
     // dragLocationInGrid 是父视图传来的"手指全局坐标"，这里换算成网格本地坐标用来画预览——
     // 单独存一份而不是写回 dragLocationInGrid，避免它被当成新的全局坐标再转一遍，越转越偏
@@ -72,10 +74,17 @@ struct FactoryGridView: View {
             if boxDragKind != nil { updateBoxDrag() }
             if placementDragStartOrigin != nil { updatePlacementDrag() }
         }
-        .onAppear {
-            withAnimation(.linear(duration: 1.2).repeatForever(autoreverses: false)) {
-                beltAnimPhase = 20
-            }
+        .background(FactoryCanvasPalette.background)
+        .onAppear { updateBeltAnimation() }
+        .onChange(of: reduceMotion) { _, _ in updateBeltAnimation() }
+    }
+
+    private func updateBeltAnimation() {
+        var transaction = Transaction(animation: nil)
+        transaction.disablesAnimations = true
+        withTransaction(transaction) { beltAnimPhase = 0 }
+        if !reduceMotion {
+            withAnimation(.linear(duration: 1.2).repeatForever(autoreverses: false)) { beltAnimPhase = 20 }
         }
     }
 
@@ -94,7 +103,7 @@ struct FactoryGridView: View {
                 path.addLine(to: CGPoint(x: size.width, y: y))
             }
             context.stroke(path,
-                with: .color(Color(red: 1.0, green: 0.8, blue: 0.0).opacity(0.08)),
+                with: .color(FactoryCanvasPalette.minorGrid),
                 lineWidth: 0.5)
 
             var thickPath = Path()
@@ -109,18 +118,17 @@ struct FactoryGridView: View {
                 thickPath.addLine(to: CGPoint(x: size.width, y: y))
             }
             context.stroke(thickPath,
-                with: .color(Color(red: 1.0, green: 0.8, blue: 0.0).opacity(0.15)),
+                with: .color(FactoryCanvasPalette.majorGrid),
                 lineWidth: 1)
         }
         .frame(width: CGFloat(cols) * cellSize, height: CGFloat(rows) * cellSize)
     }
 
-    // 橙色传送带主色 / 蓝色管道主色
-    private let selectionColor = Color(red: 1.0, green: 0.8, blue: 0.0)
-    private let beltColor      = Color(red: 1.0, green: 0.55, blue: 0.1)
-    private let pipeColor      = Color(red: 0.3, green: 0.7, blue: 1.0)
+    // 工程图线路：浅黄物流带 / 中性管道，阻塞和利用率仍有独立状态色。
+    private let selectionColor = FactoryCanvasPalette.selection
+    private let beltColor      = FactoryCanvasPalette.belt
+    private let pipeColor      = FactoryCanvasPalette.pipe
     private let beltBlockedColor = Color.red
-    private let beltArrowColor = Color.white     // 方向箭头用白色，对比度高
 
     /// 同一格、同一轴上如果传送带和管道都经过（平行走线），管道会缩细叠在传送带上面显示，
     /// 不用左右分开占位——两者物理上本来就不在同一高度，缩细叠加比硬挤在同一格宽度里更接近实际，
@@ -238,9 +246,11 @@ struct FactoryGridView: View {
     static let utilizationFullColor = Color(red: 0.35, green: 0.95, blue: 0.45)
     static let utilizationOverColor = Color(red: 1.0, green: 0.25, blue: 0.2)
 
-    /// 跑满：沿中心线叠一条绿线；被限流：红线；没跑满：在线中间那格标百分比（格子太小就不标）
+    /// 分段细线表示运行状态，部分负载标牌按真实比例显示刻度与百分比。
     private func drawUtilization(_ level: UtilizationLevel, on belt: Belt, context: inout GraphicsContext) {
-        let style = StrokeStyle(lineWidth: max(2, cellSize * 0.2), lineCap: .round, lineJoin: .round)
+        let traceWidth = max(1.5, cellSize * 0.12)
+        let style = StrokeStyle(lineWidth: traceWidth, lineCap: .butt, lineJoin: .round,
+                                dash: [max(2, cellSize * 0.18), max(1, cellSize * 0.06)])
         switch level {
         case .full:
             drawChain(belt.segments, color: Self.utilizationFullColor, blockedColor: Self.utilizationFullColor,
@@ -249,19 +259,43 @@ struct FactoryGridView: View {
             drawChain(belt.segments, color: Self.utilizationOverColor, blockedColor: Self.utilizationOverColor,
                       blockedSet: [], style: style, radius: cellSize * 0.38, context: &context)
         case .partial(let ratio):
-            guard cellSize >= 16, !belt.segments.isEmpty else { return }
-            let mid = belt.segments[belt.segments.count / 2].cell
-            let text = Text("\(Int((ratio * 100).rounded()))%")
-                .font(.system(size: max(8, min(cellSize * 0.32, 14)), weight: .heavy, design: .monospaced))
-                .foregroundColor(.white)
-            let center = cellCenter(mid)
-            let box = CGRect(x: center.x - cellSize * 0.55, y: center.y - cellSize * 0.24,
-                             width: cellSize * 1.1, height: cellSize * 0.48)
-            context.fill(Path(roundedRect: box, cornerRadius: 3), with: .color(.black.opacity(0.7)))
-            context.draw(text, at: center)
+            drawChain(belt.segments, color: AppColors.info.opacity(0.7), blockedColor: AppColors.info,
+                      blockedSet: [], style: style, radius: cellSize * 0.38, context: &context)
+            drawUtilizationMeter(ratio, on: belt, context: &context)
         case .idle:
             break
         }
+    }
+
+    private func drawUtilizationMeter(_ ratio: Double, on belt: Belt, context: inout GraphicsContext) {
+        guard cellSize >= 16, !belt.segments.isEmpty else { return }
+        let center = cellCenter(belt.segments[belt.segments.count / 2].cell)
+        let width = max(28, cellSize * 1.1)
+        let height = max(18, cellSize * 0.62)
+        let box = CGRect(x: center.x - width / 2, y: center.y - height / 2, width: width, height: height)
+        context.fill(Path(box), with: .color(AppColors.surface))
+        context.stroke(Path(box), with: .color(FactoryCanvasPalette.structure), lineWidth: 0.75)
+
+        // 十格刻度仅映射已有 ratio；绘制层不改变利用率计算或满载判定。
+        let gap: CGFloat = 1
+        let inset: CGFloat = 3
+        let segmentWidth = (width - inset * 2 - gap * 9) / 10
+        let amount = max(0, min(1, ratio)) * 10
+        for index in 0..<10 {
+            let segment = CGRect(x: box.minX + inset + CGFloat(index) * (segmentWidth + gap),
+                                 y: box.minY + inset, width: segmentWidth, height: max(2, height * 0.12))
+            context.fill(Path(segment), with: .color(FactoryCanvasPalette.structure.opacity(0.2)))
+            let fill = max(0, min(1, amount - Double(index)))
+            if fill > 0 {
+                let filled = CGRect(x: segment.minX, y: segment.minY,
+                                    width: segment.width * CGFloat(fill), height: segment.height)
+                context.fill(Path(filled), with: .color(AppColors.info))
+            }
+        }
+        let text = Text("\(Int((ratio * 100).rounded()))%")
+            .font(.system(size: max(8, min(cellSize * 0.28, 14)), weight: .semibold, design: .monospaced))
+            .foregroundColor(FactoryCanvasPalette.ink)
+        context.draw(text, at: CGPoint(x: center.x, y: center.y + height * 0.12))
     }
 
     /// 传送带/管道渲染：Belt.segments 本身已有序，直接画圆角折线，不需要重新串链
@@ -300,15 +334,16 @@ struct FactoryGridView: View {
                   blockedColor: beltBlockedColor.opacity(alpha),
                   blockedSet: blockedSet, style: fgStyle, radius: radius, context: &context)
 
-        // 方向箭头：每格中央画白色实心三角，明显
+        // 方向箭头沿用真实流向，以较小深色 / 反色箭头呈现工程图样式。
         for seg in segments {
             let c = cellCenter(seg.cell)
             let cellKey = "\(seg.cell.col),\(seg.cell.row)"
             let isBlocked = blockedSet.contains(cellKey)
-            // 箭头大小约为格子的 30%，管道缩细时箭头也跟着小一号但不要太小看不清
-            let arrowSize = cellSize * 0.30 * max(widthScale, 0.55)
+            // 箭头大小约为格子的 18%，管道缩细时箭头也跟着小一号但不要太小看不清
+            let arrowSize = cellSize * 0.18 * max(widthScale, 0.55)
             drawArrow(at: c, dir: seg.toDir, size: arrowSize,
-                      color: isBlocked ? Color.white.opacity(0.5) : Color.white.opacity(alpha * 0.9),
+                      color: (lineType == .belt ? FactoryCanvasPalette.beltArrow : FactoryCanvasPalette.pipeArrow)
+                        .opacity(isBlocked ? 0.5 : alpha * 0.9),
                       context: &context)
             // 阻碍红叉
             if isBlocked && !isPreview {
@@ -487,61 +522,57 @@ struct FactoryGridView: View {
             settingLabel = nil
         }
 
+        let materialName = settingLabel?.isSet == true ? settingLabel?.text : nil
         return ZStack {
-            Rectangle().fill(def.category.color.opacity(isSelected ? 0.4 : 0.25))
-            Rectangle().stroke(
-                isSelected ? Color(red: 1.0, green: 0.8, blue: 0.0)
-                    : hasMapConflict ? Color(red: 0.95, green: 0.25, blue: 0.2) : def.category.color.opacity(0.6),
-                lineWidth: isSelected || hasMapConflict ? 2.5 : 1.5)
+            FactoryBuildingShell(circularInset: def.powerRange != nil && size.width == size.height)
+            if hasMapConflict {
+                Rectangle().stroke(AppColors.error, lineWidth: 2.5)
+            }
             if isThin {
                 HStack(spacing: 4) {
-                    Image(systemName: def.category.icon)
-                        .font(.system(size: min(w, h) * 0.5))
-                        .foregroundColor(def.category.color)
+                    buildingSymbol(for: def, material: materialName, size: min(w, h) * 0.48)
                     VStack(alignment: .leading, spacing: 1) {
                         Text(def.name)
                             .font(.system(size: min(w, h) * 0.32, weight: .bold, design: .monospaced))
-                            .foregroundColor(.white).lineLimit(1)
+                            .foregroundColor(FactoryCanvasPalette.ink).lineLimit(1)
                         if let setting = settingLabel {
                             Text(setting.text)
                                 .font(.system(size: min(w, h) * 0.26, design: .monospaced))
                                 .foregroundColor(hasMapConflict ? Color(red: 0.95, green: 0.35, blue: 0.3)
-                                                 : setting.isSet ? Color(red: 0.4, green: 0.8, blue: 0.2)
-                                                 : .white.opacity(0.35))
+                                                 : setting.isSet ? AppColors.success
+                                                 : FactoryCanvasPalette.secondaryInk)
                                 .lineLimit(1)
                         }
                     }
                     Text(flowSymbol)
                         .font(.system(size: min(w, h) * 0.4))
-                        .foregroundColor(.white.opacity(0.5))
+                        .foregroundColor(FactoryCanvasPalette.secondaryInk)
                 }
                 .padding(4)
                 .minimumScaleFactor(0.6)
             } else {
                 VStack(spacing: 3) {
-                    Image(systemName: def.category.icon)
-                        .font(.system(size: min(w, h) * 0.28))
-                        .foregroundColor(def.category.color)
+                    buildingSymbol(for: def, material: materialName, size: min(w, h) * 0.28)
                     Text(def.name)
                         .font(.system(size: min(w, h) * 0.16, weight: .bold, design: .monospaced))
-                        .foregroundColor(.white).lineLimit(1)
+                        .foregroundColor(FactoryCanvasPalette.ink).lineLimit(1)
                     if let setting = settingLabel {
                         Text(setting.text)
                             .font(.system(size: min(w, h) * 0.14, design: .monospaced))
                             .foregroundColor(hasMapConflict ? Color(red: 0.95, green: 0.35, blue: 0.3)
-                                             : setting.isSet ? Color(red: 0.4, green: 0.8, blue: 0.2)
-                                             : .white.opacity(0.35))
+                                             : setting.isSet ? AppColors.success
+                                             : FactoryCanvasPalette.secondaryInk)
                             .lineLimit(1)
                     }
                     Text(flowSymbol)
                         .font(.system(size: min(w, h) * 0.18))
-                        .foregroundColor(.white.opacity(0.5))
+                        .foregroundColor(FactoryCanvasPalette.secondaryInk)
                 }.padding(4)
             }
             if isSelected {
                 // 选中框：整圈黄色粗边，缩小看全图时也一眼能找到
                 Rectangle()
-                    .stroke(Color(red: 1.0, green: 0.8, blue: 0.0), lineWidth: max(2, cellSize * 0.08))
+                    .stroke(FactoryCanvasPalette.selection, lineWidth: max(2, cellSize * 0.08))
                     .allowsHitTesting(false)
             }
             if isGroupMember {
@@ -577,9 +608,34 @@ struct FactoryGridView: View {
                     .allowsHitTesting(false)
             }
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(def.name)
+        .accessibilityValue([displayedStatus?.label, settingLabel?.text].compactMap { $0 }.joined(separator: "，"))
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+        .accessibilityHint("双击选择建筑")
+        .accessibilityAction {
+            vm.editMode = .select
+            vm.selectedBuildingID = placed.id
+        }
         .opacity(placed.isActive ? 1 : 0.45)
         .clipped()
         .offset(x: x, y: y)
+    }
+
+    @ViewBuilder
+    private func buildingSymbol(for def: BuildingDefinition, material: String?, size: CGFloat) -> some View {
+        if let material {
+            ItemIcon(name: material, size: size)
+                .padding(2)
+                .background(FactoryCanvasPalette.building, in: Circle())
+                .overlay(Circle().stroke(AppColors.info, lineWidth: 1))
+        } else {
+            Image(systemName: def.category.icon)
+                .font(.system(size: size * 0.8, weight: .medium))
+                .foregroundStyle(FactoryCanvasPalette.ink)
+                .frame(width: size, height: size)
+        }
     }
 
     private func statusColor(_ status: FlowSimulator.MachineStatus) -> Color {
@@ -591,7 +647,7 @@ struct FactoryGridView: View {
         }
     }
 
-    // MARK: - 端口标记层：每个入口/出口在建筑边缘画一个小圆点，接上线是实心，没接是空心
+    // MARK: - 端口标记层：依真实位置与方向绘制连接槽，实色短标记表示已连接
     private var portsLayer: some View {
         ForEach(vm.layout.buildings) { placed in
             if let def = BuildingDefinition.find(placed.definitionID) {
@@ -614,8 +670,16 @@ struct FactoryGridView: View {
         let dot = cellSize * 0.22
 
         return ZStack {
-            Circle().fill(connected ? color : Color(red: 0.06, green: 0.07, blue: 0.10))
-            Circle().stroke(color, lineWidth: connected ? 0 : 1.5)
+            Rectangle().fill(FactoryCanvasPalette.building)
+            Rectangle().stroke(FactoryCanvasPalette.structure, lineWidth: max(0.75, cellSize * 0.02))
+            Image(systemName: port.ioDirection == .output ? "chevron.right" : "chevron.left")
+                .font(.system(size: max(4, dot * 0.5), weight: .bold))
+                .foregroundStyle(connected ? FactoryCanvasPalette.ink : FactoryCanvasPalette.secondaryInk)
+                .rotationEffect(.degrees(facing == .up ? -90 : facing == .down ? 90 : facing == .left ? 180 : 0))
+            Rectangle().fill(color)
+                .frame(width: dot * 0.35, height: max(1, dot * 0.12))
+                .offset(y: dot * 0.34)
+                .opacity(connected ? 1 : 0.35)
         }
         .frame(width: dot, height: dot)
         .offset(x: cx - dot / 2, y: cy - dot / 2)

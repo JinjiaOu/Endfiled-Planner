@@ -86,8 +86,16 @@ private struct FactoryAlertsModifier: ViewModifier {
 
 struct FactoryLayoutView: View {
 
+    /// 作为平级编辑器使用时提供退出入口；原有 push / Preview 调用仍可不传。
+    var onExit: (() -> Void)? = nil
+    var entryID: UUID? = nil
+
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-    @StateObject private var vm = FactoryViewModel()
+    @StateObject private var vm: FactoryViewModel
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @State private var workspaceSize: CGSize = .zero
 
     // 网格缩放
     @State private var cellSize: CGFloat = 72
@@ -112,6 +120,7 @@ struct FactoryLayoutView: View {
 
     // 悬浮 Stats
     @State private var showStats = false
+    @State private var showUtilizationLegend = false
 
     // 其他
     @State private var showClearConfirm = false
@@ -128,473 +137,327 @@ struct FactoryLayoutView: View {
     @State private var crossMapLayout: SavedLayout? = nil
     @State private var crossMapWarnings: [String] = []
 
+    init(onExit: (() -> Void)? = nil, entryID: UUID? = nil, viewModel: FactoryViewModel? = nil) {
+        self.onExit = onExit
+        self.entryID = entryID
+        _vm = StateObject(wrappedValue: viewModel ?? FactoryViewModel())
+    }
+
     private var usesSidePalette: Bool {
-        horizontalSizeClass == .regular
+        horizontalSizeClass == .regular && workspaceSize.width >= (dynamicTypeSize.isAccessibilitySize ? 1000 : 760) && workspaceSize.height >= 520
+    }
+
+    private var bottomPanelHeight: CGFloat { max(120, workspaceSize.height * 0.42) }
+
+    private var detailContentHeight: CGFloat {
+        min(260, max(96, workspaceSize.height * 0.25))
     }
 
     var body: some View {
-        NavigationStack {
-            ZStack {
-                Color(red: 0.06, green: 0.07, blue: 0.10).ignoresSafeArea()
+        ZStack {
+            FactoryCanvasPalette.background.ignoresSafeArea()
 
-                VStack(spacing: 0) {
-                    toolBar
-
-                    // 画布 + 拖拽放置覆盖
-                    GeometryReader { geo in
-                        ZStack {
-                            // 可滚动的网格
-                            ScrollView([.horizontal, .vertical], showsIndicators: false) {
-                                FactoryGridView(
-                                    vm: vm,
-                                    cellSize: cellSize,
-                                    draggingDef: $draggingDef,
-                                    dragLocationInGrid: $dragLocationInGrid,
-                                    autoScrollFinger: $autoScrollFinger
-                                )
-                                .padding(20)
-                            }
-                            .scrollPosition($scrollPosition)
-                            .onScrollGeometryChange(for: ScrollMetrics.self) { geo in
-                                ScrollMetrics(offset: geo.contentOffset, contentSize: geo.contentSize,
-                                              containerSize: geo.containerSize)
-                            } action: { _, metrics in
-                                scrollGeometry.metrics = metrics
-                            }
-                            .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { scrollGeometry.viewport = $0 }
-                            .onReceive(autoScrollTimer) { _ in autoScrollStep() }
-                            // simultaneousGesture 让双指缩放和 belt DragGesture 共存
-                            .simultaneousGesture(
-                                MagnificationGesture()
-                                    .onChanged { v in
-                                        cellSize = min(max(lastCellSize * v, minCellSize), maxCellSize)
-                                    }
-                                    .onEnded { _ in lastCellSize = cellSize }
-                            )
-
-                            // 电力提示（画布顶部）：发电不够、或者有建筑不在供电桩范围内时才出现
-                            VStack {
-                                powerWarningBanner
-                                    .padding(.top, 8)
-                                    .padding(.horizontal, 16)
-                                Spacer()
-                            }
-                            .allowsHitTesting(false)
-
-                            // 悬浮产能按钮（右下角）
-                            VStack {
-                                Spacer()
-                                HStack(alignment: .bottom, spacing: 10) {
-                                    Spacer()
-                                    if vm.showUtilization { utilizationLegend }
-                                    VStack(spacing: 10) {
-                                        utilizationButton
-                                        statsFloatingButton
-                                    }
-                                    .padding(.trailing, 16)
-                                }
-                                .padding(.bottom, 16)
-                            }
-                        }
-                    }
-
-                    // 底部面板（建筑板 / 选中信息）
+            VStack(spacing: 0) {
+                FactoryWorkspaceHeader(vm: vm, buildingPaletteVisible: showBuildingPalette)
+                HStack(spacing: 0) {
                     VStack(spacing: 0) {
-                        if !usesSidePalette, vm.pendingPlacement != nil {
-                            PlacementPanel(vm: vm)
-                                .transition(.move(edge: .bottom).combined(with: .opacity))
-                        } else if showBuildingPalette && !usesSidePalette {
-                            buildingPalette(vertical: false)
-                                .transition(.move(edge: .bottom).combined(with: .opacity))
-                        } else if !usesSidePalette, vm.editMode == .boxSelect {
-                            GroupSelectionPanel(vm: vm, style: .bottom, onSaveAs: promptSaveGroup)
-                                .transition(.move(edge: .bottom).combined(with: .opacity))
-                        } else if !usesSidePalette, let placed = vm.selectedPlaced, let def = vm.selectedDefinition {
-                            BuildingDetailPanel(vm: vm, placed: placed, def: def, style: .bottom)
-                                .id(placed.id)
-                                .transition(.move(edge: .bottom).combined(with: .opacity))
-                        } else if !usesSidePalette, let belt = vm.selectedBelt {
-                            BeltDetailPanel(vm: vm, belt: belt, style: .bottom)
-                                .id(belt.id)
-                                .transition(.move(edge: .bottom).combined(with: .opacity))
-                        }
+                        canvasWorkspace
+                        toolBar
+                        if !usesSidePalette { bottomInspector }
                     }
-                    .animation(.spring(response: 0.3), value: showBuildingPalette)
-                    .animation(.spring(response: 0.3), value: vm.selectedBuildingID)
-                    .animation(.spring(response: 0.3), value: vm.selectedBeltID)
-                    .animation(.spring(response: 0.3), value: vm.editMode == .boxSelect)
-                    .animation(.spring(response: 0.3), value: vm.pendingPlacement != nil)
-                }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-                if usesSidePalette, vm.pendingPlacement != nil {
-                    HStack {
-                        Spacer()
-                        PlacementPanel(vm: vm)
-                            .frame(width: 360)
-                            .padding(.trailing, 18)
-                            .padding(.top, 64)
+                    if usesSidePalette {
+                        sideInspector
+                            .frame(width: dynamicTypeSize.isAccessibilitySize ? 360 : 304)
+                            .frame(maxHeight: .infinity, alignment: .top)
+                            .background(AppColors.surface)
+                            .clipped()
+                            .overlay(alignment: .leading) {
+                                Rectangle().fill(AppColors.border).frame(width: 1)
+                                    .allowsHitTesting(false)
+                            }
                     }
-                    .frame(maxHeight: .infinity, alignment: .top)
-                    .transition(.move(edge: .trailing).combined(with: .opacity))
-                    .zIndex(3)
-                } else if showBuildingPalette && usesSidePalette {
-                    sideBuildingPalette
-                } else if usesSidePalette, vm.editMode == .boxSelect {
-                    HStack {
-                        Spacer()
-                        GroupSelectionPanel(vm: vm, style: .side, onSaveAs: promptSaveGroup)
-                            .frame(width: 360)
-                            .padding(.trailing, 18)
-                            .padding(.top, 64)
-                    }
-                    .frame(maxHeight: .infinity, alignment: .top)
-                    .transition(.move(edge: .trailing).combined(with: .opacity))
-                    .zIndex(3)
-                } else if usesSidePalette, let placed = vm.selectedPlaced, let def = vm.selectedDefinition {
-                    HStack {
-                        Spacer()
-                        BuildingDetailPanel(vm: vm, placed: placed, def: def, style: .side)
-                            .id(placed.id)
-                            .frame(width: 360)
-                            .padding(.trailing, 18)
-                            .padding(.top, 64)
-                            .padding(.bottom, 18)
-                    }
-                    .transition(.move(edge: .trailing).combined(with: .opacity))
-                    .zIndex(3)
-                } else if usesSidePalette, let belt = vm.selectedBelt {
-                    HStack {
-                        Spacer()
-                        BeltDetailPanel(vm: vm, belt: belt, style: .side)
-                            .id(belt.id)
-                            .frame(width: 360)
-                            .frame(maxHeight: 420, alignment: .top)
-                            .padding(.trailing, 18)
-                            .padding(.top, 64)
-                        Spacer().frame(width: 0)
-                    }
-                    .frame(maxHeight: .infinity, alignment: .top)
-                    .transition(.move(edge: .trailing).combined(with: .opacity))
-                    .zIndex(3)
                 }
-
-                // 产能统计 overlay
-                if showStats {
-                    statsOverlay
-                }
-
-                // 保存提示
-                if vm.showSaveConfirm { saveToast }
             }
-            .navigationTitle("")
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "building.2.fill")
-                            .foregroundColor(Color(red: 1.0, green: 0.8, blue: 0.0))
-                        Text("基建规划")
-                            .font(.system(size: 16, weight: .bold, design: .monospaced))
-                            .foregroundColor(.white)
-                        Text("· \(vm.layout.mapType.displayName)")
-                            .font(.system(size: 12, weight: .medium, design: .monospaced))
-                            .foregroundColor(.white.opacity(0.5))
+
+            // 产能统计 overlay
+            if showStats {
+                statsOverlay
+            }
+
+            // 保存提示
+            if vm.showSaveConfirm { saveToast }
+        }
+        .onGeometryChange(for: CGSize.self) { $0.size } action: { workspaceSize = $0 }
+        .navigationTitle("基建规划")
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(onExit != nil)
+        .toolbar {
+            if let onExit {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button(action: onExit) {
+                        Label("工作台", systemImage: "chevron.left")
                     }
+                    .accessibilityLabel("返回工作台，保留当前编辑状态")
                 }
-                ToolbarItem(placement: .navigationBarTrailing) {
+            }
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Menu {
+                    Button { vm.saveLayout() } label: {
+                        Label("保存画布", systemImage: "square.and.arrow.down")
+                    }
                     Menu {
-                        Button { vm.saveLayout() } label: {
-                            Label("保存画布", systemImage: "square.and.arrow.down")
-                        }
-                        Menu {
-                            ForEach(MapType.allCases, id: \.self) { map in
-                                Button {
-                                    if map != vm.layout.mapType { pendingMapSwitch = map }
-                                } label: {
-                                    if map == vm.layout.mapType {
-                                        Label(map.displayName, systemImage: "checkmark")
-                                    } else {
-                                        Text(map.displayName)
-                                    }
+                        ForEach(MapType.allCases, id: \.self) { map in
+                            Button {
+                                if map != vm.layout.mapType { pendingMapSwitch = map }
+                            } label: {
+                                if map == vm.layout.mapType {
+                                    Label(map.displayName, systemImage: "checkmark")
+                                } else {
+                                    Text(map.displayName)
                                 }
                             }
-                        } label: {
-                            Label("切换地图（当前：\(vm.layout.mapType.displayName)）", systemImage: "map")
-                        }
-                        ForEach(FactoryPreset.allCases) { preset in
-                            Button { pendingPreset = preset } label: {
-                                Label(preset.menuTitle, systemImage: "wand.and.stars")
-                            }
-                        }
-                        Button(role: .destructive) { showClearConfirm = true } label: {
-                            Label("清空布局", systemImage: "trash")
                         }
                     } label: {
-                        Image(systemName: "ellipsis.circle")
-                            .foregroundColor(Color(red: 1.0, green: 0.8, blue: 0.0))
+                        Label("切换地图（当前：\(vm.layout.mapType.displayName)）", systemImage: "map")
                     }
+                    ForEach(FactoryPreset.allCases) { preset in
+                        Button { pendingPreset = preset } label: {
+                            Label(preset.menuTitle, systemImage: "wand.and.stars")
+                        }
+                    }
+                    Button(role: .destructive) { showClearConfirm = true } label: {
+                        Label("清空布局", systemImage: "trash")
+                    }
+                } label: {
+                    Image(systemName: "ellipsis.circle")
+                        .foregroundColor(AppColors.accent)
+                }
+                .accessibilityLabel("画布选项：地图、预设与清空")
+            }
+        }
+        .toolbarBackground(.visible, for: .navigationBar)
+        .toolbarBackground(AppColors.background, for: .navigationBar)
+        .tint(AppColors.accent)
+        .alert("存为布局", isPresented: $showSaveGroupPrompt) {
+            TextField("布局名字", text: $saveGroupName)
+            Button("取消", role: .cancel) {}
+            Button("保存") { saveGroup() }
+        } message: {
+            Text("选中的建筑和它们的设置、选中的线，以及两头接在这些建筑上的线会一起存下来")
+        }
+        .sheet(isPresented: $showMyLayouts, onDismiss: handleLayoutToPlace) {
+            MyLayoutsView(store: myLayouts, currentMap: vm.layout.mapType) { layoutToPlace = $0 }
+        }
+        .alert("跨地图放置", isPresented: Binding(get: { crossMapLayout != nil }, set: { if !$0 { crossMapLayout = nil } })) {
+            Button("取消", role: .cancel) { crossMapLayout = nil }
+            Button("仍然放置") {
+                if let saved = crossMapLayout { beginPlacement(saved) }
+                crossMapLayout = nil
+            }
+        } message: {
+            Text("这份布局来自\(crossMapLayout?.mapType.displayName ?? "")，放到\(vm.layout.mapType.displayName)后下面这些会标红、不参与计算：\n"
+                 + crossMapWarnings.joined(separator: "\n"))
+        }
+        .modifier(FactoryAlertsModifier(vm: vm, showClearConfirm: $showClearConfirm,
+                                       pendingPreset: $pendingPreset,
+                                       pendingMapSwitch: $pendingMapSwitch))
+        .modifier(OptimizerDisclaimerModifier(entryID: entryID))
+    }
+
+    // MARK: - 自适应工作区
+    // 侧栏参与布局，画布的可滚动范围与拖拽坐标来自真实剩余区域。
+    private var canvasWorkspace: some View {
+        GeometryReader { _ in
+            ZStack {
+                // 可滚动的网格
+                ScrollView([.horizontal, .vertical], showsIndicators: false) {
+                    FactoryGridView(
+                        vm: vm,
+                        cellSize: cellSize,
+                        draggingDef: $draggingDef,
+                        dragLocationInGrid: $dragLocationInGrid,
+                        autoScrollFinger: $autoScrollFinger
+                    )
+                    .padding(20)
+                }
+                .scrollPosition($scrollPosition)
+                .onScrollGeometryChange(for: ScrollMetrics.self) { geo in
+                    ScrollMetrics(offset: geo.contentOffset, contentSize: geo.contentSize,
+                                  containerSize: geo.containerSize)
+                } action: { _, metrics in
+                    scrollGeometry.metrics = metrics
+                }
+                .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { scrollGeometry.viewport = $0 }
+                .onReceive(autoScrollTimer) { _ in autoScrollStep() }
+                // simultaneousGesture 让双指缩放和 belt DragGesture 共存
+                .simultaneousGesture(
+                    MagnificationGesture()
+                        .onChanged { v in
+                            cellSize = min(max(lastCellSize * v, minCellSize), maxCellSize)
+                        }
+                        .onEnded { _ in lastCellSize = cellSize }
+                )
+                // 电力提示（画布顶部）：发电不够、或者有建筑不在供电桩范围内时才出现
+                VStack {
+                    powerWarningBanner
+                        .padding(.top, 8)
+                        .padding(.horizontal, 16)
+                    Spacer()
+                }
+                .allowsHitTesting(false)
+                // 悬浮产能按钮（右下角）
+                VStack {
+                    Spacer()
+                    HStack(alignment: .bottom, spacing: 10) {
+                        Spacer()
+                        canvasControls
+                            .padding(.trailing, AppSpacing.md)
+                    }
+                    .padding(.bottom, 16)
                 }
             }
-            .toolbarBackground(.visible, for: .navigationBar)
-            .toolbarBackground(Color(red: 0.08, green: 0.09, blue: 0.12), for: .navigationBar)
-            .alert("存为布局", isPresented: $showSaveGroupPrompt) {
-                TextField("布局名字", text: $saveGroupName)
-                Button("取消", role: .cancel) {}
-                Button("保存") { saveGroup() }
-            } message: {
-                Text("选中的建筑和它们的设置、选中的线，以及两头接在这些建筑上的线会一起存下来")
-            }
-            .sheet(isPresented: $showMyLayouts, onDismiss: handleLayoutToPlace) {
-                MyLayoutsView(store: myLayouts, currentMap: vm.layout.mapType) { layoutToPlace = $0 }
-            }
-            .alert("跨地图放置", isPresented: Binding(get: { crossMapLayout != nil }, set: { if !$0 { crossMapLayout = nil } })) {
-                Button("取消", role: .cancel) { crossMapLayout = nil }
-                Button("仍然放置") {
-                    if let saved = crossMapLayout { beginPlacement(saved) }
-                    crossMapLayout = nil
-                }
-            } message: {
-                Text("这份布局来自\(crossMapLayout?.mapType.displayName ?? "")，放到\(vm.layout.mapType.displayName)后下面这些会标红、不参与计算：\n"
-                     + crossMapWarnings.joined(separator: "\n"))
-            }
-            .modifier(FactoryAlertsModifier(vm: vm, showClearConfirm: $showClearConfirm,
-                                           pendingPreset: $pendingPreset,
-                                           pendingMapSwitch: $pendingMapSwitch))
-            .modifier(OptimizerDisclaimerModifier())
         }
     }
 
-    private var sideBuildingPalette: some View {
-        HStack {
-            Spacer()
-
-            VStack(spacing: 0) {
-                HStack {
-                    Rectangle()
-                        .fill(Color(red: 0.4, green: 0.8, blue: 0.2))
-                        .frame(width: 3, height: 16)
-
-                    Text("建造面板")
-                        .font(.system(size: 12, weight: .bold, design: .monospaced))
-                        .foregroundColor(.white.opacity(0.9))
-
-                    Spacer()
-
-                    Button {
-                        withAnimation(.spring(response: 0.3)) {
-                            showBuildingPalette = false
-                            vm.editMode = .select
-                        }
-                    } label: {
-                        Image(systemName: "xmark")
-                            .font(.system(size: 12, weight: .bold))
-                            .foregroundColor(.white.opacity(0.55))
-                            .frame(width: 30, height: 30)
-                    }
-                    .buttonStyle(.plain)
-                }
-                .padding(.horizontal, 14)
-                .padding(.vertical, 10)
-                .background(Color(red: 0.08, green: 0.09, blue: 0.12))
-
-                buildingPalette(vertical: true)
+    private var bottomInspector: some View {
+        VStack(spacing: 0) {
+            if vm.pendingPlacement != nil {
+                PlacementPanel(vm: vm, maxPanelHeight: bottomPanelHeight)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            } else if showBuildingPalette {
+                buildingPalette(vertical: false)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            } else if vm.editMode == .boxSelect {
+                GroupSelectionPanel(vm: vm, style: .bottom, maxPanelHeight: bottomPanelHeight, onSaveAs: promptSaveGroup)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            } else if let placed = vm.selectedPlaced, let def = vm.selectedDefinition {
+                BuildingDetailPanel(vm: vm, placed: placed, def: def, style: .bottom, maxContentHeight: detailContentHeight, maxPanelHeight: bottomPanelHeight)
+                    .id(placed.id)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            } else if let belt = vm.selectedBelt {
+                BeltDetailPanel(vm: vm, belt: belt, style: .bottom, maxContentHeight: detailContentHeight, maxPanelHeight: bottomPanelHeight)
+                    .id(belt.id)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
             }
-            .frame(width: 380)
-            .background(Color(red: 0.10, green: 0.11, blue: 0.14))
-            .overlay(
-                Rectangle()
-                    .stroke(Color(red: 0.4, green: 0.8, blue: 0.2).opacity(0.4), lineWidth: 1)
-            )
-            .padding(.trailing, 18)
-            .padding(.top, 64)
-            .padding(.bottom, 18)
         }
-        .transition(.move(edge: .trailing).combined(with: .opacity))
-        .zIndex(3)
+        .animation(AppMotion.panel(reduceMotion: reduceMotion), value: showBuildingPalette)
+        .animation(AppMotion.panel(reduceMotion: reduceMotion), value: vm.selectedBuildingID)
+        .animation(AppMotion.panel(reduceMotion: reduceMotion), value: vm.selectedBeltID)
+        .animation(AppMotion.panel(reduceMotion: reduceMotion), value: vm.editMode == .boxSelect)
+        .animation(AppMotion.panel(reduceMotion: reduceMotion), value: vm.pendingPlacement != nil)
+    }
+
+    @ViewBuilder
+    private var sideInspector: some View {
+        if vm.pendingPlacement != nil {
+            PlacementPanel(vm: vm, style: .side)
+        } else if showBuildingPalette {
+            buildingPalette(vertical: true)
+        } else if vm.editMode == .boxSelect {
+            GroupSelectionPanel(vm: vm, style: .side, onSaveAs: promptSaveGroup)
+        } else if let placed = vm.selectedPlaced, let def = vm.selectedDefinition {
+            BuildingDetailPanel(vm: vm, placed: placed, def: def, style: .side)
+                .id(placed.id)
+        } else if let belt = vm.selectedBelt {
+            BeltDetailPanel(vm: vm, belt: belt, style: .side)
+                .id(belt.id)
+        } else {
+            VStack(alignment: .leading, spacing: AppSpacing.md) {
+                AppSectionHeader(title: "属性检查器", subtitle: "选择建筑或线路")
+                Text("点按画布中的设施查看配置与运行状态，也可以从建造面板添加设施。")
+                    .font(AppTypography.supporting)
+                    .foregroundStyle(AppColors.secondaryText)
+                    .fixedSize(horizontal: false, vertical: true)
+                Button {
+                    showBuildingPalette = true
+                    vm.editMode = .select
+                } label: {
+                    Label("建造设施", systemImage: "plus")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(AppActionStyle(emphasis: .secondary))
+                Spacer(minLength: 0)
+            }
+            .padding(AppSpacing.md)
+        }
     }
 
     // MARK: - 工具栏
     private var toolBar: some View {
-        HStack(spacing: 0) {
-            toolButton(icon: "cursorarrow", label: "选择",
-                       isActive: vm.editMode == .select && !showBuildingPalette,
-                       color: Color(red: 1.0, green: 0.8, blue: 0.0)) {
-                vm.editMode = .select
-                showBuildingPalette = false
-            }
-            Divider().overlay(Color.white.opacity(0.1))
-            toolButton(icon: "plus.square.fill", label: "建造",
-                       isActive: showBuildingPalette || { if case .place = vm.editMode { return true }; return false }(),
-                       color: Color(red: 0.4, green: 0.8, blue: 0.2)) {
-                withAnimation(.spring(response: 0.3)) {
-                    showBuildingPalette.toggle()
-                    if showBuildingPalette {
-                        // 打开建筑板时切换到 place 模式的初始态（无具体建筑先用 select 占位）
-                        // 实际 editMode 在用户点选建筑后才变成 .place(def)
-                        vm.editMode = .select
-                    } else {
+        FactoryWorkspaceToolbar(vm: vm, showBuildingPalette: $showBuildingPalette, showMyLayouts: $showMyLayouts,
+                                horizontalLabels: usesSidePalette && workspaceSize.width >= 1000)
+    }
+
+    // MARK: - 建筑选择板（拖拽放置）
+    /// vertical：iPad 右侧面板用竖向网格（分类横向滚动、建筑按可用宽度自适应列数上下滑）；手机底部用横向一排
+    @ViewBuilder
+    private func buildingPalette(vertical: Bool) -> some View {
+        VStack(spacing: 0) {
+            HStack(spacing: AppSpacing.xs) {
+                Text("设施").font(AppTypography.rowTitle)
+                Text("长按拖入画布").font(AppTypography.caption).foregroundStyle(AppColors.secondaryText)
+                Spacer(minLength: 0)
+                placementRotationButton
+                AppIconButton(title: "关闭建造面板", systemImage: "xmark") {
+                    withAnimation(AppMotion.panel(reduceMotion: reduceMotion)) {
+                        showBuildingPalette = false
                         vm.editMode = .select
                     }
                 }
             }
-            Divider().overlay(Color.white.opacity(0.1))
-            toolButton(icon: "arrow.left.and.right", label: "传送带",
-                       isActive: vm.editMode == .belt,
-                       color: Color(red: 1.0, green: 0.55, blue: 0.1)) {
-                vm.editMode = .belt
-                showBuildingPalette = false
-                vm.beltStart = nil
-            }
-            // 不能用管道的地图（四号谷地）不显示管道工具
-            if vm.layout.mapType.rules.allowsPipes {
-                Divider().overlay(Color.white.opacity(0.1))
-                toolButton(icon: "water.waves", label: "管道",
-                           isActive: vm.editMode == .pipe,
-                           color: Color(red: 0.3, green: 0.7, blue: 1.0)) {
-                    vm.editMode = .pipe
-                    showBuildingPalette = false
-                    vm.beltStart = nil
-                }
-            }
-            Divider().overlay(Color.white.opacity(0.1))
-            // 旋转已选建筑在详情面板里，放置前旋转在建造面板里，这个位置给框选
-            toolButton(icon: "rectangle.dashed", label: "框选",
-                       isActive: vm.editMode == .boxSelect,
-                       color: Color(red: 0.3, green: 0.85, blue: 0.95)) {
-                vm.editMode = .boxSelect
-                showBuildingPalette = false
-            }
-            Divider().overlay(Color.white.opacity(0.1))
-            toolButton(icon: "square.stack.3d.up", label: "我的布局",
-                       isActive: showMyLayouts,
-                       color: Color(red: 0.4, green: 0.8, blue: 0.2)) {
-                showMyLayouts = true
-            }
-            Divider().overlay(Color.white.opacity(0.1))
-            toolButton(icon: "trash.fill", label: "删除",
-                       isActive: vm.editMode == .erase,
-                       color: Color.red) {
-                vm.editMode = .erase
-                showBuildingPalette = false
-            }
-            Divider().overlay(Color.white.opacity(0.1))
-            toolButton(icon: "arrow.uturn.backward", label: "撤销",
-                       isActive: false,
-                       color: .white) {
-                vm.undo()
-            }
-            .disabled(!vm.canUndo)
-            .opacity(vm.canUndo ? 1 : 0.35)
-            Divider().overlay(Color.white.opacity(0.1))
-            toolButton(icon: "arrow.uturn.forward", label: "重做",
-                       isActive: false,
-                       color: .white) {
-                vm.redo()
-            }
-            .disabled(!vm.canRedo)
-            .opacity(vm.canRedo ? 1 : 0.35)
-        }
-        .frame(height: 52)
-        .background(Color(red: 0.10, green: 0.11, blue: 0.14))
-        .overlay(Rectangle()
-            .stroke(Color(red: 1.0, green: 0.8, blue: 0.0).opacity(0.15), lineWidth: 1),
-            alignment: .bottom)
-    }
+            .foregroundStyle(AppColors.primaryText)
+            .padding(.leading, AppSpacing.md)
+            .padding(.trailing, AppSpacing.xxs)
 
-    private func toolButton(icon: String, label: String, isActive: Bool,
-                            color: Color, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            VStack(spacing: 3) {
-                Image(systemName: icon).font(.system(size: 16))
-                    .foregroundColor(isActive ? color : .white.opacity(0.4))
-                Text(label).font(.system(size: 8, weight: .bold, design: .monospaced))
-                    .foregroundColor(isActive ? color : .white.opacity(0.3))
-            }
-            .frame(maxWidth: .infinity).padding(.vertical, 8)
-            .background(isActive ? color.opacity(0.12) : Color.clear)
-        }
-        .buttonStyle(.plain)
-    }
-
-    // MARK: - 建筑选择板（拖拽放置）
-    /// vertical：iPad 右侧面板用竖向网格（分类标签换行、建筑每行 4 个上下滑）；手机底部用横向一排
-    @ViewBuilder
-    private func buildingPalette(vertical: Bool) -> some View {
-        VStack(spacing: 0) {
-            // 分类筛选
-            if vertical {
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 76), spacing: 8)], alignment: .leading, spacing: 8) {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: AppSpacing.xxs) {
                     categoryChip(category: nil, label: "全部")
                     ForEach(BuildingCategory.allCases, id: \.self) { cat in
                         categoryChip(category: cat, label: cat.rawValue)
                     }
                 }
-                .padding(.horizontal, 14).padding(.vertical, 10)
-                .background(Color(red: 0.10, green: 0.11, blue: 0.14))
-            } else {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
-                        categoryChip(category: nil, label: "全部")
-                        ForEach(BuildingCategory.allCases, id: \.self) { cat in
-                            categoryChip(category: cat, label: cat.rawValue)
-                        }
-                    }
-                    .padding(.horizontal, 14).padding(.vertical, 8)
-                }
-                .background(Color(red: 0.10, green: 0.11, blue: 0.14))
+                .padding(.horizontal, AppSpacing.xs)
             }
+            .fixedSize(horizontal: false, vertical: true)
 
-            // 建筑列表（按住卡片再拖进网格）
             if vertical {
-                ScrollView(.vertical, showsIndicators: true) {
-                    LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 4), spacing: 14) {
-                        ForEach(filteredBuildings) { def in
-                            draggableBuildingChip(def)
-                        }
+                ScrollView(.vertical) {
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 88), spacing: AppSpacing.xs)], spacing: AppSpacing.xs) {
+                        ForEach(filteredBuildings) { def in draggableBuildingChip(def) }
                     }
-                    .padding(.horizontal, 14).padding(.vertical, 12)
+                    .padding(AppSpacing.xs)
                 }
-                .frame(maxHeight: .infinity)
-                .background(Color(red: 0.12, green: 0.13, blue: 0.16))
             } else {
                 ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 10) {
-                        ForEach(filteredBuildings) { def in
-                            draggableBuildingChip(def)
-                        }
+                    HStack(alignment: .top, spacing: AppSpacing.xs) {
+                        ForEach(filteredBuildings) { def in draggableBuildingChip(def) }
                     }
-                    .padding(.horizontal, 14).padding(.vertical, 10)
+                    .padding(.horizontal, AppSpacing.xs)
+                    .padding(.vertical, AppSpacing.xs)
                 }
-                .background(Color(red: 0.12, green: 0.13, blue: 0.16))
+                .fixedSize(horizontal: false, vertical: true)
             }
-
-            // 拖拽提示
-            HStack(spacing: 6) {
-                Image(systemName: "hand.draw.fill")
-                    .font(.system(size: 10))
-                    .foregroundColor(.white.opacity(0.3))
-                Text("按住建筑再拖到网格放置 · 双指缩放")
-                    .font(.system(size: 10, design: .monospaced))
-                    .foregroundColor(.white.opacity(0.3))
-                Spacer().frame(width: 12)
-                // 放置前旋转（已放下的建筑在详情面板里旋转）
-                Button {
-                    vm.pendingRotation = vm.pendingRotation.next
-                } label: {
-                    Label("旋转 \(vm.pendingRotation.symbol)", systemImage: "rotate.right")
-                        .font(.system(size: 10, weight: .bold, design: .monospaced))
-                        .foregroundColor(Color(red: 0.7, green: 0.5, blue: 0.9))
-                        .padding(.horizontal, 8).padding(.vertical, 4)
-                        .background(Color(red: 0.7, green: 0.5, blue: 0.9).opacity(0.12))
-                }
-                .buttonStyle(.plain)
-            }
-            .padding(.vertical, 6)
-            .frame(maxWidth: .infinity)
-            .background(Color(red: 0.10, green: 0.11, blue: 0.14))
         }
-        .overlay(Rectangle()
-            .stroke(Color(red: 0.4, green: 0.8, blue: 0.2).opacity(0.3), lineWidth: 1),
-            alignment: .top)
+        .background(AppColors.surface)
+        .overlay(alignment: .top) {
+            Rectangle().fill(AppColors.border).frame(height: 1).allowsHitTesting(false)
+        }
+    }
+
+    private var placementRotationButton: some View {
+        Button { vm.pendingRotation = vm.pendingRotation.next } label: {
+            Label(vm.pendingRotation.symbol, systemImage: "rotate.right")
+                .font(AppTypography.supporting)
+                .foregroundStyle(AppColors.secondaryText)
+                .padding(.horizontal, AppSpacing.xs)
+                .frame(minWidth: AppSize.touchTarget, minHeight: AppSize.touchTarget)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("放置前旋转，当前朝向 \(vm.pendingRotation.symbol)")
     }
 
     private var filteredBuildings: [BuildingDefinition] {
@@ -605,40 +468,48 @@ struct FactoryLayoutView: View {
     }
 
     private func categoryChip(category: BuildingCategory?, label: String) -> some View {
-        let isSelected = category == selectedCategory
-        let color = category?.color ?? Color(red: 1.0, green: 0.8, blue: 0.0)
+        let selected = category == selectedCategory
         return Button { selectedCategory = category } label: {
             Text(label)
-                .font(.system(size: 11, weight: .bold, design: .monospaced))
-                .foregroundColor(isSelected ? .black : color.opacity(0.8))
-                .padding(.horizontal, 10).padding(.vertical, 5)
-                .background(isSelected ? color : color.opacity(0.1))
-                .overlay(RoundedRectangle(cornerRadius: 0).stroke(color.opacity(0.4), lineWidth: 1))
-        }.buttonStyle(.plain)
+                .font(AppTypography.caption.weight(selected ? .semibold : .regular))
+                .foregroundStyle(selected ? AppColors.accent : AppColors.secondaryText)
+                .padding(.horizontal, AppSpacing.xs)
+                .frame(minWidth: AppSize.touchTarget, minHeight: AppSize.touchTarget)
+                .contentShape(Rectangle())
+                .overlay(alignment: .bottom) {
+                    if selected { Capsule().fill(AppColors.accent).frame(height: 2).padding(.horizontal, AppSpacing.xs) }
+                }
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(label)
+        .accessibilityAddTraits(selected ? .isSelected : [])
     }
 
     /// 建筑卡片：按住再拖时激活拖拽状态，松手时在网格对应位置放置
     private func draggableBuildingChip(_ def: BuildingDefinition) -> some View {
-        VStack(spacing: 6) {
-            ZStack {
-                Rectangle().fill(def.category.color.opacity(0.15)).frame(width: 52, height: 52)
-                Rectangle().stroke(def.category.color.opacity(0.4), lineWidth: 1).frame(width: 52, height: 52)
-                Image(systemName: def.category.icon).font(.system(size: 20))
-                    .foregroundColor(def.category.color)
-            }
-            Text(def.name).font(.system(size: 10, weight: .bold))
-                .foregroundColor(.white.opacity(0.7)).lineLimit(1)
+        VStack(spacing: AppSpacing.xxs) {
+            Image(systemName: def.category.icon)
+                .font(.title3.weight(.medium))
+                .foregroundStyle(def.category.color)
+                .frame(height: 28)
+            Text(def.name).font(AppTypography.caption.weight(.medium))
+                .foregroundStyle(AppColors.primaryText)
+                .fixedSize(horizontal: false, vertical: true)
             Text("\(def.size.width)×\(def.size.height)")
-                .font(.system(size: 9, design: .monospaced)).foregroundColor(.white.opacity(0.4))
+                .font(.caption2.monospacedDigit()).foregroundStyle(AppColors.tertiaryText)
         }
-        .frame(width: 72)
-        .scaleEffect(draggingDef?.id == def.id ? 1.08 : 1.0)
-        .animation(.spring(response: 0.2), value: draggingDef?.id)
+        .multilineTextAlignment(.center)
+        .padding(.vertical, AppSpacing.xxs)
+        .frame(width: dynamicTypeSize.isAccessibilitySize ? 144 : 88)
+        .scaleEffect(!reduceMotion && draggingDef?.id == def.id ? 1.04 : 1.0)
+        .animation(AppMotion.feedback(reduceMotion: reduceMotion), value: draggingDef?.id)
         // 先按住 0.2 秒再拖才算"拿建筑去放置"，手指一按下就滑动则交给外面的 ScrollView 滚动。
         // SwiftUI 自己的 DragGesture / 长按+拖（不管 gesture 还是 simultaneousGesture）在新版 iOS 上
         // 都会把卡片区域的列表滑动吃掉，所以改用 UIKit 的长按手势：它和 ScrollView 的滑动是同一套
         // 手势系统，按下就滑时长按自动失败，滚动不受影响；长按成功后手指移动会持续回调位置。
         // 原来长按弹出的"旋转"菜单会跟这个冲突，去掉了，放置前旋转用工具栏的旋转按钮
+        .accessibilityElement(children: .combine)
+        .accessibilityHint("长按并拖到画布放置")
         .gesture(PaletteHoldDragGesture(
             onChanged: { location in
                 if draggingDef == nil {
@@ -735,178 +606,150 @@ struct FactoryLayoutView: View {
                     Label("\(unpowered) 个建筑不在供电桩范围内，不运行", systemImage: "bolt.slash.fill")
                 }
             }
-            .font(.system(size: 11, weight: .bold))
+            .font(AppTypography.supporting)
             .foregroundColor(red)
             .padding(.horizontal, 12).padding(.vertical, 7)
-            .background(Color(red: 0.10, green: 0.11, blue: 0.14).opacity(0.92))
+            .background(AppColors.elevatedSurface.opacity(0.92))
             .overlay(Rectangle().stroke(red.opacity(0.6), lineWidth: 1))
             .transition(.move(edge: .top).combined(with: .opacity))
         }
     }
 
-    // MARK: - 利用率视图开关 + 图例
-    private var utilizationButton: some View {
-        let on = vm.showUtilization
-        let color = Color(red: 0.35, green: 0.95, blue: 0.45)
-        return Button {
-            withAnimation(.spring(response: 0.3)) { vm.showUtilization.toggle() }
-        } label: {
-            ZStack {
-                Circle()
-                    .fill(on ? color.opacity(0.22) : Color(red: 0.10, green: 0.11, blue: 0.14))
-                    .frame(width: 44, height: 44)
-                Circle()
-                    .stroke(color.opacity(on ? 0.9 : 0.45), lineWidth: 1.5)
-                    .frame(width: 44, height: 44)
-                VStack(spacing: 0) {
-                    Image(systemName: "gauge.with.dots.needle.50percent")
-                        .font(.system(size: 15))
-                    Text("利用率")
-                        .font(.system(size: 8, weight: .bold))
-                }
-                .foregroundColor(on ? color : .white.opacity(0.6))
+    // MARK: - 利用率与统计
+    private var canvasControls: some View {
+        HStack(spacing: 0) {
+            utilizationButton
+            if vm.showUtilization {
+                AppIconButton(title: "查看利用率图例", systemImage: "info.circle") { showUtilizationLegend = true }
+                    .popover(isPresented: $showUtilizationLegend, arrowEdge: .bottom) {
+                        utilizationLegend
+                            .padding(AppSpacing.xs)
+                            .presentationCompactAdaptation(.popover)
+                    }
             }
+            Rectangle().fill(AppColors.border).frame(width: 1, height: 18).accessibilityHidden(true)
+            statsFloatingButton
+        }
+        .background(AppColors.surface, in: RoundedRectangle(cornerRadius: AppRadius.control))
+        .overlay {
+            RoundedRectangle(cornerRadius: AppRadius.control)
+                .stroke(vm.showUtilization ? AppColors.accent.opacity(0.65) : AppColors.controlBorder, lineWidth: 1)
+                .allowsHitTesting(false)
+        }
+    }
+
+    private var utilizationButton: some View {
+        Button {
+            withAnimation(AppMotion.feedback(reduceMotion: reduceMotion)) { vm.showUtilization.toggle() }
+        } label: {
+            Label("线的利用率", systemImage: "gauge.with.dots.needle.50percent")
+                .font(AppTypography.caption.weight(.medium))
+                .foregroundStyle(vm.showUtilization ? AppColors.accent : AppColors.secondaryText)
+                .padding(.horizontal, AppSpacing.sm)
+                .frame(minHeight: AppSize.touchTarget)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(on ? "关闭利用率视图" : "打开利用率视图")
+        .accessibilityLabel(vm.showUtilization ? "关闭利用率视图" : "打开利用率视图")
+        .accessibilityAddTraits(vm.showUtilization ? .isSelected : [])
     }
 
     private var utilizationLegend: some View {
-        VStack(alignment: .leading, spacing: 5) {
-            Text("线的利用率").font(.system(size: 10, weight: .bold)).foregroundColor(.white.opacity(0.8))
-            legendRow(swatch: AnyView(Capsule().fill(FactoryGridView.utilizationFullColor)), text: "跑满")
-            legendRow(swatch: AnyView(Text("60%").font(.system(size: 8, weight: .heavy, design: .monospaced))
-                                        .foregroundColor(.white).padding(.horizontal, 2).background(Color.black.opacity(0.7))),
-                      text: "没跑满（标百分比）")
-            legendRow(swatch: AnyView(Capsule().fill(Color(red: 1.0, green: 0.55, blue: 0.1).opacity(0.25))), text: "空闲（变暗）")
-            legendRow(swatch: AnyView(Capsule().fill(FactoryGridView.utilizationOverColor)), text: "被限流（瓶颈）")
+        VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: AppSpacing.xs) {
+                Text("线的利用率").font(AppTypography.supporting.weight(.semibold))
+                legendRow(swatch: AnyView(Rectangle().fill(FactoryGridView.utilizationFullColor)), text: "跑满")
+                legendRow(swatch: AnyView(Text("60%").font(AppTypography.caption).foregroundStyle(.white)
+                    .background(.black)), text: "没跑满（刻度与百分比）")
+                legendRow(swatch: AnyView(Rectangle().fill(FactoryCanvasPalette.belt.opacity(0.25))),
+                          text: "空闲（变暗）")
+                legendRow(swatch: AnyView(Rectangle().fill(FactoryGridView.utilizationOverColor)), text: "被限流（瓶颈）")
+            }
+            .foregroundStyle(AppColors.primaryText)
         }
-        .padding(10)
-        .background(Color(red: 0.10, green: 0.11, blue: 0.14).opacity(0.95))
-        .overlay(Rectangle().stroke(Color.white.opacity(0.15), lineWidth: 1))
+        .padding(AppSpacing.sm)
+        .frame(maxWidth: 240)
+        .transition(.opacity)
+    }
+
+    private func legendRow(swatch: AnyView, text: String) -> some View {
+        HStack(spacing: AppSpacing.xs) {
+            swatch.frame(width: 28, height: 12).accessibilityHidden(true)
+            Text(text).font(AppTypography.caption).foregroundStyle(AppColors.secondaryText)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    private var statsFloatingButton: some View {
+        Button {
+            withAnimation(AppMotion.feedback(reduceMotion: reduceMotion)) { showStats.toggle() }
+        } label: {
+            Label("统计 · \(vm.stats.buildingCount)", systemImage: "chart.bar")
+                .font(AppTypography.caption.weight(.medium))
+                .foregroundStyle(AppColors.secondaryText)
+                .padding(.horizontal, AppSpacing.sm)
+                .frame(minHeight: AppSize.touchTarget)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("产能统计，\(vm.stats.buildingCount) 个建筑")
+    }
+
+    private var statsOverlay: some View {
+        GeometryReader { geometry in
+            ZStack(alignment: .bottomTrailing) {
+                Color.black.opacity(0.35)
+                    .ignoresSafeArea()
+                    .onTapGesture {
+                        withAnimation(AppMotion.feedback(reduceMotion: reduceMotion)) { showStats = false }
+                    }
+                    .accessibilityHidden(true)
+                VStack(spacing: 0) {
+                    HStack(alignment: .top, spacing: AppSpacing.xs) {
+                        AppSectionHeader(title: "产能统计", subtitle: "当前布局的稳定产能估算")
+                        AppIconButton(title: "关闭产能统计", systemImage: "xmark") { showStats = false }
+                    }
+                    .padding(AppSpacing.md)
+                    Divider().overlay(AppColors.border)
+                    ScrollView {
+                        FactoryStatsView(stats: vm.stats, isExpanded: .constant(true), showsHeader: false)
+                    }
+                }
+                .background(AppColors.surface, in: RoundedRectangle(cornerRadius: AppRadius.panel))
+                .clipShape(RoundedRectangle(cornerRadius: AppRadius.panel))
+                .overlay {
+                    RoundedRectangle(cornerRadius: AppRadius.panel).strokeBorder(AppColors.border, lineWidth: 1)
+                        .allowsHitTesting(false)
+                }
+                .frame(width: max(0, min(520, geometry.size.width - AppSpacing.md * 2)),
+                       height: max(0, min(720, geometry.size.height - AppSpacing.md * 2)))
+                .padding(AppSpacing.md)
+                .accessibilityElement(children: .contain)
+                .accessibilityAction(.escape) { showStats = false }
+            }
+        }
+        .transition(.opacity)
+    }
+
+    private var saveToast: some View {
+        VStack {
+            Spacer()
+            AppFeedbackToast(title: vm.toastText)
+                .padding(AppSpacing.md)
+                .onAppear {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                        withAnimation(AppMotion.feedback(reduceMotion: reduceMotion)) { vm.showSaveConfirm = false }
+                    }
+                }
+        }
         .transition(.opacity)
         .allowsHitTesting(false)
     }
 
-    private func legendRow(swatch: AnyView, text: String) -> some View {
-        HStack(spacing: 6) {
-            swatch.frame(width: 26, height: 8)
-            Text(text).font(.system(size: 10)).foregroundColor(.white.opacity(0.75))
-        }
-    }
-
-    // MARK: - 悬浮产能按钮
-    private var statsFloatingButton: some View {
-        Button {
-            withAnimation(.spring(response: 0.35)) {
-                showStats.toggle()
-            }
-        } label: {
-            ZStack {
-                Circle()
-                    .fill(Color(red: 0.10, green: 0.11, blue: 0.14))
-                    .frame(width: 52, height: 52)
-                Circle()
-                    .stroke(Color(red: 0.4, green: 0.8, blue: 0.2).opacity(0.6), lineWidth: 1.5)
-                    .frame(width: 52, height: 52)
-                VStack(spacing: 1) {
-                    Image(systemName: "chart.bar.fill")
-                        .font(.system(size: 16))
-                        .foregroundColor(Color(red: 0.4, green: 0.8, blue: 0.2))
-                    Text("\(vm.stats.buildingCount)")
-                        .font(.system(size: 10, weight: .bold, design: .monospaced))
-                        .foregroundColor(.white.opacity(0.7))
-                }
-            }
-            .shadow(color: Color(red: 0.4, green: 0.8, blue: 0.2).opacity(0.3), radius: 6)
-        }
-        .buttonStyle(.plain)
-    }
-
-    // MARK: - 产能统计 overlay（从角落弹出）
-    private var statsOverlay: some View {
-        ZStack(alignment: .bottomTrailing) {
-            // 半透明背景蒙层，点击关闭
-            Color.black.opacity(0.3)
-                .ignoresSafeArea()
-                .onTapGesture {
-                    withAnimation(.spring(response: 0.3)) { showStats = false }
-                }
-
-            // 统计卡片
-            VStack(spacing: 0) {
-                // 标题栏
-                HStack {
-                    Rectangle().fill(Color(red: 0.4, green: 0.8, blue: 0.2)).frame(width: 3, height: 14)
-                    Text("产能统计")
-                        .font(.system(size: 12, weight: .bold, design: .monospaced))
-                        .foregroundColor(.white)
-                    Spacer()
-                    // 电力余量（发电－耗电，正数=有富余，负数=不够）
-                    let margin = vm.stats.totalPowerGenerated - vm.stats.totalPowerConsumed
-                    Text(String(format: "%+.1f MW", margin))
-                        .font(.system(size: 11, weight: .medium, design: .monospaced))
-                        .foregroundColor(margin >= 0 ? Color(red: 0.4, green: 0.8, blue: 0.2) : Color(red: 0.9, green: 0.3, blue: 0.2))
-                        .padding(.trailing, 8)
-                    Button {
-                        withAnimation(.spring(response: 0.3)) { showStats = false }
-                    } label: {
-                        Image(systemName: "xmark").font(.system(size: 12, weight: .bold))
-                            .foregroundColor(.white.opacity(0.5))
-                    }
-                    .buttonStyle(.plain)
-                }
-                .padding(.horizontal, 14).padding(.vertical, 10)
-                .background(Color(red: 0.08, green: 0.09, blue: 0.12))
-
-                // 内容可能很长（建筑一多，"没正常运行的机器"这类提示行会刷很多条），
-                // 之前没套 ScrollView 会直接顶出屏幕、连最上面的功率数字都划不到
-                ScrollView {
-                    FactoryStatsView(stats: vm.stats, isExpanded: .constant(true), showsHeader: false)
-                }
-            }
-            .background(Color(red: 0.10, green: 0.11, blue: 0.14))
-            .overlay(Rectangle().stroke(Color(red: 0.4, green: 0.8, blue: 0.2).opacity(0.4), lineWidth: 1))
-            // iPad 宽屏放大一些，一屏多看几行
-            .frame(maxWidth: usesSidePalette ? 460 : 340)
-            .frame(maxHeight: usesSidePalette ? 680 : 480)
-            .padding(.trailing, 16)
-            .padding(.bottom, 80)   // 留出悬浮按钮空间
-        }
-        .transition(.opacity.combined(with: .scale(scale: 0.95, anchor: .bottomTrailing)))
-    }
-
-    // MARK: - 保存 Toast
-    private var saveToast: some View {
-        VStack {
-            Spacer()
-            HStack(spacing: 10) {
-                Image(systemName: "checkmark.circle.fill")
-                    .foregroundColor(Color(red: 0.4, green: 0.8, blue: 0.2))
-                Text(vm.toastText)
-                    .font(.system(size: 14, weight: .bold, design: .monospaced))
-                    .foregroundColor(.white)
-            }
-            .padding(.horizontal, 20).padding(.vertical, 12)
-            .background(ZStack {
-                Rectangle().fill(Color(red: 0.10, green: 0.11, blue: 0.14))
-                Rectangle().stroke(Color(red: 0.4, green: 0.8, blue: 0.2).opacity(0.6), lineWidth: 1.5)
-            })
-            .shadow(color: Color(red: 0.4, green: 0.8, blue: 0.2).opacity(0.3), radius: 8)
-            .padding(.bottom, 80)
-            .onAppear {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                    withAnimation { vm.showSaveConfirm = false }
-                }
-            }
-        }
-        .transition(.move(edge: .bottom).combined(with: .opacity))
-        .allowsHitTesting(false)
-    }
 }
 
 #Preview {
-    FactoryLayoutView()
+    NavigationStack { FactoryLayoutView() }
 }
 
 /// 建筑卡片的"按住再拖"：UIKit 长按手势，按住 0.2 秒内手指没怎么动才开始，之后跟着手指回调全局坐标

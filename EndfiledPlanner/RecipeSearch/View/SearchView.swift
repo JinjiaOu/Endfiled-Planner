@@ -73,6 +73,9 @@ struct SearchView: View {
     @AppStorage("recipeDisclaimerSeen") private var disclaimerSeen = false
     @State private var showDisclaimer = false
     @State private var showEmptyHint = false
+    @State private var pageWidth: CGFloat = 0
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     
     var suggestions: [SuggestionItem] {
         let query = searchText.trimmingCharacters(in: .whitespaces)
@@ -90,402 +93,219 @@ struct SearchView: View {
     }
     
     var body: some View {
-        NavigationStack {
-            ZStack {
-                Color(red: 0.08, green: 0.09, blue: 0.12).ignoresSafeArea()
-                
-                GeometryReader { _ in
-                    Canvas { context, size in
-                        let spacing: CGFloat = 30
-                        var path = Path()
-                        for x in stride(from: 0, through: size.width, by: spacing) {
-                            path.move(to: CGPoint(x: x, y: 0))
-                            path.addLine(to: CGPoint(x: x, y: size.height))
+        ZStack {
+            AppTopographicBackground()
+            ScrollView {
+                VStack(alignment: .leading, spacing: AppSpacing.lg) {
+                    AppPageHeader(title: "分析生产依赖", subtitle: "选择目标物品与数量，查看生产步骤和串行耗时。")
+                    if pageWidth >= 820 && !dynamicTypeSize.isAccessibilitySize {
+                        HStack(alignment: .top, spacing: AppSpacing.lg) {
+                            configuration.frame(width: 320)
+                            results.frame(maxWidth: .infinity)
                         }
-                        for y in stride(from: 0, through: size.height, by: spacing) {
-                            path.move(to: CGPoint(x: 0, y: y))
-                            path.addLine(to: CGPoint(x: size.width, y: y))
-                        }
-                        context.stroke(path,
-                            with: .color(Color(red: 1.0, green: 0.8, blue: 0.0).opacity(0.1)),
-                            lineWidth: 0.5)
+                    } else {
+                        configuration
+                        results
                     }
                 }
-                .ignoresSafeArea()
-                
-                ScrollView {
-                    VStack(spacing: 0) {
-                        
-                        // ── 控制面板 ─────────────────────────────────
-                        VStack(spacing: 20) {
-                            
-                            // 标题
-                            VStack(alignment: .leading, spacing: 8) {
-                                HStack(spacing: 4) {
-                                    Rectangle().fill(Color(red: 1.0, green: 0.8, blue: 0.0)).frame(width: 30, height: 2)
-                                    Circle().fill(Color(red: 1.0, green: 0.8, blue: 0.0)).frame(width: 4, height: 4)
-                                    Spacer()
-                                }
-                                Text("RECIPE ANALYSIS")
-                                    .font(.system(size: 12, weight: .bold, design: .monospaced))
-                                    .foregroundColor(Color(red: 1.0, green: 0.8, blue: 0.0))
-                                Text("配方分析系统")
-                                    .font(.system(size: 28, weight: .bold))
-                                    .foregroundColor(.white)
-                            }
-                            .padding(.horizontal)
-                            .padding(.top, 20)
-                            
-                            VStack(spacing: 16) {
-                                
-                                // ── TARGET ITEM ───────────────────────
-                                VStack(alignment: .leading, spacing: 8) {
-                                    
-                                    HStack {
-                                        Text("TARGET ITEM")
-                                            .font(.system(size: 10, weight: .bold, design: .monospaced))
-                                            .foregroundColor(.white.opacity(0.6))
-                                        Spacer()
-                                        if let sel = selectedItem {
-                                            HStack(spacing: 4) {
-                                                Image(systemName: "checkmark.circle.fill").font(.system(size: 10))
-                                                Text(sel).font(.system(size: 10, design: .monospaced))
-                                            }
-                                            .foregroundColor(Color(red: 1.0, green: 0.8, blue: 0.0))
-                                        }
-                                    }
-                                    
-                                    // 搜索框 + ALL 按钮
-                                    HStack(spacing: 0) {
-                                        ZStack(alignment: .leading) {
-                                            Rectangle().fill(Color(red: 0.12, green: 0.13, blue: 0.16))
-                                            Rectangle().stroke(
-                                                searchFocused
-                                                    ? Color(red: 1.0, green: 0.8, blue: 0.0)
-                                                    : Color(red: 1.0, green: 0.8, blue: 0.0).opacity(0.3),
-                                                lineWidth: searchFocused ? 2 : 1
-                                            )
-                                            
-                                            HStack(spacing: 10) {
-                                                Image(systemName: "magnifyingglass")
-                                                    .font(.system(size: 14))
-                                                    .foregroundColor(searchFocused
-                                                        ? Color(red: 1.0, green: 0.8, blue: 0.0)
-                                                        : .white.opacity(0.35))
-                                                
-                                                ZStack(alignment: .leading) {
-                                                    if showDropdown,
-                                                       !searchText.isEmpty,
-                                                       let first = suggestions.first,
-                                                       first.matchType == .prefixMatch,
-                                                       first.name.count > searchText.count {
-                                                        Text(first.name)
-                                                            .font(.system(size: 15))
-                                                            .foregroundColor(.white.opacity(0.2))
-                                                            .allowsHitTesting(false)
-                                                    }
-                                                    
-                                                    TextField("", text: $searchText, prompt:
-                                                        Text("搜索或选择物品...")
-                                                            .foregroundColor(.white.opacity(0.28))
-                                                    )
-                                                    .font(.system(size: 15))
-                                                    .foregroundColor(.white)
-                                                    .focused($searchFocused)
-                                                    .autocorrectionDisabled()
-                                                    .onChange(of: searchFocused) { focused in
-                                                        withAnimation(.easeInOut(duration: 0.18)) {
-                                                            showDropdown = focused
-                                                        }
-                                                    }
-                                                    .onChange(of: searchText) { _ in
-                                                        if !showDropdown { showDropdown = true }
-                                                    }
-                                                    .onSubmit {
-                                                        if let first = suggestions.first {
-                                                            selectItem(first.name)
-                                                        }
-                                                    }
-                                                }
-                                                
-                                                if !searchText.isEmpty {
-                                                    Button {
-                                                        withAnimation(.easeInOut(duration: 0.15)) {
-                                                            searchText = ""
-                                                            selectedItem = nil
-                                                        }
-                                                    } label: {
-                                                        Image(systemName: "xmark.circle.fill")
-                                                            .font(.system(size: 15))
-                                                            .foregroundColor(.white.opacity(0.35))
-                                                    }
-                                                }
-                                            }
-                                            .padding(.horizontal, 12)
-                                        }
-                                        .frame(height: 50)
-                                        
-                                        Menu {
-                                            ForEach(vm.recipes.keys.sorted(), id: \.self) { item in
-                                                Button(item) { selectItem(item) }
-                                            }
-                                        } label: {
-                                            ZStack {
-                                                Rectangle().fill(Color(red: 0.08, green: 0.09, blue: 0.12))
-                                                Rectangle().stroke(Color(red: 1.0, green: 0.8, blue: 0.0).opacity(0.3), lineWidth: 1)
-                                                VStack(spacing: 3) {
-                                                    Image(systemName: "line.3.horizontal.decrease")
-                                                        .font(.system(size: 16))
-                                                        .foregroundColor(Color(red: 1.0, green: 0.8, blue: 0.0))
-                                                    Text("ALL")
-                                                        .font(.system(size: 8, weight: .bold, design: .monospaced))
-                                                        .foregroundColor(Color(red: 1.0, green: 0.8, blue: 0.0).opacity(0.7))
-                                                }
-                                            }
-                                            .frame(width: 52, height: 50)
-                                        }
-                                    }
-                                    
-                                    // ── 联想下拉列表 ──────────────────────
-                                    if showDropdown {
-                                        SuggestionDropdown(
-                                            suggestions: suggestions,
-                                            searchText: searchText,
-                                            selectedItem: selectedItem,
-                                            historyMgr: historyMgr,
-                                            onSelect: selectItem,
-                                            onDeleteHistory: { historyMgr.remove($0) },
-                                            onClearHistory: { historyMgr.clear() }
-                                        )
-                                        .transition(.opacity.combined(with: .move(edge: .top)))
-                                    }
-                                }
-                                .frame(maxWidth: .infinity)
-                                
-                                // ── 数量控制 ─────────────────────────────
-                                VStack(alignment: .leading, spacing: 8) {
-                                    Text("QUANTITY")
-                                        .font(.system(size: 10, weight: .bold, design: .monospaced))
-                                        .foregroundColor(.white.opacity(0.6))
-                                    
-                                    HStack(spacing: 0) {
-                                        Button {
-                                            if amount > 1 { withAnimation(.spring(response: 0.3)) { amount -= 1 } }
-                                        } label: {
-                                            ZStack {
-                                                Rectangle().fill(Color(red: 0.12, green: 0.13, blue: 0.16)).frame(width: 50, height: 50)
-                                                Image(systemName: "minus").font(.system(size: 18, weight: .bold))
-                                                    .foregroundColor(amount > 1 ? Color(red: 1.0, green: 0.8, blue: 0.0) : .white.opacity(0.2))
-                                            }
-                                        }
-                                        .disabled(amount <= 1)
-                                        
-                                        Spacer()
-                                        Text("\(amount)")
-                                            .font(.system(size: 32, weight: .bold, design: .monospaced))
-                                            .foregroundColor(Color(red: 1.0, green: 0.8, blue: 0.0))
-                                            .frame(minWidth: 80)
-                                            .animation(.spring(response: 0.3), value: amount)
-                                        Spacer()
-                                        
-                                        Button {
-                                            if amount < 100 { withAnimation(.spring(response: 0.3)) { amount += 1 } }
-                                        } label: {
-                                            ZStack {
-                                                Rectangle().fill(Color(red: 0.12, green: 0.13, blue: 0.16)).frame(width: 50, height: 50)
-                                                Image(systemName: "plus").font(.system(size: 18, weight: .bold))
-                                                    .foregroundColor(amount < 100 ? Color(red: 1.0, green: 0.8, blue: 0.0) : .white.opacity(0.2))
-                                            }
-                                        }
-                                        .disabled(amount >= 100)
-                                    }
-                                    .frame(height: 50)
-                                    .background(Rectangle().stroke(Color(red: 1.0, green: 0.8, blue: 0.0).opacity(0.3), lineWidth: 1))
-                                }
-                                .frame(maxWidth: .infinity)
-                                
-                                // ── 执行按钮 ──────────────────────────────
-                                VStack(spacing: 8) {
-                                    Button {
-                                        if let item = selectedItem {
-                                            showEmptyHint = false
-                                            dismissDropdown()
-                                            withAnimation(.spring(response: 0.4)) {
-                                                vm.buildTree(target: item, amount: amount)
-                                                showTree = true
-                                            }
-                                        } else {
-                                            withAnimation(.spring(response: 0.3)) {
-                                                showEmptyHint = true
-                                            }
-                                        }
-                                    } label: {
-                                        HStack(spacing: 8) {
-                                            Image(systemName: "play.fill")
-                                            Text("查看配方").font(.system(size: 14, weight: .bold, design: .monospaced))
-                                        }
-                                        .frame(maxWidth: .infinity)
-                                        .padding()
-                                        .background(ZStack {
-                                            Rectangle().fill(selectedItem == nil
-                                                ? Color.white.opacity(0.1)
-                                                : Color(red: 1.0, green: 0.8, blue: 0.0).opacity(0.2))
-                                            Rectangle().stroke(selectedItem == nil
-                                                ? Color.white.opacity(0.2)
-                                                : Color(red: 1.0, green: 0.8, blue: 0.0), lineWidth: 2)
-                                        })
-                                        .foregroundColor(selectedItem == nil
-                                            ? .white.opacity(0.3)
-                                            : Color(red: 1.0, green: 0.8, blue: 0.0))
-                                    }
-                                    .frame(maxWidth: .infinity)
+                .padding(AppSpacing.md)
+                .frame(maxWidth: 1120, alignment: .leading)
+                .frame(maxWidth: .infinity)
+            }
+            .scrollDismissesKeyboard(.interactively)
 
-                                    if showEmptyHint {
-                                        HStack(spacing: 6) {
-                                            Image(systemName: "exclamationmark.circle")
-                                                .font(.system(size: 11))
-                                            Text("请先搜索或选择一个配方")
-                                                .font(.system(size: 12, design: .monospaced))
-                                        }
-                                        .foregroundColor(Color(red: 0.9, green: 0.5, blue: 0.2))
-                                        .transition(.opacity.combined(with: .move(edge: .top)))
-                                    }
-                                }
-                            }
-                            .padding(.horizontal)
-                            .padding(.bottom, 20)
-                        }
-                        .background(
-                            Rectangle()
-                                .fill(Color(red: 0.12, green: 0.13, blue: 0.16))
-                                .overlay(Rectangle().stroke(
-                                    LinearGradient(
-                                        colors: [Color(red: 1.0, green: 0.8, blue: 0.0).opacity(0.3),
-                                                 Color(red: 1.0, green: 0.8, blue: 0.0).opacity(0.05)],
-                                        startPoint: .topLeading, endPoint: .bottomTrailing),
-                                    lineWidth: 1))
-                        )
-                        .padding(.horizontal)
-                        .padding(.top, 10)
-                        
-                        // ── 配方树结果 ─────────────────────────────────
-                        if showTree, let root = vm.rootNode {
-                            VStack(spacing: 16) {
-                                VStack(spacing: 0) {
-                                    HStack {
-                                        Rectangle().fill(Color(red: 1.0, green: 0.8, blue: 0.0)).frame(width: 3, height: 16)
-                                        Text("分析结果").font(.system(size: 12, weight: .bold, design: .monospaced)).foregroundColor(.white.opacity(0.8))
-                                        Spacer()
-                                    }
-                                    .padding(.horizontal, 16).padding(.vertical, 12)
-                                    .background(Color(red: 0.08, green: 0.09, blue: 0.12))
-                                    
-                                    HStack(spacing: 0) {
-                                        EndFieldStatCard(icon: "clock.fill", title: "TIME", value: "\(root.totalTime)", unit: "SEC", color: Color(red: 0.9, green: 0.5, blue: 0.2))
-                                        Divider().overlay(Color.white.opacity(0.1))
-                                        EndFieldStatCard(icon: "gearshape.2.fill", title: "BATCH", value: "\(root.batches)", unit: "CNT", color: Color(red: 0.6, green: 0.4, blue: 0.9))
-                                        Divider().overlay(Color.white.opacity(0.1))
-                                        EndFieldStatCard(icon: "arrow.triangle.branch", title: "STEPS", value: "\(countNodes(root))", unit: "CNT", color: Color(red: 0.4, green: 0.8, blue: 0.2))
-                                    }
-                                    .frame(height: 80)
-                                    .background(Color(red: 0.12, green: 0.13, blue: 0.16))
-                                }
-                                .background(Rectangle().stroke(Color(red: 1.0, green: 0.8, blue: 0.0).opacity(0.2), lineWidth: 1))
-                                .padding(.horizontal).padding(.top, 16)
-                                
-                                VStack(spacing: 0) {
-                                    HStack {
-                                        Rectangle().fill(Color(red: 1.0, green: 0.8, blue: 0.0)).frame(width: 3, height: 16)
-                                        Text("配方树").font(.system(size: 12, weight: .bold, design: .monospaced)).foregroundColor(.white.opacity(0.8))
-                                        Spacer()
-                                        Text("PREVIEW").font(.system(size: 10, weight: .medium, design: .monospaced)).foregroundColor(.white.opacity(0.4))
-                                    }
-                                    .padding(.horizontal, 16).padding(.vertical, 12)
-                                    .background(Color(red: 0.08, green: 0.09, blue: 0.12))
-                                    
-                                    ZStack {
-                                        ThumbnailPreview(root: root).frame(height: 300).background(Color(red: 0.12, green: 0.13, blue: 0.16))
-                                        VStack {
-                                            Spacer()
-                                            Button { showDetailView = true } label: {
-                                                HStack(spacing: 6) {
-                                                    Image(systemName: "arrow.up.left.and.arrow.down.right")
-                                                    Text("VIEW FULL TREE").font(.system(size: 12, weight: .bold, design: .monospaced))
-                                                }
-                                                .padding(.horizontal, 20).padding(.vertical, 12)
-                                                .background(ZStack {
-                                                    Rectangle().fill(Color(red: 1.0, green: 0.8, blue: 0.0).opacity(0.2))
-                                                    Rectangle().stroke(Color(red: 1.0, green: 0.8, blue: 0.0), lineWidth: 2)
-                                                })
-                                                .foregroundColor(Color(red: 1.0, green: 0.8, blue: 0.0))
-                                            }
-                                            .padding(.bottom, 20)
-                                        }
-                                    }
-                                    .onTapGesture { showDetailView = true }
-                                }
-                                .background(Rectangle().stroke(Color(red: 1.0, green: 0.8, blue: 0.0).opacity(0.2), lineWidth: 1))
-                                .padding(.horizontal)
-                            }
-                            .transition(.move(edge: .bottom).combined(with: .opacity))
-                            
-                        } else if showTree {
-                            VStack(spacing: 16) {
-                                Image(systemName: "exclamationmark.triangle").font(.system(size: 60)).foregroundColor(.red.opacity(0.5))
-                                Text("ERROR: RECIPE NOT FOUND").font(.system(size: 14, weight: .bold, design: .monospaced)).foregroundColor(.red.opacity(0.8))
-                                Text("未找到配方数据").font(.subheadline).foregroundColor(.white.opacity(0.6))
-                            }
-                            .frame(maxHeight: .infinity).padding(.top, 60)
-                        }
-                        
-                        Spacer(minLength: 40)
-                    }
-                    .frame(maxWidth: 940)
-                    .frame(maxWidth: .infinity)
-                }
-                .onTapGesture { dismissDropdown() }
-                
-                // ── 免责声明弹窗覆盖层 ────────────────────────────
-                if showDisclaimer {
-                    RecipeDisclaimerOverlay {
-                        withAnimation(.easeInOut(duration: 0.2)) {
-                            showDisclaimer = false
-                            disclaimerSeen = true
-                        }
-                    }
-                    .transition(.opacity)
-                    .zIndex(10)
-                }
-            }
-            .navigationTitle("")
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "doc.text.magnifyingglass").foregroundColor(Color(red: 1.0, green: 0.8, blue: 0.0))
-                        Text("RECIPE ANALYSIS").font(.system(size: 16, weight: .bold, design: .monospaced)).foregroundColor(.white)
+            if showDisclaimer {
+                RecipeDisclaimerOverlay {
+                    withAnimation(AppMotion.feedback(reduceMotion: reduceMotion)) {
+                        showDisclaimer = false
+                        disclaimerSeen = true
                     }
                 }
+                .zIndex(10)
             }
-            .toolbarBackground(.visible, for: .navigationBar)
-            .toolbarBackground(Color(red: 0.08, green: 0.09, blue: 0.12), for: .navigationBar)
-            .sheet(isPresented: $showDetailView) {
-                if let root = vm.rootNode { RecipeDetailView(root: root) }
+        }
+        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { pageWidth = $0 }
+        .navigationTitle("配方分析")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(.visible, for: .navigationBar)
+        .toolbarBackground(AppColors.background, for: .navigationBar)
+        .tint(AppColors.accent)
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("完成") { dismissDropdown() }
             }
-            .onAppear {
-                // 首次进入时弹出免责声明
-                if !disclaimerSeen {
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        showDisclaimer = true
+        }
+        .sheet(isPresented: $showDetailView) {
+            if let root = vm.rootNode { RecipeDetailView(root: root) }
+        }
+        .onAppear {
+            if !disclaimerSeen {
+                withAnimation(AppMotion.feedback(reduceMotion: reduceMotion)) { showDisclaimer = true }
+            }
+        }
+    }
+
+    private var configuration: some View {
+        AppSurface {
+            VStack(alignment: .leading, spacing: AppSpacing.md) {
+                AppSectionHeader(title: "目标与数量")
+                searchInput
+                if showDropdown {
+                    SuggestionDropdown(suggestions: suggestions, searchText: searchText,
+                                       selectedItem: selectedItem, historyMgr: historyMgr,
+                                       onSelect: selectItem,
+                                       onDeleteHistory: { historyMgr.remove($0) },
+                                       onClearHistory: { historyMgr.clear() })
+                }
+                if let selectedItem {
+                    Label(selectedItem, systemImage: "checkmark.circle.fill")
+                        .font(AppTypography.supporting).foregroundStyle(AppColors.success)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Divider().overlay(AppColors.border)
+                Stepper(value: $amount, in: 1...100) {
+                    VStack(alignment: .leading, spacing: AppSpacing.xxs) {
+                        Text("目标数量").font(AppTypography.supporting).foregroundStyle(AppColors.secondaryText)
+                        Text("\(amount)").font(AppTypography.metric).foregroundStyle(AppColors.primaryText)
                     }
+                }
+                .accessibilityLabel("目标数量")
+                .accessibilityValue("\(amount)")
+                Button(action: buildRecipe) {
+                    Label("查看配方", systemImage: "arrow.triangle.branch")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(AppActionStyle())
+                if showEmptyHint {
+                    AppInlineNotice(title: "请先搜索或选择一个配方", tone: .warning)
                 }
             }
         }
     }
-    
+
+    private var searchInput: some View {
+        HStack(alignment: .top, spacing: AppSpacing.xs) {
+            HStack(spacing: AppSpacing.xs) {
+                Image(systemName: "magnifyingglass").foregroundStyle(AppColors.secondaryText)
+                ZStack(alignment: .leading) {
+                    if showDropdown, !searchText.isEmpty, let first = suggestions.first,
+                       first.matchType == .prefixMatch, first.name.count > searchText.count {
+                        Text(first.name).foregroundStyle(AppColors.tertiaryText.opacity(0.45))
+                            .allowsHitTesting(false).accessibilityHidden(true)
+                    }
+                    TextField("搜索物品", text: $searchText)
+                        .focused($searchFocused)
+                        .autocorrectionDisabled()
+                        .textInputAutocapitalization(.never)
+                        .submitLabel(.search)
+                        .onChange(of: searchFocused) { _, focused in
+                            withAnimation(AppMotion.feedback(reduceMotion: reduceMotion)) { showDropdown = focused }
+                        }
+                        .onChange(of: searchText) { _, _ in
+                            if !showDropdown { showDropdown = true }
+                        }
+                        .onSubmit { if let first = suggestions.first { selectItem(first.name) } }
+                        .accessibilityLabel("搜索目标物品")
+                }
+                .font(AppTypography.body).foregroundStyle(AppColors.primaryText)
+                if !searchText.isEmpty {
+                    AppIconButton(title: "清除物品搜索", systemImage: "xmark.circle.fill") {
+                        searchText = ""
+                        selectedItem = nil
+                    }
+                }
+            }
+            .padding(.leading, AppSpacing.sm)
+            .padding(.trailing, searchText.isEmpty ? AppSpacing.sm : 0)
+            .frame(minHeight: AppSize.rowMinimum)
+            .background(AppColors.background, in: RoundedRectangle(cornerRadius: AppRadius.control))
+            .overlay {
+                RoundedRectangle(cornerRadius: AppRadius.control)
+                    .strokeBorder(searchFocused ? AppColors.accent : AppColors.controlBorder, lineWidth: 1)
+                    .allowsHitTesting(false)
+            }
+            Menu {
+                ForEach(vm.recipes.keys.sorted(), id: \.self) { item in
+                    Button(item) { selectItem(item) }
+                }
+            } label: {
+                Image(systemName: "list.bullet")
+                    .frame(minWidth: AppSize.touchTarget, minHeight: AppSize.rowMinimum)
+                    .background(AppColors.background, in: RoundedRectangle(cornerRadius: AppRadius.control))
+            }
+            .accessibilityLabel("浏览全部物品")
+        }
+    }
+
+    @ViewBuilder
+    private var results: some View {
+        if showTree, let root = vm.rootNode {
+            VStack(alignment: .leading, spacing: AppSpacing.md) {
+                AppSurface {
+                    VStack(alignment: .leading, spacing: AppSpacing.md) {
+                        AppSectionHeader(title: root.name, subtitle: "分析结果 · 目标数量 \(root.amount)")
+                        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), alignment: .leading),
+                                                 count: dynamicTypeSize.isAccessibilitySize ? 1 : 3),
+                                  alignment: .leading, spacing: AppSpacing.md) {
+                            EndFieldStatCard(icon: "clock", title: "串行耗时", value: "\(root.totalTime)", unit: "秒", color: AppColors.primaryText)
+                            EndFieldStatCard(icon: "gearshape.2", title: "生产批次", value: "\(root.batches)", unit: "批", color: AppColors.primaryText)
+                            EndFieldStatCard(icon: "arrow.triangle.branch", title: "依赖节点", value: "\(countNodes(root))", unit: "个", color: AppColors.primaryText)
+                        }
+                        Text("耗时为最长串行路径，不含采集、运输和实际产线调度。")
+                            .font(AppTypography.caption).foregroundStyle(AppColors.secondaryText)
+                    }
+                }
+                AppSurface(padding: 0) {
+                    VStack(alignment: .leading, spacing: 0) {
+                        AppSectionHeader(title: "配方树", subtitle: "展开查看完整依赖，支持缩放、保存与分享。")
+                            .padding(AppSpacing.md)
+                        Divider().overlay(AppColors.border)
+                        Button { dismissDropdown(); showDetailView = true } label: {
+                            ThumbnailPreview(root: root).frame(height: 260)
+                                .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("查看完整配方树")
+                        Button { dismissDropdown(); showDetailView = true } label: {
+                            Label("展开完整配方树", systemImage: "arrow.up.left.and.arrow.down.right")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(AppActionStyle(emphasis: .secondary))
+                        .padding(AppSpacing.sm)
+                    }
+                }
+            }
+        } else if showTree {
+            AppSurface {
+                AppContentState(title: "未找到配方数据", message: "请重新选择目标物品后分析。",
+                                systemImage: "exclamationmark.triangle", tone: .error)
+            }
+        } else {
+            AppSurface {
+                AppContentState(title: "从目标物品开始", message: "输入名称、选择搜索历史，或浏览全部物品；选择数量后查看生产依赖。",
+                                systemImage: "arrow.triangle.branch")
+            }
+        }
+    }
+
+    private func buildRecipe() {
+        if let item = selectedItem {
+            showEmptyHint = false
+            dismissDropdown()
+            withAnimation(AppMotion.feedback(reduceMotion: reduceMotion)) {
+                vm.buildTree(target: item, amount: amount)
+                showTree = true
+            }
+        } else {
+            withAnimation(AppMotion.feedback(reduceMotion: reduceMotion)) { showEmptyHint = true }
+        }
+    }
+
     // MARK: - 辅助方法
     
     private func selectItem(_ item: String) {
-        withAnimation(.easeInOut(duration: 0.15)) {
+        withAnimation(AppMotion.feedback(reduceMotion: reduceMotion)) {
             selectedItem = item
             searchText = item
             showDropdown = false
@@ -496,7 +316,7 @@ struct SearchView: View {
     }
     
     private func dismissDropdown() {
-        withAnimation(.easeInOut(duration: 0.18)) {
+        withAnimation(AppMotion.feedback(reduceMotion: reduceMotion)) {
             showDropdown = false
             searchFocused = false
         }
@@ -511,115 +331,34 @@ struct SearchView: View {
 
 struct RecipeDisclaimerOverlay: View {
     let onConfirm: () -> Void
-    
-    private let accent = Color(red: 1.0, green: 0.8, blue: 0.0)
-    
+
     var body: some View {
-        ZStack {
-            // 半透明遮罩
-            Color.black.opacity(0.6)
-                .ignoresSafeArea()
-            
-            VStack(spacing: 0) {
-                
-                // 顶部标题栏
-                HStack(spacing: 10) {
-                    Rectangle()
-                        .fill(accent)
-                        .frame(width: 3, height: 20)
-                    
-                    Image(systemName: "exclamationmark.triangle.fill")
-                        .font(.system(size: 14))
-                        .foregroundColor(accent)
-                    
-                    Text("DATA NOTICE")
-                        .font(.system(size: 13, weight: .bold, design: .monospaced))
-                        .foregroundColor(accent)
-                    
-                    Spacer()
-                }
-                .padding(.horizontal, 20)
-                .padding(.vertical, 14)
-                .background(Color(red: 0.08, green: 0.09, blue: 0.12))
-                
-                // 分隔线
-                Rectangle()
-                    .fill(accent.opacity(0.3))
-                    .frame(height: 1)
-                
-                // 正文内容
-                VStack(alignment: .leading, spacing: 16) {
-                    
-                    Text("时间数据说明")
-                        .font(.system(size: 17, weight: .bold))
-                        .foregroundColor(.white)
-                    
-                    VStack(alignment: .leading, spacing: 12) {
-                        DisclaimerRow(
-                            icon: "arrow.triangle.branch",
-                            text: "本功能展示的生产时间基于单条串行链路计算，即从原材料到成品的最长路径耗时。"
-                        )
-                        
-                        DisclaimerRow(
-                            icon: "minus.circle",
-                            text: "计算结果不包含采矿、种植等原材料采集环节的时间，亦未考虑传送带运输延迟、建筑数量限制、产线调度等实际因素。"
-                        )
-                        
-                        DisclaimerRow(
-                            icon: "info.circle",
-                            text: "展示数据仅供规划参考，实际生产效率以游戏内表现为准。"
-                        )
-                    }
-                }
-                .padding(20)
-                .background(Color(red: 0.12, green: 0.13, blue: 0.16))
-                
-                // 分隔线
-                Rectangle()
-                    .fill(accent.opacity(0.3))
-                    .frame(height: 1)
-                
-                // 确认按钮
-                Button(action: onConfirm) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "checkmark")
-                            .font(.system(size: 13, weight: .bold))
-                        Text("我已了解")
-                            .font(.system(size: 14, weight: .bold, design: .monospaced))
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
-                    .foregroundColor(accent)
-                    .background(Color(red: 0.08, green: 0.09, blue: 0.12))
-                }
+        AppNoticeDialog(title: "时间数据说明") {
+            VStack(alignment: .leading, spacing: AppSpacing.md) {
+                DisclaimerRow(icon: "arrow.triangle.branch",
+                              text: "本功能展示的生产时间基于单条串行链路计算，即从原材料到成品的最长路径耗时。")
+                DisclaimerRow(icon: "minus.circle",
+                              text: "计算结果不包含采矿、种植等原材料采集环节的时间，亦未考虑传送带运输延迟、建筑数量限制、产线调度等实际因素。")
+                DisclaimerRow(icon: "info.circle",
+                              text: "展示数据仅供规划参考，实际生产效率以游戏内表现为准。")
             }
-            .background(Color(red: 0.12, green: 0.13, blue: 0.16))
-            .overlay(
-                Rectangle()
-                    .stroke(accent.opacity(0.4), lineWidth: 1)
-            )
-            .frame(maxWidth: 560)
-            .padding(.horizontal, 32)
+        } actions: {
+            Button(action: onConfirm) {
+                Label("我已了解", systemImage: "checkmark").frame(maxWidth: .infinity)
+            }
+            .buttonStyle(AppActionStyle())
         }
     }
 }
 
-// MARK: - 免责声明条目
-
 struct DisclaimerRow: View {
     let icon: String
     let text: String
-    
     var body: some View {
-        HStack(alignment: .top, spacing: 10) {
-            Image(systemName: icon)
-                .font(.system(size: 12))
-                .foregroundColor(Color(red: 1.0, green: 0.8, blue: 0.0).opacity(0.7))
-                .frame(width: 16, height: 20)
-            
-            Text(text)
-                .font(.system(size: 13))
-                .foregroundColor(.white.opacity(0.75))
+        HStack(alignment: .top, spacing: AppSpacing.sm) {
+            Image(systemName: icon).foregroundStyle(AppColors.accent)
+                .frame(width: AppSize.icon)
+            Text(text).font(AppTypography.body).foregroundStyle(AppColors.secondaryText)
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
@@ -636,7 +375,6 @@ struct SuggestionDropdown: View {
     let onDeleteHistory: (String) -> Void
     let onClearHistory: () -> Void
     
-    private let accent = Color(red: 1.0, green: 0.8, blue: 0.0)
     
     private var groups: [(label: String, icon: String, items: [SuggestionItem])] {
         let history  = suggestions.filter { $0.matchType == .history }
@@ -644,98 +382,72 @@ struct SuggestionDropdown: View {
         let contains = suggestions.filter { $0.matchType == .containsMatch }
         var g: [(String, String, [SuggestionItem])] = []
         if !history.isEmpty  { g.append(("最近搜索",    "clock.arrow.circlepath", history))  }
-        if !prefix.isEmpty   { g.append(("BEST MATCH", "target",                 prefix))   }
-        if !contains.isEmpty { g.append(("CONTAINS",   "text.magnifyingglass",   contains)) }
+        if !prefix.isEmpty   { g.append(("前缀匹配", "target",                 prefix))   }
+        if !contains.isEmpty { g.append(("包含匹配",   "text.magnifyingglass",   contains)) }
         return g
     }
     
     var body: some View {
-        VStack(spacing: 0) {
+        VStack(alignment: .leading, spacing: 0) {
             if suggestions.isEmpty {
-                HStack(spacing: 8) {
-                    Image(systemName: searchText.isEmpty ? "clock" : "magnifyingglass")
-                        .font(.system(size: 12)).foregroundColor(.white.opacity(0.25))
-                    Text(searchText.isEmpty ? "暂无搜索历史" : "未找到匹配物品")
-                        .font(.system(size: 13, design: .monospaced)).foregroundColor(.white.opacity(0.25))
-                    Spacer()
-                }
-                .padding(.horizontal, 14).padding(.vertical, 14)
+                Text(searchText.isEmpty ? "暂无搜索历史" : "未找到匹配物品")
+                    .font(AppTypography.supporting).foregroundStyle(AppColors.secondaryText)
+                    .padding(AppSpacing.sm)
             } else {
                 ScrollView {
-                    VStack(spacing: 0) {
-                        ForEach(Array(groups.enumerated()), id: \.offset) { gi, group in
-                            
-                            HStack(spacing: 6) {
-                                Image(systemName: group.icon).font(.system(size: 9, weight: .bold))
-                                Text(group.label).font(.system(size: 9, weight: .bold, design: .monospaced))
+                    LazyVStack(alignment: .leading, spacing: 0) {
+                        ForEach(Array(groups.enumerated()), id: \.offset) { _, group in
+                            HStack {
+                                Label(group.label, systemImage: group.icon)
+                                    .font(AppTypography.caption).foregroundStyle(AppColors.secondaryText)
                                 Spacer()
                                 if group.label == "最近搜索" {
-                                    Button { withAnimation { onClearHistory() } } label: {
-                                        Text("清除").font(.system(size: 9, design: .monospaced)).foregroundColor(accent.opacity(0.6))
-                                    }
+                                    Button("清除") { onClearHistory() }
+                                        .font(AppTypography.caption)
+                                        .frame(minWidth: AppSize.touchTarget, minHeight: AppSize.touchTarget)
+                                        .accessibilityLabel("清除全部搜索历史")
                                 }
                             }
-                            .foregroundColor(.white.opacity(0.35))
-                            .padding(.horizontal, 12)
-                            .padding(.top, gi == 0 ? 10 : 6)
-                            .padding(.bottom, 4)
-                            
                             ForEach(group.items) { item in
-                                let isSelected = item.name == selectedItem
-                                
-                                HStack(spacing: 10) {
-                                    Image(systemName: item.matchType == .history ? "clock" : "arrow.right")
-                                        .font(.system(size: 11))
-                                        .foregroundColor(isSelected ? accent : .white.opacity(0.25))
-                                        .frame(width: 14)
-                                    
-                                    HighlightedText(
-                                        text: item.name,
-                                        highlight: searchText,
-                                        baseColor: isSelected ? accent : .white,
-                                        highlightColor: accent
-                                    )
-                                    .font(.system(size: 14))
-                                    
-                                    Spacer()
-                                    
-                                    HStack(spacing: 8) {
-                                        if isSelected {
-                                            Image(systemName: "checkmark")
-                                                .font(.system(size: 10, weight: .bold))
-                                                .foregroundColor(accent)
-                                        }
-                                        if item.matchType == .history {
-                                            Button { withAnimation { onDeleteHistory(item.name) } } label: {
-                                                Image(systemName: "xmark")
-                                                    .font(.system(size: 10))
-                                                    .foregroundColor(.white.opacity(0.3))
-                                                    .padding(4)
+                                HStack(spacing: AppSpacing.xs) {
+                                    Button { onSelect(item.name) } label: {
+                                        HStack(spacing: AppSpacing.xs) {
+                                            ItemIcon(name: item.name, size: AppSize.itemIcon)
+                                            HighlightedText(text: item.name, highlight: searchText,
+                                                            baseColor: AppColors.primaryText, highlightColor: AppColors.accent)
+                                                .font(AppTypography.rowTitle)
+                                                .fixedSize(horizontal: false, vertical: true)
+                                            Spacer(minLength: 0)
+                                            if item.name == selectedItem {
+                                                Image(systemName: "checkmark").foregroundStyle(AppColors.accent)
                                             }
                                         }
+                                        .frame(minHeight: AppSize.touchTarget)
+                                        .contentShape(Rectangle())
+                                    }
+                                    .buttonStyle(.plain)
+                                    .accessibilityAddTraits(item.name == selectedItem ? .isSelected : [])
+                                    if item.matchType == .history {
+                                        AppIconButton(title: "删除历史：\(item.name)", systemImage: "xmark") {
+                                            onDeleteHistory(item.name)
+                                        }
                                     }
                                 }
-                                .padding(.horizontal, 12).padding(.vertical, 10)
-                                .background(isSelected ? accent.opacity(0.08) : Color.clear)
-                                .contentShape(Rectangle())
-                                .onTapGesture { onSelect(item.name) }
-                                
-                                Rectangle().fill(Color.white.opacity(0.04)).frame(height: 1).padding(.leading, 36)
-                            }
-                            
-                            if gi < groups.count - 1 {
-                                Rectangle().fill(Color.white.opacity(0.08)).frame(height: 1)
-                                    .padding(.horizontal, 12).padding(.vertical, 4)
+                                Divider().overlay(AppColors.border)
                             }
                         }
-                        Color.clear.frame(height: 6)
                     }
+                    .padding(.horizontal, AppSpacing.sm)
                 }
-                .frame(maxHeight: 240)
+                .frame(maxHeight: 280)
+                .scrollBounceBehavior(.basedOnSize)
             }
         }
-        .background(Color(red: 0.10, green: 0.11, blue: 0.14))
-        .overlay(Rectangle().stroke(accent.opacity(0.22), lineWidth: 1))
+        .background(AppColors.background, in: RoundedRectangle(cornerRadius: AppRadius.control))
+        .overlay {
+            RoundedRectangle(cornerRadius: AppRadius.control).strokeBorder(AppColors.border, lineWidth: 1)
+                .allowsHitTesting(false)
+        }
     }
 }
 
@@ -775,13 +487,13 @@ struct HighlightedText: View {
 struct EndFieldStatCard: View {
     let icon: String; let title: String; let value: String; let unit: String; let color: Color
     var body: some View {
-        VStack(spacing: 6) {
-            Image(systemName: icon).font(.system(size: 20)).foregroundColor(color)
-            Text(value).font(.system(size: 24, weight: .bold, design: .monospaced)).foregroundColor(color)
-            Text(title).font(.system(size: 9, weight: .bold, design: .monospaced)).foregroundColor(.white.opacity(0.4))
-            Text(unit).font(.system(size: 8, weight: .medium, design: .monospaced)).foregroundColor(.white.opacity(0.3))
+        VStack(alignment: .leading, spacing: AppSpacing.xs) {
+            Label(title, systemImage: icon).font(AppTypography.caption).foregroundStyle(AppColors.secondaryText)
+            Text(value).font(AppTypography.metric).foregroundStyle(color)
+            Text(unit).font(AppTypography.caption).foregroundStyle(AppColors.secondaryText)
         }
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .combine)
     }
 }
 
@@ -813,11 +525,11 @@ struct ThumbnailPreview: View {
     
     private func drawLines(node: RecipeNode, ctx: inout GraphicsContext) {
         for child in node.children {
-            let s = CGPoint(x: child.positionX * xS + nW/2, y: CGFloat(child.level) * yS + nH/2)
-            let e = CGPoint(x: node.positionX  * xS + nW/2, y: CGFloat(node.level)  * yS - nH/2)
+            let s = CGPoint(x: child.positionX * xS + nW/2, y: CGFloat(child.level) * yS - nH/2)
+            let e = CGPoint(x: node.positionX  * xS + nW/2, y: CGFloat(node.level)  * yS + nH/2)
             var p = Path(); p.move(to: s)
             p.addCurve(to: e, control1: CGPoint(x: s.x, y: s.y+(e.y-s.y)*0.5), control2: CGPoint(x: e.x, y: s.y+(e.y-s.y)*0.5))
-            ctx.stroke(p, with: .color(Color(red:1,green:0.8,blue:0).opacity(0.3)), lineWidth: 1.5)
+            ctx.stroke(p, with: .color(AppColors.accent.opacity(0.3)), lineWidth: 1.5)
             drawLines(node: child, ctx: &ctx)
         }
     }
@@ -837,15 +549,7 @@ struct ThumbnailNodeView: View {
     }
     
     private func thumb(_ node: RecipeNode) -> some View {
-        let c = node.recipe == nil ? Color(red: 0.9, green: 0.5, blue: 0.2) : Color(red: 1.0, green: 0.8, blue: 0.0)
-        return VStack(spacing: 2) {
-            Text(node.name).font(.system(size: 9, weight: .semibold)).foregroundColor(.white).lineLimit(1)
-            Text("x\(node.amount)").font(.system(size: 8, design: .monospaced)).foregroundColor(.white.opacity(0.6))
-        }
-        .frame(width: nodeWidth, height: nodeHeight)
-        .background(ZStack {
-            Rectangle().fill(c.opacity(0.2))
-            Rectangle().stroke(c.opacity(0.5), lineWidth: 1)
-        })
+        RecipeDiagramCard(node: node, compact: true)
+            .frame(width: nodeWidth, height: nodeHeight)
     }
 }

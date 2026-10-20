@@ -2,7 +2,7 @@
 
 import SwiftUI
 
-/// 选中建筑的详情面板：iPad 放右侧浮层，iPhone 放在网格下方（不是模态弹窗，展开时网格照样能点能拖）。
+/// 选中建筑的详情面板：iPad 放独立右侧栏，iPhone 放在网格下方（不是模态弹窗，展开时网格照样能点能拖）。
 /// 头部是通用信息和操作（开关/移动/旋转/收纳），下面按建筑类型显示配方、到货、激活、发电等内容
 struct BuildingDetailPanel: View {
     enum Style { case side, bottom }
@@ -11,19 +11,21 @@ struct BuildingDetailPanel: View {
     let placed: PlacedBuilding
     let def: BuildingDefinition
     let style: Style
+    var maxContentHeight: CGFloat = 300
+    var maxPanelHeight: CGFloat? = nil
 
-    @State private var expanded = true
+    @State private var expanded = false
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var showRecipeSheet = false
     @State private var showMaterialSheet = false
     @State private var showFilterSheet = false
     /// 协议核心正在选材料的出货口（BuildingDefinition.ports 下标），nil = 没在选
     @State private var corePortSheetIndex: Int? = nil
 
-    private let green = Color(red: 0.4, green: 0.8, blue: 0.2)
-    private let orange = Color(red: 0.9, green: 0.5, blue: 0.2)
-    private let red = Color(red: 0.9, green: 0.3, blue: 0.2)
-    private let yellow = Color(red: 1.0, green: 0.8, blue: 0.0)
-    private let panelBackground = Color(red: 0.10, green: 0.11, blue: 0.14)
+    private let green = AppColors.success
+    private let orange = AppColors.warning
+    private let red = AppColors.error
+    private let yellow = AppColors.accent
 
     private var state: FlowSimulator.MachineState? {
         vm.stats.machineStates.first { $0.id == placed.id }
@@ -32,77 +34,54 @@ struct BuildingDetailPanel: View {
     private var isMoving: Bool { vm.movingBuildingID == placed.id }
 
     var body: some View {
-        VStack(spacing: 0) {
-            header
-            if isMoving { movingBanner }
-            if style == .side || expanded {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 14) {
-                        content
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(14)
-                }
-                .frame(maxHeight: style == .bottom ? 300 : .infinity)
+        AppInspectorContainer(title: def.name, subtitle: headerStatus,
+                              placement: style == .side ? .side : .bottom,
+                              isExpanded: $expanded,
+                              maxContentHeight: style == .bottom ? maxContentHeight : nil,
+                              maxPanelHeight: style == .bottom ? maxPanelHeight : nil,
+                              summaryText: powerSummary,
+                              disclosureTitle: def.isProtocolCore ? "出货口配置与运行详情" : "配置与运行详情",
+                              onClose: {
+                                  vm.cancelMoving()
+                                  vm.selectedBuildingID = nil
+                              }) {
+            VStack(alignment: .leading, spacing: AppSpacing.md) {
+                statusBar
+                if isMoving { movingBanner }
+                content
             }
-        }
-        .background(panelBackground)
-        .overlay(Rectangle().stroke(def.category.color.opacity(0.35), lineWidth: 1))
-    }
-
-    // MARK: - 头部：名称 / 耗电 / 状态条 / 操作按钮
-    private var header: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 12) {
-                ZStack {
-                    Rectangle().fill(def.category.color.opacity(0.2)).frame(width: 40, height: 40)
-                    Rectangle().stroke(def.category.color.opacity(0.6), lineWidth: 1.5).frame(width: 40, height: 40)
-                    Image(systemName: def.category.icon).font(.system(size: 17)).foregroundColor(def.category.color)
-                }
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(def.name).font(.system(size: 15, weight: .bold)).foregroundColor(.white)
-                    powerLine
-                }
-                Spacer()
-                if style == .bottom {
-                    iconButton("chevron.\(expanded ? "down" : "up")", color: .white.opacity(0.6)) {
-                        withAnimation(.spring(response: 0.3)) { expanded.toggle() }
-                    }
-                }
-                iconButton("xmark", color: .white.opacity(0.6)) {
-                    vm.cancelMoving()
-                    vm.selectedBuildingID = nil
-                }
-            }
-            statusBar
-            HStack(spacing: 8) {
+        } actions: {
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: AppSpacing.xxs),
+                                      count: dynamicTypeSize.isAccessibilitySize ? 2 : 4), spacing: AppSpacing.xxs) {
                 actionButton(placed.isActive ? "关闭" : "开启", icon: "power",
-                             color: placed.isActive ? green : .white.opacity(0.5)) { vm.toggleActive(placed.id) }
+                             color: placed.isActive ? green : AppColors.secondaryText) { vm.toggleActive(placed.id) }
                 actionButton(isMoving ? "取消移动" : "移动", icon: "arrow.up.and.down.and.arrow.left.and.right",
-                             color: Color(red: 0.4, green: 0.7, blue: 0.9)) {
+                             color: AppColors.info) {
+                    expanded = true
                     isMoving ? vm.cancelMoving() : vm.startMoving(placed.id)
                 }
-                actionButton("旋转", icon: "rotate.right", color: Color(red: 0.7, green: 0.5, blue: 0.9)) { vm.rotateSelected() }
+                actionButton("旋转", icon: "rotate.right", color: AppColors.accent) { vm.rotateSelected() }
                 actionButton("收纳", icon: "tray.and.arrow.down.fill", color: red) { vm.deleteSelected() }
             }
         }
-        .padding(.horizontal, 14).padding(.vertical, 10)
-        .background(Color(red: 0.08, green: 0.09, blue: 0.12))
     }
 
-    @ViewBuilder
-    private var powerLine: some View {
+    private var headerStatus: String {
+        if vm.stats.mapConflicts[placed.id] != nil { return "地图不支持" }
+        if !placed.isActive { return "已关闭" }
+        if isUnpowered { return "未通电" }
+        return state?.status.label ?? def.category.rawValue
+    }
+
+    private var powerSummary: String {
         if def.powerUsage > 0 {
-            Label(String(format: "耗电功率值 %.0f MW", def.powerUsage), systemImage: "bolt.fill")
-                .font(.system(size: 10, design: .monospaced)).foregroundColor(orange)
+            return String(format: "耗电功率值 %.0f MW", def.powerUsage)
         } else if def.isProtocolCore {
-            Label(String(format: "发电 %.0f MW", def.powerGenerate), systemImage: "bolt.fill")
-                .font(.system(size: 10, design: .monospaced)).foregroundColor(yellow)
+            return String(format: "固定发电 %.0f MW · 本身无供电范围", def.powerGenerate)
         } else if def.powerRange != nil || def.id == "power_station_1" {
-            Label("电力设施", systemImage: "bolt.fill")
-                .font(.system(size: 10, design: .monospaced)).foregroundColor(yellow)
+            return "电力设施"
         } else {
-            Text("不耗电").font(.system(size: 10, design: .monospaced)).foregroundColor(.white.opacity(0.4))
+            return "不耗电"
         }
     }
 
@@ -110,23 +89,23 @@ struct BuildingDetailPanel: View {
     @ViewBuilder
     private var statusBar: some View {
         let (label, ratio, color): (String, Double?, Color) = {
-            if !placed.isActive { return ("已关闭", nil, .white.opacity(0.4)) }
+            if !placed.isActive { return ("已关闭", nil, AppColors.secondaryText) }
             if isUnpowered { return ("未通电", 0, red) }
             guard let state else { return ("", nil, .clear) }
             switch state.status {
             case .running:  return (state.status.label, state.throttle, green)
             case .starved:  return (state.status.label, state.throttle, orange)
             case .blocked:  return (state.status.label, state.throttle, red)
-            case .inactive, .noRecipe: return (state.status.label, state.throttle, .white.opacity(0.45))
+            case .inactive, .noRecipe: return (state.status.label, state.throttle, AppColors.secondaryText)
             }
         }()
         if !label.isEmpty {
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
-                    Text(label).font(.system(size: 11, weight: .bold)).foregroundColor(color)
+                    Text(label).font(AppTypography.supporting).foregroundColor(color)
                     if let ratio {
                         Text("\(Int((ratio * 100).rounded()))%")
-                            .font(.system(size: 11, weight: .bold, design: .monospaced)).foregroundColor(color)
+                            .font(AppTypography.supporting).foregroundColor(color)
                     }
                     Spacer()
                 }
@@ -140,7 +119,7 @@ struct BuildingDetailPanel: View {
                     .frame(height: 4)
                 }
                 if placed.isActive, let detail = isUnpowered ? "不在任何供电桩范围内，不运行" : state?.detail {
-                    Text(detail).font(.system(size: 10)).foregroundColor(.white.opacity(0.55))
+                    Text(detail).font(AppTypography.supporting).foregroundColor(AppColors.secondaryText)
                 }
             }
         }
@@ -148,14 +127,14 @@ struct BuildingDetailPanel: View {
 
     private var movingBanner: some View {
         HStack(spacing: 8) {
-            Image(systemName: "hand.tap.fill").foregroundColor(Color(red: 0.4, green: 0.7, blue: 0.9))
-            Text(vm.moveFailedMessage ?? "点按网格上的目标位置（点的格子是建筑新的左上角），原来接的线不会跟着走")
-                .font(.system(size: 10))
-                .foregroundColor(vm.moveFailedMessage == nil ? .white.opacity(0.75) : red)
+            Image(systemName: "hand.tap.fill").foregroundColor(AppColors.info)
+            Text(vm.moveFailedMessage ?? "点按网格上的目标位置（点的格子是建筑新的左上角），已连接的线路会尝试重新连接，无法连接时会提示")
+                .font(AppTypography.supporting)
+                .foregroundColor(vm.moveFailedMessage == nil ? AppColors.primaryText : red)
             Spacer()
         }
         .padding(.horizontal, 14).padding(.vertical, 8)
-        .background(Color(red: 0.4, green: 0.7, blue: 0.9).opacity(0.12))
+        .background(AppColors.info.opacity(0.12))
     }
 
     // MARK: - 主体：按建筑类型
@@ -164,8 +143,8 @@ struct BuildingDetailPanel: View {
         if let conflict = vm.stats.mapConflicts[placed.id] {
             section("地图不支持") {
                 Text("\(conflict)。这台建筑不参与产能计算。")
-                    .font(.system(size: 11))
-                    .foregroundColor(Color(red: 0.95, green: 0.35, blue: 0.3))
+                    .font(AppTypography.supporting)
+                    .foregroundColor(AppColors.error)
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -201,7 +180,7 @@ struct BuildingDetailPanel: View {
         if let range = def.powerRange { diffuserSection(range: range) }
         if let sink = vm.stats.sinkStates.first(where: { $0.id == placed.id }) {
             section(def.id == BuildingDefinition.warehouseInletID || def.isProtocolCore ? "入库" : def.isUndergroundInlet ? "送入暗管" : "处理") {
-                rateRows(sink.consumed, color: Color(red: 0.4, green: 0.7, blue: 0.9))
+                rateRows(sink.consumed, color: AppColors.info)
             }
         }
     }
@@ -209,14 +188,14 @@ struct BuildingDetailPanel: View {
     private func section<Content: View>(_ title: String, @ViewBuilder _ body: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(title)
-                .font(.system(size: 10, weight: .bold, design: .monospaced))
-                .foregroundColor(.white.opacity(0.45))
+                .font(AppTypography.supporting)
+                .foregroundColor(AppColors.secondaryText)
             body()
         }
     }
 
     private func infoText(_ text: String) -> some View {
-        Text(text).font(.system(size: 11)).foregroundColor(.white.opacity(0.7))
+        Text(text).font(AppTypography.supporting).foregroundColor(AppColors.primaryText)
             .fixedSize(horizontal: false, vertical: true)
     }
 
@@ -227,13 +206,11 @@ struct BuildingDetailPanel: View {
                 let need = (state.needs[item] ?? 0) * 60
                 let arrived = (state.arrivals[item] ?? 0) * 60
                 let enough = arrived + 1e-6 >= need
-                HStack(spacing: 6) {
-                    ItemIcon(name: item, size: 20)
-                    Text(item).font(.system(size: 12)).foregroundColor(.white.opacity(0.85))
-                    Spacer()
-                    Text(String(format: "%.1f / %.1f /min", arrived, need))
-                        .font(.system(size: 11, weight: .bold, design: .monospaced))
-                        .foregroundColor(enough ? green : orange)
+                HStack(alignment: .top, spacing: AppSpacing.xs) {
+                    ItemIcon(name: item, size: AppSize.icon)
+                    AppKeyValueRow(title: item, value: String(format: "%.1f / %.1f /min", arrived, need),
+                                   detail: enough ? "到货 / 需求" : "到货 / 需求 · 原料不足",
+                                   valueColor: enough ? green : orange)
                 }
             }
         }
@@ -242,13 +219,10 @@ struct BuildingDetailPanel: View {
     private func rateRows(_ rates: [String: Double], color: Color) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             ForEach(rates.filter { $0.value > 1e-9 }.keys.sorted(), id: \.self) { item in
-                HStack(spacing: 6) {
-                    ItemIcon(name: item, size: 20)
-                    Text(item).font(.system(size: 12)).foregroundColor(.white.opacity(0.85))
-                    Spacer()
-                    Text(String(format: "%.1f /min", (rates[item] ?? 0) * 60))
-                        .font(.system(size: 11, weight: .bold, design: .monospaced))
-                        .foregroundColor(color)
+                HStack(alignment: .top, spacing: AppSpacing.xs) {
+                    ItemIcon(name: item, size: AppSize.icon)
+                    AppKeyValueRow(title: item, value: String(format: "%.1f /min", (rates[item] ?? 0) * 60),
+                                   valueColor: color)
                 }
             }
         }
@@ -260,13 +234,10 @@ struct BuildingDetailPanel: View {
         let need = FlowSimulator.activatorNeed * 60
         let ok = arrived + 1e-6 >= need
         return VStack(alignment: .leading, spacing: 4) {
-            HStack(spacing: 6) {
-                ItemIcon(name: item, size: 20)
-                Text(item).font(.system(size: 12)).foregroundColor(.white.opacity(0.85))
-                Spacer()
-                Text(String(format: "%.1f /min（需要 ≥%.0f）", arrived, need))
-                    .font(.system(size: 11, weight: .bold, design: .monospaced))
-                    .foregroundColor(ok ? green : red)
+            HStack(alignment: .top, spacing: AppSpacing.xs) {
+                ItemIcon(name: item, size: AppSize.icon)
+                AppKeyValueRow(title: item, value: String(format: "%.1f /min（需要 ≥%.0f）", arrived, need),
+                               detail: ok ? nil : "激活材料不足", valueColor: ok ? green : red)
             }
             if def.id == "vaporizer_1" {
                 infoText("惰气→稳定、水蒸气→潮湿、酸气→酸性、息壤气→息壤，影响周围 \(FlowSimulator.vaporizerRange) 格")
@@ -282,10 +253,10 @@ struct BuildingDetailPanel: View {
                 if let generator, let fuel = generator.fuel {
                     HStack(spacing: 6) {
                         ItemIcon(name: fuel, size: 20)
-                        Text("正在烧 \(fuel)").font(.system(size: 12)).foregroundColor(.white.opacity(0.85))
+                        Text("正在烧 \(fuel)").font(AppTypography.rowTitle).foregroundColor(AppColors.primaryText)
                         Spacer()
                         Text(String(format: "%.0f MW", generator.power))
-                            .font(.system(size: 11, weight: .bold, design: .monospaced)).foregroundColor(yellow)
+                            .font(AppTypography.supporting).foregroundColor(yellow)
                     }
                     if generator.fuelRatio < 0.999 {
                         infoText(String(format: "燃料只送到满烧需要量的 %.0f%%，发电按比例打折", generator.fuelRatio * 100))
@@ -295,7 +266,7 @@ struct BuildingDetailPanel: View {
                 }
                 ForEach(FuelCatalog.all, id: \.itemId) { fuel in
                     Text(String(format: "%@  %.0f MW，每个烧 %.0f 秒", fuel.name, fuel.powerProvide, fuel.secondsPerItem))
-                        .font(.system(size: 10, design: .monospaced)).foregroundColor(.white.opacity(0.5))
+                        .font(AppTypography.supporting).foregroundColor(AppColors.secondaryText)
                 }
             }
         }
@@ -322,26 +293,20 @@ struct BuildingDetailPanel: View {
     }
 
     // MARK: - 按钮
-    private func iconButton(_ icon: String, color: Color, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Image(systemName: icon).font(.system(size: 13, weight: .bold)).foregroundColor(color)
-                .frame(width: 30, height: 30)
-        }
-        .buttonStyle(.plain)
-    }
-
     private func actionButton(_ title: String, icon: String, color: Color, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            VStack(spacing: 3) {
-                Image(systemName: icon).font(.system(size: 14))
-                Text(title).font(.system(size: 10, weight: .medium))
+            VStack(spacing: AppSpacing.xxs) {
+                Image(systemName: icon).foregroundStyle(color).font(AppTypography.supporting)
+                Text(title).foregroundStyle(AppColors.primaryText).font(AppTypography.caption)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .multilineTextAlignment(.center)
             }
-            .foregroundColor(color)
-            .frame(maxWidth: .infinity, minHeight: 44)
-            .background(color.opacity(0.12))
-            .overlay(Rectangle().stroke(color.opacity(0.35), lineWidth: 1))
+            .padding(.vertical, AppSpacing.xxs)
+            .frame(maxWidth: .infinity, minHeight: AppSize.touchTarget)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(title)
     }
 
     // MARK: - 配方 / 取货材料 / 限速（原来在 FactoryLayoutView 里）
@@ -365,8 +330,8 @@ struct BuildingDetailPanel: View {
                     systemImage: "list.bullet.rectangle"
                     )
                 }
-                .font(.system(size: 10, design: .monospaced))
-                .foregroundColor(Color(red: 0.4, green: 0.8, blue: 0.2))
+                .font(AppTypography.supporting)
+                .foregroundColor(AppColors.success)
             }
             .buttonStyle(.plain)
             .sheet(isPresented: $showRecipeSheet) {
@@ -414,8 +379,8 @@ struct BuildingDetailPanel: View {
                 } label: {
                     Label(selectedIDs.isEmpty ? "配方一览（可多选）" : "已勾选 \(selectedIDs.count) 条配方",
                           systemImage: "list.bullet.rectangle.fill")
-                        .font(.system(size: 10, design: .monospaced))
-                        .foregroundColor(Color(red: 0.4, green: 0.8, blue: 0.2))
+                        .font(AppTypography.supporting)
+                        .foregroundColor(AppColors.success)
                 }
                 .buttonStyle(.plain)
                 .sheet(isPresented: $showRecipeSheet) {
@@ -454,8 +419,8 @@ struct BuildingDetailPanel: View {
         VStack(alignment: .leading, spacing: 3) {
             if let cap = def.multiRecipeItemCapacity {
                 Text("涉及物品 \(analysis.totalDistinctItems)/\(cap) 种")
-                    .font(.system(size: 9, design: .monospaced))
-                    .foregroundColor(analysis.exceedsCapacity ? .red : .white.opacity(0.5))
+                    .font(AppTypography.supporting)
+                    .foregroundColor(analysis.exceedsCapacity ? .red : AppColors.secondaryText)
             }
             let internalItems = analysis.netItems.filter { abs($0.net) < 1e-9 }
             if !internalItems.isEmpty {
@@ -465,8 +430,8 @@ struct BuildingDetailPanel: View {
                     }
                     Text("内部循环：\(internalItems.map { $0.name }.joined(separator: "、"))（不占外部口）")
                 }
-                    .font(.system(size: 9, design: .monospaced))
-                    .foregroundColor(Color(red: 0.4, green: 0.7, blue: 0.9))
+                    .font(AppTypography.supporting)
+                    .foregroundColor(AppColors.info)
             }
             if !analysis.externalInputs.isEmpty {
                 let text = analysis.externalInputs
@@ -478,15 +443,15 @@ struct BuildingDetailPanel: View {
                     }
                     Text("外部输入：\(text)")
                 }
-                    .font(.system(size: 9, design: .monospaced))
-                    .foregroundColor(.white.opacity(0.6))
+                    .font(AppTypography.supporting)
+                    .foregroundColor(AppColors.secondaryText)
             }
             ForEach(analysis.externalOutputs, id: \.name) { output in
                 outputAssignmentRow(item: output.name, rate: output.net, def: def, placedID: placedID)
             }
             if analysis.exceedsOutputCap {
                 Text("对外输出超限：同时最多 2 种液体 + 1 种固体，多出来的必须靠另一条配方内部消化掉")
-                    .font(.system(size: 9, weight: .bold, design: .monospaced))
+                    .font(AppTypography.supporting)
                     .foregroundColor(.red)
             }
         }
@@ -507,8 +472,8 @@ struct BuildingDetailPanel: View {
         HStack(spacing: 6) {
             ItemIcon(name: item, size: 18)
             Text("输出：\(item) \(String(format: "%.0f", rate * 60))/min")
-                .font(.system(size: 9, design: .monospaced))
-                .foregroundColor(.white.opacity(0.7))
+                .font(AppTypography.supporting)
+                .foregroundColor(AppColors.primaryText)
             if ports.count > 1 {
                 let current = vm.selectedPlaced?.outputPortAssignments.first { $0.value == item }?.key
                 ForEach(Array(ports.enumerated()), id: \.element) { seq, portIdx in
@@ -516,10 +481,10 @@ struct BuildingDetailPanel: View {
                         vm.setOutputPortAssignment(item: item, portIndex: portIdx, for: placedID)
                     } label: {
                         Text("口\(seq + 1)")
-                            .font(.system(size: 9, weight: .bold, design: .monospaced))
+                            .font(AppTypography.supporting)
                             .padding(.horizontal, 6).padding(.vertical, 2)
-                            .background(current == portIdx ? Color(red: 0.4, green: 0.8, blue: 0.2) : Color.white.opacity(0.12))
-                            .foregroundColor(current == portIdx ? .black : .white.opacity(0.6))
+                            .background(current == portIdx ? AppColors.success : Color.white.opacity(0.12))
+                            .foregroundColor(current == portIdx ? .black : AppColors.secondaryText)
                     }
                     .buttonStyle(.plain)
                 }
@@ -556,9 +521,9 @@ struct BuildingDetailPanel: View {
             let current = vm.selectedPlaced?.flowLimitPerMin
             HStack(spacing: 8) {
                 Image(systemName: "speedometer")
-                    .font(.system(size: 10))
+                    .font(AppTypography.supporting)
                 Text(current.map { String(format: "限速 %.0f/min", $0) } ?? "不限速")
-                    .font(.system(size: 10, design: .monospaced))
+                    .font(AppTypography.supporting)
                 Button {
                     vm.setFlowLimit(max((current ?? maxPerMin) - 6, 0), for: placedID)
                 } label: { Image(systemName: "minus.circle") }
@@ -567,7 +532,7 @@ struct BuildingDetailPanel: View {
                     vm.setFlowLimit(next >= maxPerMin ? nil : next, for: placedID)
                 } label: { Image(systemName: "plus.circle") }
             }
-            .foregroundColor(Color(red: 0.4, green: 0.8, blue: 0.2))
+            .foregroundColor(AppColors.success)
             .buttonStyle(.plain)
         }
     }
@@ -585,8 +550,8 @@ struct BuildingDetailPanel: View {
                     if let current { ItemIcon(name: current, size: 20) }
                     Label(current ?? "全部通过", systemImage: "line.3.horizontal.decrease.circle")
                 }
-                    .font(.system(size: 10, design: .monospaced))
-                    .foregroundColor(Color(red: 0.4, green: 0.8, blue: 0.2))
+                    .font(AppTypography.supporting)
+                    .foregroundColor(AppColors.success)
             }
             .buttonStyle(.plain)
             .sheet(isPresented: $showFilterSheet) {
@@ -612,33 +577,36 @@ struct BuildingDetailPanel: View {
     private func corePortPicker(for def: BuildingDefinition) -> some View {
         if let placedID = vm.selectedBuildingID, let current = vm.selectedPlaced {
             let ports = corePortLabels(def: def, placed: current)
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: 0) {
                 ForEach(ports, id: \.index) { port in
                     let material = current.portMaterialIDs[port.index].flatMap(ItemCatalog.name(for:))
                     Button {
                         corePortSheetIndex = port.index
                     } label: {
                         // 每行至少 44pt 高、整行可点，手机上不容易点错行
-                        HStack(spacing: 8) {
+                        HStack(alignment: .center, spacing: AppSpacing.xs) {
                             Text(port.label)
-                                .font(.system(size: 13, weight: .bold, design: .monospaced))
-                                .foregroundColor(.white.opacity(0.7))
-                                .frame(width: 44, alignment: .leading)
+                                .font(AppTypography.rowTitle)
+                                .foregroundColor(AppColors.primaryText)
+                                .fixedSize(horizontal: true, vertical: true)
                             if let material { ItemIcon(name: material, size: 24) }
                             Text(material ?? "不出货")
-                                .font(.system(size: 14))
-                                .foregroundColor(material == nil ? .white.opacity(0.4) : Color(red: 0.4, green: 0.8, blue: 0.2))
+                                .font(AppTypography.rowTitle)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .foregroundColor(material == nil ? AppColors.secondaryText : AppColors.success)
                             Spacer()
                             Image(systemName: "chevron.right")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundColor(.white.opacity(0.45))
+                                .font(AppTypography.rowTitle)
+                                .foregroundColor(AppColors.secondaryText)
                         }
-                        .padding(.horizontal, 10)
-                        .frame(minHeight: 44)
-                        .background(Color.white.opacity(0.06))
+                        .padding(.vertical, AppSpacing.xxs)
+                        .frame(minHeight: AppSize.touchTarget)
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel("\(port.label)，\(material ?? "不出货")")
+                    .accessibilityHint("选择该出货口的材料")
+                    Divider().overlay(AppColors.border)
                 }
             }
             .sheet(isPresented: Binding(get: { corePortSheetIndex != nil },
@@ -691,8 +659,8 @@ struct BuildingDetailPanel: View {
                     if let current { ItemIcon(name: current, size: 20) }
                     Label(current ?? "选择材料", systemImage: "shippingbox.fill")
                 }
-                    .font(.system(size: 10, design: .monospaced))
-                    .foregroundColor(Color(red: 0.4, green: 0.8, blue: 0.2))
+                    .font(AppTypography.supporting)
+                    .foregroundColor(AppColors.success)
             }
             .buttonStyle(.plain)
             .sheet(isPresented: $showMaterialSheet) {

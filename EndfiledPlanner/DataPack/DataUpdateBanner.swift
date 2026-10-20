@@ -2,77 +2,52 @@
 
 import SwiftUI
 
-/// 首页的数据更新横幅：有新数据、下载中、下载完待重启时显示，其他时候不占位置。
-/// 跟设置页 GAME DATA 区用同一个 DataPackUpdater，状态两边同步
+/// 与设置页共享同一个更新器；这里只接入设计系统，不改变下载或启用时机。
 struct DataUpdateBanner: View {
     @ObservedObject private var updater = DataPackUpdater.shared
-
-    private let yellow = Color(red: 1.0, green: 0.8, blue: 0.0)
-    private let green = Color(red: 0.4, green: 0.8, blue: 0.2)
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
         switch updater.state {
         case .available(let remote):
-            card(accent: yellow) {
-                icon("arrow.down.circle.fill", yellow)
-                texts("发现新的游戏数据", "\(remote.builtDateText) · 配方/物品/图标")
-                Spacer()
-                Button {
-                    Task { await updater.download() }
-                } label: {
-                    Text("下载")
-                        .font(.system(size: 14, weight: .bold, design: .monospaced))
-                        .foregroundColor(.black)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 8)
-                        .background(yellow)
+            AppSurface {
+                if dynamicTypeSize.isAccessibilitySize {
+                    VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                        availableMessage(date: remote.builtDateText)
+                        downloadButton
+                    }
+                } else {
+                    HStack(alignment: .center, spacing: AppSpacing.sm) {
+                        availableMessage(date: remote.builtDateText)
+                        downloadButton.fixedSize(horizontal: true, vertical: false)
+                    }
                 }
             }
         case .downloading(let done, let total):
-            card(accent: yellow) {
-                icon("arrow.down.circle", yellow)
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("正在下载游戏数据 \(done)/\(total)")
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundColor(.white)
-                    ProgressView(value: Double(done), total: Double(max(total, 1))).tint(yellow)
-                }
+            AppSurface {
+                AppLoadingState(title: "正在下载游戏数据",
+                                progress: Double(done) / Double(max(total, 1)),
+                                detail: "\(done)/\(total)")
             }
         case .readyToRestart:
-            card(accent: green) {
-                icon("checkmark.circle.fill", green)
-                texts("游戏数据已就绪", "完全退出并重新打开 App 后生效")
-                Spacer()
+            AppSurface {
+                AppInlineNotice(title: "游戏数据已就绪", message: "完全退出并重新打开 App 后生效", tone: .success)
             }
         default:
             EmptyView()
         }
     }
 
-    private func card<Content: View>(accent: Color, @ViewBuilder content: () -> Content) -> some View {
-        HStack(spacing: 12) { content() }
-            .padding(14)
-            .background(Color(red: 0.12, green: 0.13, blue: 0.16))
-            .overlay(alignment: .leading) {
-                Rectangle().fill(accent).frame(width: 3)
-            }
-            .overlay(Rectangle().stroke(accent.opacity(0.4), lineWidth: 1))
+    private func availableMessage(date: String) -> some View {
+        AppInlineNotice(title: "发现新的游戏数据", message: "\(date) · 配方/物品/图标", tone: .info)
     }
 
-    private func icon(_ name: String, _ color: Color) -> some View {
-        Image(systemName: name)
-            .font(.system(size: 26))
-            .foregroundColor(color)
-    }
-
-    private func texts(_ title: String, _ subtitle: String) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(title)
-                .font(.system(size: 15, weight: .bold))
-                .foregroundColor(.white)
-            Text(subtitle)
-                .font(.system(size: 12, design: .monospaced))
-                .foregroundColor(.white.opacity(0.6))
+    private var downloadButton: some View {
+        Button {
+            Task { await updater.download() }
+        } label: {
+            Label("下载", systemImage: "arrow.down")
         }
+        .buttonStyle(AppActionStyle())
     }
 }

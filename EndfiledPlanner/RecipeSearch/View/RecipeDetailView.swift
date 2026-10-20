@@ -18,6 +18,10 @@ struct RecipeDetailView: View {
     @State private var lastOffset: CGSize = .zero
     @State private var showingSaveAlert = false
     @State private var saveMessage = ""
+    @State private var showsOutline = false
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.colorScheme) private var colorScheme
     
     private var initialXOffset: CGFloat {
         -(root.positionX * xSpacing)
@@ -35,214 +39,139 @@ struct RecipeDetailView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color(red: 0.08, green: 0.09, blue: 0.12)
-                    .ignoresSafeArea()
-                
-                Canvas { context, size in
-                    let spacing: CGFloat = 30
-                    var path = Path()
-                    for x in stride(from: 0, through: size.width, by: spacing) {
-                        path.move(to: CGPoint(x: x, y: 0))
-                        path.addLine(to: CGPoint(x: x, y: size.height))
+                AppTopographicBackground()
+                if showsOutline {
+                    ScrollView {
+                        RecipeDependencyOutline(node: root)
+                            .padding(AppSpacing.md)
+                            .frame(maxWidth: 840, alignment: .leading)
+                            .frame(maxWidth: .infinity)
                     }
-                    for y in stride(from: 0, through: size.height, by: spacing) {
-                        path.move(to: CGPoint(x: 0, y: y))
-                        path.addLine(to: CGPoint(x: size.width, y: y))
-                    }
-                    context.stroke(
-                        path,
-                        with: .color(Color(red: 1.0, green: 0.8, blue: 0.0).opacity(0.1)),
-                        lineWidth: 0.5
-                    )
-                }
-                .ignoresSafeArea()
-                
-                GeometryReader { geometry in
-                    ZStack {
-                        Canvas { context, size in
-                            drawConnections(node: root, context: &context)
-                        }
-                        
-                        DetailNodeView(
-                            node: root,
-                            nodeWidth: nodeWidth,
-                            nodeHeight: nodeHeight,
-                            xSpacing: xSpacing,
-                            ySpacing: ySpacing
-                        )
-                    }
-                    .frame(width: calculateWidth(), height: calculateHeight())
-                    .scaleEffect(scale)
-                    .offset(x: geometry.size.width / 2 + offset.width + initialXOffset,
-                           y: geometry.size.height / 2 + offset.height + initialYOffset)
-                    .gesture(
-                        SimultaneousGesture(
-                            MagnificationGesture()
-                                .onChanged { value in
-                                    scale = lastScale * value
-                                }
-                                .onEnded { _ in
-                                    lastScale = scale
-                                    scale = min(max(scale, 0.3), 3.0)
-                                    lastScale = scale
-                                },
-                            DragGesture()
-                                .onChanged { value in
-                                    offset = CGSize(
-                                        width: lastOffset.width + value.translation.width,
-                                        height: lastOffset.height + value.translation.height
-                                    )
-                                }
-                                .onEnded { _ in
-                                    lastOffset = offset
-                                }
-                        )
-                    )
-                }
-                .clipped()
-                
-                VStack {
-                    HStack {
-                        Spacer()
-                        
-                        VStack(spacing: 12) {
-                            Button {
-                                withAnimation(.spring(response: 0.3)) {
-                                    scale = 0.5
-                                    lastScale = 0.5
-                                    offset = .zero
-                                    lastOffset = .zero
-                                }
-                            } label: {
-                                ZStack {
-                                    Rectangle()
-                                        .fill(Color(red: 0.12, green: 0.13, blue: 0.16))
-                                        .frame(width: 44, height: 44)
-                                    Rectangle()
-                                        .stroke(Color(red: 1.0, green: 0.8, blue: 0.0), lineWidth: 2)
-                                        .frame(width: 44, height: 44)
-                                    Image(systemName: "arrow.counterclockwise")
-                                        .font(.system(size: 18))
-                                        .foregroundColor(Color(red: 1.0, green: 0.8, blue: 0.0))
-                                }
-                                .shadow(color: Color(red: 1.0, green: 0.8, blue: 0.0).opacity(0.3), radius: 4)
-                            }
-                            
-                            Button {
-                                withAnimation(.spring(response: 0.3)) {
-                                    scale = min(scale * 1.2, 3.0)
-                                    lastScale = scale
-                                }
-                            } label: {
-                                ZStack {
-                                    Rectangle()
-                                        .fill(Color(red: 0.12, green: 0.13, blue: 0.16))
-                                        .frame(width: 44, height: 44)
-                                    Rectangle()
-                                        .stroke(Color(red: 0.4, green: 0.8, blue: 0.2), lineWidth: 2)
-                                        .frame(width: 44, height: 44)
-                                    Image(systemName: "plus.magnifyingglass")
-                                        .font(.system(size: 18))
-                                        .foregroundColor(Color(red: 0.4, green: 0.8, blue: 0.2))
-                                }
-                                .shadow(color: Color(red: 0.4, green: 0.8, blue: 0.2).opacity(0.3), radius: 4)
-                            }
-                            
-                            Button {
-                                withAnimation(.spring(response: 0.3)) {
-                                    scale = max(scale / 1.2, 0.3)
-                                    lastScale = scale
-                                }
-                            } label: {
-                                ZStack {
-                                    Rectangle()
-                                        .fill(Color(red: 0.12, green: 0.13, blue: 0.16))
-                                        .frame(width: 44, height: 44)
-                                    Rectangle()
-                                        .stroke(Color(red: 0.9, green: 0.5, blue: 0.2), lineWidth: 2)
-                                        .frame(width: 44, height: 44)
-                                    Image(systemName: "minus.magnifyingglass")
-                                        .font(.system(size: 18))
-                                        .foregroundColor(Color(red: 0.9, green: 0.5, blue: 0.2))
-                                }
-                                .shadow(color: Color(red: 0.9, green: 0.5, blue: 0.2).opacity(0.3), radius: 4)
-                            }
-                        }
-                        .padding(.trailing, 20)
-                    }
-                    
-                    Spacer()
-                    
-                    HStack(spacing: 8) {
-                        Text("ZOOM")
-                            .font(.system(size: 10, weight: .bold, design: .monospaced))
-                            .foregroundColor(.white.opacity(0.6))
-                        Text("\(Int(scale * 100))%")
-                            .font(.system(size: 14, weight: .bold, design: .monospaced))
-                            .foregroundColor(Color(red: 1.0, green: 0.8, blue: 0.0))
-                    }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
-                    .background(
+                } else {
+                    GeometryReader { geometry in
                         ZStack {
-                            Rectangle().fill(Color(red: 0.12, green: 0.13, blue: 0.16))
-                            Rectangle().stroke(Color(red: 1.0, green: 0.8, blue: 0.0).opacity(0.3), lineWidth: 1)
+                            Canvas { context, size in
+                                drawConnections(node: root, context: &context)
+                            }
+                            
+                            DetailNodeView(
+                                node: root,
+                                nodeWidth: nodeWidth,
+                                nodeHeight: nodeHeight,
+                                xSpacing: xSpacing,
+                                ySpacing: ySpacing
+                            )
                         }
-                    )
-                    .padding(.bottom, 20)
+                        .frame(width: calculateWidth(), height: calculateHeight())
+                        .scaleEffect(scale)
+                        .offset(x: geometry.size.width / 2 + offset.width + initialXOffset,
+                               y: geometry.size.height / 2 + offset.height + initialYOffset)
+                        .gesture(
+                            SimultaneousGesture(
+                                MagnificationGesture()
+                                    .onChanged { value in
+                                        scale = lastScale * value
+                                    }
+                                    .onEnded { _ in
+                                        lastScale = scale
+                                        scale = min(max(scale, 0.3), 3.0)
+                                        lastScale = scale
+                                    },
+                                DragGesture()
+                                    .onChanged { value in
+                                        offset = CGSize(
+                                            width: lastOffset.width + value.translation.width,
+                                            height: lastOffset.height + value.translation.height
+                                        )
+                                    }
+                                    .onEnded { _ in
+                                        lastOffset = offset
+                                    }
+                            )
+                        )
+                    }
+                    .clipped()
                 }
-                .allowsHitTesting(true)
             }
-            .navigationTitle("")
+            .safeAreaInset(edge: .top, spacing: 0) {
+                VStack(alignment: .leading, spacing: AppSpacing.xs) {
+                    Text(root.name).font(AppTypography.rowTitle).foregroundStyle(AppColors.primaryText)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Picker("查看方式", selection: $showsOutline) {
+                        Text("图形").tag(false)
+                        Text("依赖清单").tag(true)
+                    }
+                    .pickerStyle(.segmented)
+                }
+                .padding(AppSpacing.sm)
+                .background(AppColors.surface)
+            }
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                if !showsOutline { zoomControls }
+            }
+            .navigationTitle("完整配方树")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .principal) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "arrow.triangle.branch")
-                            .foregroundColor(Color(red: 1.0, green: 0.8, blue: 0.0))
-                        Text("FULL TREE VIEW")
-                            .font(.system(size: 16, weight: .bold, design: .monospaced))
-                            .foregroundColor(.white)
-                    }
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("关闭") { dismiss() }
                 }
-                
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button { dismiss() } label: {
-                        HStack(spacing: 4) {
-                            Image(systemName: "chevron.left")
-                            Text("返回")
-                        }
-                        .foregroundColor(Color(red: 1.0, green: 0.8, blue: 0.0))
-                    }
-                }
-                
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .topBarTrailing) {
                     Menu {
-                        Button { saveAsImage() } label: {
-                            Label("保存为图片", systemImage: "square.and.arrow.down")
-                        }
-                        Button { shareImage() } label: {
-                            Label("分享", systemImage: "square.and.arrow.up")
-                        }
-                    } label: {
-                        Image(systemName: "ellipsis.circle")
-                            .foregroundColor(Color(red: 1.0, green: 0.8, blue: 0.0))
-                    }
+                        Button { saveAsImage() } label: { Label("保存配方树图片", systemImage: "square.and.arrow.down") }
+                        Button { shareImage() } label: { Label("分享配方树图片", systemImage: "square.and.arrow.up") }
+                    } label: { Image(systemName: "ellipsis.circle") }
+                    .accessibilityLabel("保存与分享配方树")
                 }
             }
             .toolbarBackground(.visible, for: .navigationBar)
-            .toolbarBackground(Color(red: 0.08, green: 0.09, blue: 0.12), for: .navigationBar)
+            .toolbarBackground(AppColors.background, for: .navigationBar)
+            .tint(AppColors.accent)
+            .onAppear { if dynamicTypeSize.isAccessibilitySize { showsOutline = true } }
+            .onChange(of: dynamicTypeSize) { _, size in if size.isAccessibilitySize { showsOutline = true } }
             .alert("保存图片", isPresented: $showingSaveAlert) {
                 Button("确定", role: .cancel) { }
-            } message: {
-                Text(saveMessage)
-            }
+            } message: { Text(saveMessage) }
         }
     }
-    
+
+    private var zoomControls: some View {
+        HStack(spacing: AppSpacing.xs) {
+            AppIconButton(title: "缩小配方树", systemImage: "minus.magnifyingglass") {
+                withAnimation(AppMotion.feedback(reduceMotion: reduceMotion)) {
+                    scale = max(scale / 1.2, 0.3)
+                    lastScale = scale
+                }
+            }
+            Text("\(Int(scale * 100))%")
+                .font(AppTypography.numeric).foregroundStyle(AppColors.primaryText)
+                .frame(minWidth: 60)
+                .accessibilityLabel("缩放比例 \(Int(scale * 100))%")
+            AppIconButton(title: "放大配方树", systemImage: "plus.magnifyingglass") {
+                withAnimation(AppMotion.feedback(reduceMotion: reduceMotion)) {
+                    scale = min(scale * 1.2, 3.0)
+                    lastScale = scale
+                }
+            }
+            Spacer(minLength: 0)
+            AppIconButton(title: "重置视图", systemImage: "arrow.counterclockwise") {
+                withAnimation(AppMotion.feedback(reduceMotion: reduceMotion)) {
+                    scale = 0.5
+                    lastScale = 0.5
+                    offset = .zero
+                    lastOffset = .zero
+                }
+            }
+        }
+        .padding(.horizontal, AppSpacing.sm)
+        .padding(.vertical, AppSpacing.xxs)
+        .background(AppColors.surface)
+        .overlay(alignment: .top) { Divider().overlay(AppColors.border) }
+    }
+
     // MARK: - 保存功能
     
     private func saveAsImage() {
-        let renderer = ImageRenderer(content: currentView())
+        let renderer = ImageRenderer(content: currentView().environment(\.colorScheme, colorScheme))
         renderer.scale = 3.0
         if let image = renderer.uiImage {
             UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)
@@ -254,7 +183,7 @@ struct RecipeDetailView: View {
     }
     
     private func shareImage() {
-        let renderer = ImageRenderer(content: currentView())
+        let renderer = ImageRenderer(content: currentView().environment(\.colorScheme, colorScheme))
         renderer.scale = 3.0
         guard let image = renderer.uiImage else { return }
         let activityVC = UIActivityViewController(activityItems: [image], applicationActivities: nil)
@@ -273,7 +202,7 @@ struct RecipeDetailView: View {
     private func currentView() -> some View {
         GeometryReader { geometry in
             ZStack {
-                Color(red: 0.08, green: 0.09, blue: 0.12)
+                AppColors.background
                 Canvas { context, size in
                     let spacing: CGFloat = 30
                     var path = Path()
@@ -285,7 +214,7 @@ struct RecipeDetailView: View {
                         path.move(to: CGPoint(x: 0, y: y))
                         path.addLine(to: CGPoint(x: size.width, y: y))
                     }
-                    context.stroke(path, with: .color(Color(red: 1.0, green: 0.8, blue: 0.0).opacity(0.1)), lineWidth: 0.5)
+                    context.stroke(path, with: .color(AppColors.accent.opacity(0.1)), lineWidth: 0.5)
                 }
                 ZStack {
                     Canvas { context, size in drawConnections(node: root, context: &context) }
@@ -318,14 +247,15 @@ struct RecipeDetailView: View {
     
     private func drawConnections(node: RecipeNode, context: inout GraphicsContext) {
         for child in node.children {
-            let start = CGPoint(x: child.positionX * xSpacing + nodeWidth / 2, y: CGFloat(child.level) * ySpacing + nodeHeight / 2)
-            let end   = CGPoint(x: node.positionX  * xSpacing + nodeWidth / 2, y: CGFloat(node.level)  * ySpacing - nodeHeight / 2)
+            // 原料子节点位于下方：从其上边缘连向成品节点下边缘。
+            let start = CGPoint(x: child.positionX * xSpacing + nodeWidth / 2, y: CGFloat(child.level) * ySpacing - nodeHeight / 2)
+            let end   = CGPoint(x: node.positionX  * xSpacing + nodeWidth / 2, y: CGFloat(node.level)  * ySpacing + nodeHeight / 2)
             var path = Path()
             path.move(to: start)
             path.addCurve(to: end,
                           control1: CGPoint(x: start.x, y: start.y + (end.y - start.y) * 0.5),
                           control2: CGPoint(x: end.x,   y: start.y + (end.y - start.y) * 0.5))
-            context.stroke(path, with: .color(Color(red: 1.0, green: 0.8, blue: 0.0).opacity(0.3)), lineWidth: 2.5)
+            context.stroke(path, with: .color(AppColors.accent.opacity(0.3)), lineWidth: 2.5)
             drawArrow(at: end, context: &context)
             drawConnections(node: child, context: &context)
         }
@@ -333,10 +263,11 @@ struct RecipeDetailView: View {
     
     private func drawArrow(at point: CGPoint, context: inout GraphicsContext) {
         var path = Path()
-        path.move(to: CGPoint(x: point.x - 4, y: point.y - 8))
+        path.move(to: CGPoint(x: point.x - 4, y: point.y + 8))
         path.addLine(to: point)
-        path.addLine(to: CGPoint(x: point.x + 4, y: point.y - 8))
-        context.fill(path, with: .color(Color(red: 1.0, green: 0.8, blue: 0.0).opacity(0.5)))
+        path.addLine(to: CGPoint(x: point.x + 4, y: point.y + 8))
+        path.closeSubpath()
+        context.fill(path, with: .color(AppColors.accent.opacity(0.5)))
     }
 }
 
@@ -365,66 +296,7 @@ struct DetailNodeView: View {
     }
     
     private func nodeCard(_ node: RecipeNode) -> some View {
-        VStack(spacing: 8) {
-            Text(node.name)
-                .font(.system(size: 16, weight: .semibold))
-                .multilineTextAlignment(.center)
-                .lineLimit(2)
-                .foregroundColor(.white)
-            
-            HStack(spacing: 4) {
-                Image(systemName: "cube.box.fill").font(.caption2)
-                Text("x\(node.amount)").font(.system(size: 15, weight: .medium, design: .monospaced))
-            }
-            .foregroundColor(.white.opacity(0.7))
-            
-            if let recipe = node.recipe {
-                VStack(spacing: 2) {
-                    Text(recipe.machine)
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 3)
-                        .background(Capsule().fill(machineColor(recipe.machine)))
-                    
-                    // 采矿类机器不显示时间
-                    if recipe.time > 0 && !RecipeViewModel.isMiningMachine(recipe.machine) {
-                        HStack(spacing: 3) {
-                            Image(systemName: "clock.fill").font(.system(size: 8))
-                            Text("\(recipe.time)s").font(.system(size: 9, design: .monospaced))
-                        }
-                        .foregroundColor(.white.opacity(0.5))
-                    }
-                }
-            }
-        }
-        .frame(width: nodeWidth, height: nodeHeight)
-        .background(
-            ZStack {
-                Rectangle().fill(
-                    node.recipe == nil
-                        ? Color(red: 0.9, green: 0.5, blue: 0.2).opacity(0.15)
-                        : Color(red: 1.0, green: 0.8, blue: 0.0).opacity(0.15)
-                )
-                Rectangle().stroke(
-                    node.recipe == nil
-                        ? Color(red: 0.9, green: 0.5, blue: 0.2).opacity(0.5)
-                        : Color(red: 1.0, green: 0.8, blue: 0.0).opacity(0.5),
-                    lineWidth: 2
-                )
-            }
-        )
-        .shadow(color: Color(red: 1.0, green: 0.8, blue: 0.0).opacity(0.1), radius: 5, x: 0, y: 3)
-    }
-    
-    private func machineColor(_ machine: String) -> Color {
-        switch machine {
-        case let m where m.contains("矿机"):  return Color(red: 0.6, green: 0.4, blue: 0.2)
-        case let m where m.contains("精炼"):  return Color(red: 0.9, green: 0.3, blue: 0.2)
-        case let m where m.contains("装配"):  return Color(red: 0.6, green: 0.4, blue: 0.9)
-        case let m where m.contains("粉碎"):  return Color(red: 0.5, green: 0.5, blue: 0.5)
-        case let m where m.contains("封装"):  return Color(red: 0.4, green: 0.8, blue: 0.2)
-        default: return Color(red: 1.0, green: 0.8, blue: 0.0)
-        }
+        RecipeDiagramCard(node: node)
+            .frame(width: nodeWidth, height: nodeHeight)
     }
 }

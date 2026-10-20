@@ -1,279 +1,129 @@
-//
-//  BlueprintSetView.swift
-//  EndfiledPlanner
-//
-//  Created by Jinjia Ou on 2/21/26.
-//
+// Created by Jinjia Ou on 2/21/26.
 
 import SwiftUI
 
 struct BlueprintSetView: View {
-    
     @StateObject private var viewModel = BlueprintSetViewModel()
     @State private var selectedSet: BlueprintSet?
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
-    /// 手机一列；iPad 等宽屏按屏宽自动排 2~3 列（每列至少 360 宽）
     private var listColumns: [GridItem] {
-        horizontalSizeClass == .regular
-            ? [GridItem(.adaptive(minimum: 360), spacing: 12, alignment: .top)]
+        horizontalSizeClass == .regular && !dynamicTypeSize.isAccessibilitySize
+            ? [GridItem(.adaptive(minimum: 320), spacing: AppSpacing.md, alignment: .top)]
             : [GridItem(.flexible())]
     }
-    
+
     // 免责声明相关状态
     @AppStorage("hasAcceptedBlueprintDisclaimer") private var hasAccepted = false
     @State private var showDisclaimer = false
     
     var body: some View {
-        NavigationStack {
-            ZStack {
-                // 深色背景
-                Color(red: 0.08, green: 0.09, blue: 0.12)
-                    .ignoresSafeArea()
-                
-                // 网格背景
-                Canvas { context, size in
-                    let spacing: CGFloat = 30
-                    var path = Path()
-                    for x in stride(from: 0, through: size.width, by: spacing) {
-                        path.move(to: CGPoint(x: x, y: 0))
-                        path.addLine(to: CGPoint(x: x, y: size.height))
-                    }
-                    for y in stride(from: 0, through: size.height, by: spacing) {
-                        path.move(to: CGPoint(x: 0, y: y))
-                        path.addLine(to: CGPoint(x: size.width, y: y))
-                    }
-                    context.stroke(
-                        path,
-                        with: .color(Color(red: 0.2, green: 0.6, blue: 0.9).opacity(0.1)),
-                        lineWidth: 0.5
-                    )
-                }
-                .ignoresSafeArea()
-                
-                // 整个页面都可滚动
-                ScrollView {
-                    VStack(spacing: 0) {
-                        
-                        // 页面横幅
-                        BlueprintSetBanner()
-                            .padding(.horizontal)
-                            .padding(.top, 10)
-                        
-                        // 筛选栏
-                        BlueprintSetFilterBar(
-                            authorSearch: $viewModel.authorSearch,
-                            selectedRegion: $viewModel.selectedRegion,
-                            availableRegions: viewModel.availableRegions
-                        )
-                        .padding(.horizontal)
-                        .padding(.top, 16)
-                        
-                        // 结果统计
-                        if !viewModel.isLoading && !viewModel.filteredSets.isEmpty {
-                            HStack {
-                                Text("找到 \(viewModel.filteredSets.count) 个蓝图集")
-                                    .font(.system(size: 12, weight: .medium, design: .monospaced))
-                                    .foregroundColor(.white.opacity(0.6))
-                                
-                                Spacer()
-                            }
-                            .padding(.horizontal)
-                            .padding(.top, 12)
+        ZStack {
+            AppTopographicBackground()
+            ScrollView {
+                VStack(alignment: .leading, spacing: AppSpacing.lg) {
+                    BlueprintSetBanner()
+                    BlueprintSetFilterBar(authorSearch: $viewModel.authorSearch,
+                                          selectedRegion: $viewModel.selectedRegion,
+                                          availableRegions: viewModel.availableRegions)
+                    if viewModel.isLoading {
+                        BlueprintSetLoadingView()
+                    } else if let error = viewModel.errorMessage {
+                        BlueprintSetErrorView(message: error) { viewModel.loadBlueprintSets() }
+                    } else if viewModel.filteredSets.isEmpty {
+                        BlueprintSetEmptyView(hasSets: !viewModel.blueprintSets.isEmpty)
+                    } else {
+                        HStack {
+                            Text("蓝图集").font(AppTypography.sectionTitle)
+                            Spacer()
+                            Text("\(viewModel.filteredSets.count) 个结果")
+                                .font(AppTypography.numeric).foregroundStyle(AppColors.secondaryText)
                         }
-                        
-                        // 内容区域
-                        if viewModel.isLoading {
-                            BlueprintSetLoadingView()
-                                .padding(.top, 60)
-                        } else if let error = viewModel.errorMessage {
-                            BlueprintSetErrorView(message: error) {
-                                viewModel.loadBlueprintSets()
-                            }
-                            .padding(.top, 40)
-                        } else if viewModel.filteredSets.isEmpty {
-                            BlueprintSetEmptyView(hasSets: !viewModel.blueprintSets.isEmpty)
-                                .padding(.top, 60)
-                        } else {
-                            // 蓝图列表
-                            LazyVGrid(columns: listColumns, spacing: 12) {
-                                ForEach(viewModel.filteredSets) { set in
+                        LazyVGrid(columns: listColumns, alignment: .leading, spacing: AppSpacing.md) {
+                            ForEach(viewModel.filteredSets) { set in
+                                Button { selectedSet = set } label: {
                                     BlueprintSetCard(blueprintSet: set)
-                                        .onTapGesture {
-                                            selectedSet = set
-                                        }
                                 }
+                                .buttonStyle(.plain)
+                                .accessibilityHint("打开蓝图集，查看说明与复制分享码")
                             }
-                            .padding(.horizontal)
-                            .padding(.top, 8)
-                            .padding(.bottom, 20)
                         }
                     }
                 }
-                
-                // 免责声明弹窗（在最上层）
-                if showDisclaimer {
-                    BlueprintDisclaimerView(isPresented: $showDisclaimer)
-                        .transition(.opacity)
-                        .zIndex(999)
-                }
+                .padding(AppSpacing.md)
+                .frame(maxWidth: 1120, alignment: .leading)
+                .frame(maxWidth: .infinity)
             }
-            .navigationTitle("")
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "doc.text.fill")
-                            .foregroundColor(Color(red: 0.2, green: 0.6, blue: 0.9))
-                        
-                        Text("BLUEPRINT MANAGER")
-                            .font(.system(size: 16, weight: .bold, design: .monospaced))
-                            .foregroundColor(.white)
+            .scrollDismissesKeyboard(.interactively)
+            if showDisclaimer {
+                BlueprintDisclaimerView(isPresented: $showDisclaimer)
+                    .zIndex(999)
+            }
+        }
+        .foregroundStyle(AppColors.primaryText)
+        .navigationTitle("社区蓝图")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button { viewModel.refreshBlueprintSets() } label: {
+                    Image(systemName: "arrow.clockwise")
+                }
+                .accessibilityLabel("刷新蓝图集")
+            }
+        }
+        .toolbarBackground(.visible, for: .navigationBar)
+        .toolbarBackground(AppColors.background, for: .navigationBar)
+        .tint(AppColors.accent)
+        .sheet(item: $selectedSet) { set in
+            BlueprintSetDetailView(blueprintSet: set)
+        }
+        .onAppear {
+            // 首次进入时显示免责声明
+            if !hasAccepted {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        showDisclaimer = true
                     }
                 }
-                
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        viewModel.refreshBlueprintSets()
-                    } label: {
-                        Image(systemName: "arrow.clockwise")
-                            .foregroundColor(Color(red: 0.2, green: 0.6, blue: 0.9))
-                    }
-                }
             }
-            .toolbarBackground(.visible, for: .navigationBar)
-            .toolbarBackground(Color(red: 0.08, green: 0.09, blue: 0.12), for: .navigationBar)
-            .sheet(item: $selectedSet) { set in
-                BlueprintSetDetailView(blueprintSet: set)
-            }
-            .onAppear {
-                // 首次进入时显示免责声明
-                if !hasAccepted {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                        withAnimation(.easeInOut(duration: 0.3)) {
-                            showDisclaimer = true
-                        }
-                    }
-                }
-                
-                if viewModel.blueprintSets.isEmpty {
-                    viewModel.loadBlueprintSets()
-                }
+            
+            if viewModel.blueprintSets.isEmpty {
+                viewModel.loadBlueprintSets()
             }
         }
     }
-}
 
-// MARK: - 子视图组件
+}
 
 struct BlueprintSetBanner: View {
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: 4) {
-                Rectangle()
-                    .fill(Color(red: 0.2, green: 0.6, blue: 0.9))
-                    .frame(width: 40, height: 2)
-                Circle()
-                    .fill(Color(red: 0.2, green: 0.6, blue: 0.9))
-                    .frame(width: 4, height: 4)
-                Spacer()
-            }
-            .padding(.bottom, 12)
-            
-            HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("BLUEPRINT SHOWCASE")
-                        .font(.system(size: 12, weight: .medium, design: .monospaced))
-                        .foregroundColor(Color(red: 0.2, green: 0.6, blue: 0.9))
-                    
-                    Text("蓝图展示系统")
-                        .font(.system(size: 24, weight: .bold))
-                        .foregroundColor(.white)
-                    
-                    Text("Community Blueprint Gallery")
-                        .font(.system(size: 13, design: .monospaced))
-                        .foregroundColor(.white.opacity(0.6))
-                }
-                
-                Spacer()
-                
-                VStack(spacing: 6) {
-                    Circle()
-                        .fill(Color(red: 0.2, green: 0.6, blue: 0.9))
-                        .frame(width: 8, height: 8)
-                        .overlay(
-                            Circle()
-                                .stroke(Color(red: 0.2, green: 0.6, blue: 0.9).opacity(0.3), lineWidth: 4)
-                                .scaleEffect(1.5)
-                        )
-                    
-                    Text("ONLINE")
-                        .font(.system(size: 9, weight: .bold, design: .monospaced))
-                        .foregroundColor(Color(red: 0.2, green: 0.6, blue: 0.9))
-                }
-            }
-            .padding(20)
-        }
-        .background(
-            ZStack {
-                Rectangle()
-                    .fill(Color(red: 0.12, green: 0.13, blue: 0.16))
-                Rectangle()
-                    .stroke(
-                        LinearGradient(
-                            colors: [
-                                Color(red: 0.2, green: 0.6, blue: 0.9).opacity(0.5),
-                                Color(red: 0.2, green: 0.6, blue: 0.9).opacity(0.1)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ),
-                        lineWidth: 1
-                    )
-            }
-        )
+        AppPageHeader(title: "发现可复用的产线", subtitle: "按作者与地图查找蓝图集，查看说明并复制分享码。")
     }
 }
 
 struct BlueprintSetFilterBar: View {
     @Binding var authorSearch: String
     @Binding var selectedRegion: String?
-    
     let availableRegions: [String]
-    
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
     var body: some View {
-        VStack(spacing: 12) {
-            // 作者搜索框
-            HStack {
-                Image(systemName: "person.circle")
-                    .foregroundColor(Color(red: 0.2, green: 0.6, blue: 0.9))
-                
-                TextField("搜索作者...", text: $authorSearch)
-                    .foregroundColor(.white)
-                
-                if !authorSearch.isEmpty {
-                    Button {
-                        authorSearch = ""
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundColor(.white.opacity(0.4))
+        AppSurface {
+            VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                AppSectionHeader(title: "查找蓝图")
+                if horizontalSizeClass == .regular && !dynamicTypeSize.isAccessibilitySize {
+                    HStack(spacing: AppSpacing.sm) {
+                        AppSearchField(text: $authorSearch, prompt: "搜索作者")
+                        BlueprintSetRegionMenu(selection: $selectedRegion, options: availableRegions)
+                            .frame(width: 220)
                     }
+                } else {
+                    AppSearchField(text: $authorSearch, prompt: "搜索作者")
+                    BlueprintSetRegionMenu(selection: $selectedRegion, options: availableRegions)
                 }
             }
-            .padding()
-            .background(
-                ZStack {
-                    Rectangle()
-                        .fill(Color(red: 0.12, green: 0.13, blue: 0.16))
-                    Rectangle()
-                        .stroke(Color(red: 0.2, green: 0.6, blue: 0.9).opacity(0.3), lineWidth: 1)
-                }
-            )
-            
-            // 地图筛选器
-            BlueprintSetRegionMenu(
-                selection: $selectedRegion,
-                options: availableRegions
-            )
         }
     }
 }
@@ -281,123 +131,66 @@ struct BlueprintSetFilterBar: View {
 struct BlueprintSetRegionMenu: View {
     @Binding var selection: String?
     let options: [String]
-    
+
     var body: some View {
         Menu {
             ForEach(options, id: \.self) { option in
-                Button(option) {
-                    selection = option == "全部" ? nil : option
+                Button { selection = option == "全部" ? nil : option } label: {
+                    if option == (selection ?? "全部") { Label(option, systemImage: "checkmark") }
+                    else { Text(option) }
                 }
             }
         } label: {
-            HStack {
-                Image(systemName: "map")
-                    .foregroundColor(Color(red: 0.2, green: 0.6, blue: 0.9))
-                
-                Text(selection ?? "选择地图")
-                    .font(.system(size: 14))
-                    .foregroundColor(selection == nil ? .white.opacity(0.6) : .white)
-                
-                Spacer()
-                
-                Image(systemName: "chevron.down")
-                    .font(.system(size: 11))
-                    .foregroundColor(Color(red: 0.2, green: 0.6, blue: 0.9))
+            HStack(spacing: AppSpacing.xs) {
+                Image(systemName: "map").foregroundStyle(AppColors.accent)
+                Text(selection ?? "全部地图").font(AppTypography.rowTitle)
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: AppSpacing.xs)
+                Image(systemName: "chevron.down").font(AppTypography.caption)
             }
-            .padding()
-            .background(
-                ZStack {
-                    Rectangle()
-                        .fill(Color(red: 0.12, green: 0.13, blue: 0.16))
-                    Rectangle()
-                        .stroke(Color(red: 0.2, green: 0.6, blue: 0.9).opacity(0.3), lineWidth: 1)
-                }
-            )
+            .foregroundStyle(AppColors.primaryText)
+            .padding(.horizontal, AppSpacing.sm)
+            .padding(.vertical, AppSpacing.xs)
+            .frame(minHeight: AppSize.rowMinimum)
+            .background(AppColors.background, in: RoundedRectangle(cornerRadius: AppRadius.control))
+            .overlay {
+                RoundedRectangle(cornerRadius: AppRadius.control).strokeBorder(AppColors.controlBorder, lineWidth: 1)
+                    .allowsHitTesting(false)
+            }
         }
+        .accessibilityLabel("地图筛选")
+        .accessibilityValue(selection ?? "全部地图")
     }
 }
 
 struct BlueprintSetLoadingView: View {
     var body: some View {
-        VStack(spacing: 20) {
-            ProgressView()
-                .scaleEffect(1.5)
-                .tint(Color(red: 0.2, green: 0.6, blue: 0.9))
-            
-            Text("LOADING BLUEPRINT SETS...")
-                .font(.system(size: 14, weight: .bold, design: .monospaced))
-                .foregroundColor(Color(red: 0.2, green: 0.6, blue: 0.9))
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 60)
+        AppSurface { AppLoadingState(title: "正在加载蓝图集") }
     }
 }
 
 struct BlueprintSetErrorView: View {
     let message: String
     let retry: () -> Void
-    
     var body: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "exclamationmark.triangle")
-                .font(.system(size: 60))
-                .foregroundColor(.red.opacity(0.5))
-            
-            Text("ERROR")
-                .font(.system(size: 16, weight: .bold, design: .monospaced))
-                .foregroundColor(.red.opacity(0.8))
-            
-            Text(message)
-                .font(.system(size: 14))
-                .foregroundColor(.white.opacity(0.6))
-                .multilineTextAlignment(.center)
-            
-            Button {
-                retry()
-            } label: {
-                Text("RETRY")
-                    .font(.system(size: 14, weight: .bold, design: .monospaced))
-                    .foregroundColor(Color(red: 0.2, green: 0.6, blue: 0.9))
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 12)
-                    .background(
-                        ZStack {
-                            Rectangle()
-                                .fill(Color(red: 0.12, green: 0.13, blue: 0.16))
-                            Rectangle()
-                                .stroke(Color(red: 0.2, green: 0.6, blue: 0.9), lineWidth: 2)
-                        }
-                    )
+        AppSurface {
+            AppContentState(title: "蓝图集加载失败", message: message,
+                            systemImage: "exclamationmark.triangle", tone: .error) {
+                Button("重新加载", action: retry).buttonStyle(AppActionStyle())
             }
         }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 40)
-        .padding(.horizontal)
     }
 }
 
 struct BlueprintSetEmptyView: View {
     let hasSets: Bool
-    
     var body: some View {
-        VStack(spacing: 20) {
-            Image(systemName: hasSets ? "magnifyingglass" : "doc.text")
-                .font(.system(size: 60))
-                .foregroundColor(Color(red: 0.2, green: 0.6, blue: 0.9).opacity(0.5))
-            
-            Text(hasSets ? "NO RESULTS" : "NO BLUEPRINT SETS")
-                .font(.system(size: 16, weight: .bold, design: .monospaced))
-                .foregroundColor(Color(red: 0.2, green: 0.6, blue: 0.9))
-            
-            Text(hasSets ? "未找到匹配的蓝图集" : "暂无蓝图集数据")
-                .font(.system(size: 14))
-                .foregroundColor(.white.opacity(0.6))
+        AppSurface {
+            AppContentState(title: hasSets ? "没有匹配的蓝图集" : "暂无蓝图集",
+                            message: hasSets ? "尝试调整作者关键词或地图筛选。" : "可通过右上角刷新重新获取数据。",
+                            systemImage: hasSets ? "magnifyingglass" : "square.stack")
         }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 60)
     }
 }
 
-#Preview {
-    BlueprintSetView()
-}
+#Preview { NavigationStack { BlueprintSetView() } }
