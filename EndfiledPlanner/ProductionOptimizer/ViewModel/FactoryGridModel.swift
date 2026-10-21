@@ -97,7 +97,7 @@ class FactoryGridModel {
     static func defaultProtocolCoreOrigin(on map: MapType) -> GridPoint {
         guard let def = BuildingDefinition.find(BuildingDefinition.protocolCoreID) else { return GridPoint(col: 0, row: 0) }
         let rules = map.rules
-        return GridPoint(col: (rules.gridCols - def.size.width) / 2, row: (rules.gridRows - def.size.height) / 2)
+        return GridPoint(col: (rules.baseCols - def.size.width) / 2, row: (rules.gridRows - def.size.height) / 2)
     }
 
     /// 优先放网格正中心；测试产线这种摆得比较满的布局中心可能被占了，
@@ -151,6 +151,7 @@ class FactoryGridModel {
         if origin.col < 0 || origin.row < 0 { return false }
         if origin.col + size.width > rules.gridCols { return false }
         if origin.row + size.height > rules.gridRows { return false }
+        if pumpZoneViolation(definition: definition, placed: dummy, rules: rules) != nil { return false }
 
         // 碰撞检查
         for placed in existing {
@@ -184,6 +185,21 @@ class FactoryGridModel {
         }
 
         return true
+    }
+
+    // MARK: - 水泵区
+    /// 水泵/气泵必须整台放在水泵区、出口朝基地（左）；别的建筑不能占水泵区。符合规则返回 nil，否则返回提示
+    static func pumpZoneViolation(definition: BuildingDefinition, placed: PlacedBuilding, rules: MapRules) -> String? {
+        guard rules.pumpZoneWidth > 0 else { return nil }
+        let cells = placed.occupiedCells(definition: definition)
+        if MapRules.pumpZoneBuildingIDs.contains(definition.id) {
+            guard cells.allSatisfy(rules.isInPumpZone) else { return "要放在右侧水泵区" }
+            let outputsFaceBase = definition.ports
+                .filter { $0.ioDirection == .output }
+                .allSatisfy { $0.resolvedPosition(placed: placed, definition: definition).facing == .left }
+            return outputsFaceBase ? nil : "出口要朝向基地"
+        }
+        return cells.contains(where: rules.isInPumpZone) ? "水泵区只能放水泵和气泵" : nil
     }
 
     // MARK: - 仓库取线的地图专属规则
@@ -395,6 +411,10 @@ class FactoryGridModel {
                 .compactMap { rules.blockedMode(of: $0, on: def) }
             if let mode = blocked.first {
                 conflicts[placed.id] = "\(layout.mapType.displayName)不能用\(mode.name)配方"
+                continue
+            }
+            if let hint = pumpZoneViolation(definition: def, placed: placed, rules: rules) {
+                conflicts[placed.id] = hint
                 continue
             }
             if BuildingDefinition.warehousePortIDs.contains(def.id) || def.id == BuildingDefinition.warehouseBaseSegmentID {

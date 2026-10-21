@@ -56,6 +56,7 @@ struct FactoryGridView: View {
     var body: some View {
         ZStack(alignment: .topLeading) {
             gridLines
+            pumpZoneLayer
             powerRangeLayer
             beltsLayer
             buildingsLayer
@@ -69,6 +70,8 @@ struct FactoryGridView: View {
             placementOverlay
         }
         .frame(width: CGFloat(cols) * cellSize, height: CGFloat(rows) * cellSize)
+        // 画在网格外面，用 background 不改变网格自身尺寸和坐标
+        .background(alignment: .topLeading) { warehouseLineDecoration }
         .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { frame in
             gridFrameBox.frame = frame
             if boxDragKind != nil { updateBoxDrag() }
@@ -85,6 +88,109 @@ struct FactoryGridView: View {
         withTransaction(transaction) { beltAnimPhase = 0 }
         if !reduceMotion {
             withAnimation(.linear(duration: 1.2).repeatForever(autoreverses: false)) { beltAnimPhase = 20 }
+        }
+    }
+
+    // MARK: - 水泵区：基地右侧一条，只放水泵/气泵
+    @ViewBuilder
+    private var pumpZoneLayer: some View {
+        let rules = vm.layout.mapType.rules
+        if rules.pumpZoneWidth > 0 {
+            let x = CGFloat(rules.baseCols) * cellSize
+            let width = CGFloat(rules.pumpZoneWidth) * cellSize
+            let height = CGFloat(rows) * cellSize
+            ZStack(alignment: .top) {
+                Rectangle().fill(AppColors.info.opacity(0.08))
+                if cellSize >= 18 {
+                    Text("水泵区 · 默认通电")
+                        .font(.system(size: max(8, min(cellSize * 0.32, 13)), weight: .semibold))
+                        .foregroundStyle(AppColors.info)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.5)
+                        .padding(.top, cellSize * 0.3)
+                        .padding(.horizontal, 2)
+                }
+            }
+            .frame(width: width, height: height)
+            .overlay(alignment: .leading) {
+                // 基地边界：虚线
+                Path { p in
+                    p.move(to: .zero)
+                    p.addLine(to: CGPoint(x: 0, y: height))
+                }
+                .stroke(AppColors.info, style: StrokeStyle(lineWidth: max(1.5, cellSize * 0.05), dash: [cellSize * 0.4, cellSize * 0.25]))
+            }
+            .offset(x: x)
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+        }
+    }
+
+    // MARK: - 四号谷地外围的仓库存取线（示意）
+    /// 四号谷地的取货口/存货口贴着基地上边、左边放，这两条边外面就是仓库存取线。
+    /// 这里只画个示意（尺寸照武陵：源桩 4×4、基段 4×8），不占格子、不参与计算
+    static let warehouseLineDepth = 4
+
+    @ViewBuilder
+    private var warehouseLineDecoration: some View {
+        if case .perimeter(let edges) = vm.layout.mapType.rules.warehouseLine {
+            let depth = CGFloat(Self.warehouseLineDepth)
+            let top = edges.contains(.up), left = edges.contains(.left)
+            Canvas { context, _ in
+                let c = cellSize
+                func module(_ rect: CGRect, isSource: Bool) {
+                    let r = rect.insetBy(dx: c * 0.08, dy: c * 0.08)
+                    context.fill(Path(r), with: .color(FactoryCanvasPalette.building))
+                    context.stroke(Path(r), with: .color(FactoryCanvasPalette.ink.opacity(0.85)), lineWidth: max(1, c * 0.05))
+                    if isSource {
+                        let d = min(r.width, r.height) * 0.5
+                        let ring = CGRect(x: r.midX - d / 2, y: r.midY - d / 2, width: d, height: d)
+                        context.stroke(Path(ellipseIn: ring), with: .color(FactoryCanvasPalette.structure), lineWidth: max(1, c * 0.05))
+                        context.fill(Path(ellipseIn: ring.insetBy(dx: d * 0.3, dy: d * 0.3)), with: .color(FactoryCanvasPalette.structure))
+                        return
+                    }
+                    // 基段：沿长边两条导轨 + 中间分隔
+                    let horizontal = r.width > r.height
+                    var rails = Path()
+                    for f in [0.3, 0.7] as [CGFloat] {
+                        if horizontal {
+                            rails.move(to: CGPoint(x: r.minX + c * 0.3, y: r.minY + r.height * f))
+                            rails.addLine(to: CGPoint(x: r.maxX - c * 0.3, y: r.minY + r.height * f))
+                        } else {
+                            rails.move(to: CGPoint(x: r.minX + r.width * f, y: r.minY + c * 0.3))
+                            rails.addLine(to: CGPoint(x: r.minX + r.width * f, y: r.maxY - c * 0.3))
+                        }
+                    }
+                    context.stroke(rails, with: .color(FactoryCanvasPalette.structure.opacity(0.6)), lineWidth: max(0.75, c * 0.03))
+                    if c >= 18 {
+                        let label = Text("仓库存取线")
+                            .font(.system(size: min(c * 0.45, 14), weight: .semibold))
+                            .foregroundColor(FactoryCanvasPalette.secondaryInk)
+                        context.draw(label, at: CGPoint(x: r.midX, y: r.midY))
+                    }
+                }
+                let origin = CGPoint(x: left ? depth * c : 0, y: top ? depth * c : 0)
+                if top && left {
+                    module(CGRect(x: 0, y: 0, width: depth * c, height: depth * c), isSource: true)
+                }
+                if top {
+                    for col in stride(from: 0, to: cols, by: 8) {
+                        let len = CGFloat(min(8, cols - col))
+                        module(CGRect(x: origin.x + CGFloat(col) * c, y: 0, width: len * c, height: depth * c), isSource: false)
+                    }
+                }
+                if left {
+                    for row in stride(from: 0, to: rows, by: 8) {
+                        let len = CGFloat(min(8, rows - row))
+                        module(CGRect(x: 0, y: origin.y + CGFloat(row) * c, width: depth * c, height: len * c), isSource: false)
+                    }
+                }
+            }
+            .frame(width: CGFloat(cols) * cellSize + (left ? depth * cellSize : 0),
+                   height: CGFloat(rows) * cellSize + (top ? depth * cellSize : 0))
+            .offset(x: left ? -depth * cellSize : 0, y: top ? -depth * cellSize : 0)
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
         }
     }
 
@@ -156,8 +262,9 @@ struct FactoryGridView: View {
             for type in [LineType.belt, .pipe] {
                 for belt in vm.layout.beltNetwork.belts where belt.lineType == type {
                     let level = utilization ? utilizationLevel(of: belt) : nil
+                    let dimmed = vm.isDimmedByHighlight(belt: belt.id)
                     drawOneBelt(belt, occupied: occupied, sharedKeys: sharedKeys, isPreview: false,
-                                alphaScale: level == .idle ? 0.25 : 1, context: &context)
+                                alphaScale: (level == .idle ? 0.25 : 1) * (dimmed ? 0.18 : 1), context: &context)
                     if let level { drawUtilization(level, on: belt, context: &context) }
                 }
             }
@@ -641,7 +748,7 @@ struct FactoryGridView: View {
             vm.editMode = .select
             vm.selectedBuildingID = placed.id
         }
-        .opacity(placed.isActive ? 1 : 0.45)
+        .opacity((placed.isActive ? 1 : 0.45) * (vm.isDimmedByHighlight(building: placed.id) ? 0.22 : 1))
         .clipped()
         .offset(x: x, y: y)
     }
@@ -724,6 +831,7 @@ struct FactoryGridView: View {
             }
         }
         .frame(width: slotW, height: slotH)
+        .opacity(vm.isDimmedByHighlight(building: placed.id) ? 0.22 : 1)
         .offset(x: cx - slotW / 2, y: cy - slotH / 2)
         .allowsHitTesting(false)
     }

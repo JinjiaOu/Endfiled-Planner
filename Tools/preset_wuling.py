@@ -2,7 +2,7 @@
 水泵、分流器、气泵、散布机等辅助机器的位置/朝向放在 wuling_layout.json，
 由局部搜索得到（布线失败数最少，其次总线长最短）：
 
-    python3 preset_wuling.py search <迭代次数> <随机种子> [起始坐标.json]
+    python3 preset_wuling.py search <迭代次数> <随机种子> [起始坐标.json] [当前最好结果.json]
 
 最后一行输出就是新的坐标，覆盖 wuling_layout.json 后运行 gen_presets.py 重新生成预设。
 """
@@ -42,12 +42,50 @@ LABELS = {'W7': '水泵·清水(半载)', 'W4': '水泵·清水(半载)', 'W5': 
           'L1': '二型耐酸水泵·液化息壤', 'C': '配件机·灼铜零件', 'S': '塑形机·赤铜耐压罐'}
 
 
+# 主产线整体旋转 180°（刚体变换，内部连线关系不变）：原来在左边的气体链（反应炉/转化机/提纯机）
+# 转到右边，贴着基地右侧的水泵区。下面 build() 里的坐标都按旋转前写，放置时统一变换；
+# 水泵/气泵直接放在水泵区，坐标是真实坐标，不变换
+FLIP = True
+# 旋转前第 12 行往下（洪炉那一排下面）整体再往下挪 GAP 行，旋转后就是洪炉区和其余产线之间一条横贯全图的空走廊，
+# 水泵过来的管道走这里，不用在机器之间挤
+GAP_ROW, GAP = 12, 8
+FLIP_X, FLIP_Y = P.GRID_COLS - 1, 47 + GAP
+
+
 def build(mv=None, soft=True, first_nets=None):
     mv = mv or MOVABLE
     L = P.Layout('wuling_equip', 'wuling')
     L.soft = soft
-    place = L.place
     bad = []
+
+    def T(c):
+        if c is None:
+            return c
+        c = (c[0], c[1] + GAP if c[1] >= GAP_ROW else c[1])
+        return (FLIP_X - c[0], FLIP_Y - c[1]) if FLIP else c
+
+    def place(dev, x, y, rot=UP, **kw):
+        if y >= GAP_ROW:
+            y += GAP
+        if not FLIP:
+            return L.place(dev, x, y, rot, **kw)
+        w, h = P.Building(P.DEVICES[dev], (0, 0), rot).size
+        return L.place(dev, FLIP_X - x - w + 1, FLIP_Y - y - h + 1, (rot + 2) % 4, **kw)
+
+    def dock(dev, seg, side, off, **kw):
+        if not FLIP:
+            return L.dock(dev, seg, side, off, **kw)
+        x0, x1, y0, y1 = seg.bounds()
+        span = (x1 - x0 + 1) if side in (UP, DOWN) else (y1 - y0 + 1)
+        return L.dock(dev, seg, (side + 2) % 4, span - 3 - off, **kw)
+
+    def ox(b):
+        """建筑在旋转前坐标系里的左边界 x"""
+        return FLIP_X - b.origin[0] - b.size[0] + 1 if FLIP else b.origin[0]
+
+    def px(b):
+        """取货口/存货口那个口在旋转前坐标系里的 x"""
+        return T(b.port_pos(b.device.ports[0])[0])[0]
 
     def ports(b, kind, io):
         return [p for p in b.device.ports if p.kind == kind and p.io == io]
@@ -63,19 +101,21 @@ def build(mv=None, soft=True, first_nets=None):
             L.failures.append('missing building')
             return None
         try:
-            sp, dp = L.best_pair(src, dst, kind, s, d, se, de)
+            sp, dp = L.best_pair(src, dst, kind, T(s), T(d), se, de)
         except KeyError as e:
             L.failures.append(f'port {e}')
             return None
-        return L.connect(src, sp, dst, dp, via=via)
+        return L.connect(src, sp, dst, dp, via=[T(v) for v in via] if via else via)
 
     def pipe(src, dst, **kw):
         return conn(src, dst, 'pipe', **kw)
 
     def mplace(name):
-        dev, x, y, rot = mv[name]
+        dev, x, y, rot = mv[name][:4]
+        # 泵、以及第 5 项标了 'real' 的机器（手动摆在走廊/右侧的）用真实坐标，不做旋转变换
+        put = L.place if dev in P.PUMP_ZONE_IDS or mv[name][4:] == ['real'] else place
         try:
-            b = place(dev, x, y, rot, recipe=RECIPES.get(name), label=LABELS[name])
+            b = put(dev, x, y, rot, recipe=RECIPES.get(name), label=LABELS[name])
         except P.PlacementError:
             bad.append(name)
             return None
@@ -90,7 +130,7 @@ def build(mv=None, soft=True, first_nets=None):
                                                [(tl2, 5), (ts2, 1)], [(tr2, 0), (tr2, 3)]]):
         ov = place('xiranite_oven_1', x, 7, DOWN, recipe='xiranite_oven_xiranite_powder_1', label='天有洪炉·息壤')
         for seg, off in docks:
-            oven_docks.append((L.dock('unloader_1', seg, DOWN, off, material='稳定碳块', label='取货口·稳定碳块'), ov))
+            oven_docks.append((dock('unloader_1', seg, DOWN, off, material='稳定碳块', label='取货口·稳定碳块'), ov))
         ovens.append(ov)
     O1, O2, O3, O4, O5 = ovens
     H1 = place('xiranite_oven_1', 25, 15, DOWN, recipe='xiranite_oven_xiranite_enr_powder_1', label='天有洪炉·重息壤')
@@ -109,7 +149,7 @@ def build(mv=None, soft=True, first_nets=None):
     xs = [1, 9, 17, 25, 33, 47]
     furn, furn_docks = [], []
     for x, (seg, off) in zip(xs, [(g1, 0), (s1, 1), (g2, 5), (g3, 1), (s2, 1), (g5, 0)]):
-        o = L.dock('unloader_1', seg, UP, off, material='赤铜矿', label='取货口·赤铜矿')
+        o = dock('unloader_1', seg, UP, off, material='赤铜矿', label='取货口·赤铜矿')
         f = place('furnance_1', x, 38, UP, recipe='furnance_copper_nugget_1', label='精炼炉·赤铜块')
         furn.append(f); furn_docks.append((o, f))
     F1, F2, F3, F4, F5, F6 = furn
@@ -124,7 +164,7 @@ def build(mv=None, soft=True, first_nets=None):
     # 电力：热能池贴着下方仓库线，燃料从基段上的取货口直接送进去
     import gen_presets
     fuel = gen_presets.pick_fuel(L, extra=sum(P.DEVICES[v[0]].power for v in mv.values()))
-    fuel_out = L.dock('unloader_1', g4, UP, 0, material=fuel, label=f'取货口·{fuel}')
+    fuel_out = dock('unloader_1', g4, UP, 0, material=fuel, label=f'取货口·{fuel}')
     station = place('power_station_1', 39, 41, RIGHT, label=f'热能池·{fuel}')
 
     # ===== 可调的辅助机器 =====
@@ -132,7 +172,7 @@ def build(mv=None, soft=True, first_nets=None):
     LD = None
     if m['MS'] is not None:
         try:
-            LD = L.dock('loader_1', m['MS'], UP, 0, label='存货口·灼铜装备原件')
+            LD = dock('loader_1', m['MS'], UP, 0, label='存货口·灼铜装备原件')
         except P.PlacementError:
             bad.append('LD')
     V = m['V']
@@ -150,9 +190,9 @@ def build(mv=None, soft=True, first_nets=None):
 
     # ===== 布线：先紧贴的，再主干，再辅助 =====
     for o, ov in oven_docks:
-        add(conn, o, ov, d=(o.port_pos(o.device.ports[0])[0][0], 7))
+        add(conn, o, ov, d=(px(o), 7))
     for o, f in furn_docks:
-        add(conn, o, f, d=(o.port_pos(o.device.ports[0])[0][0], 40))
+        add(conn, o, f, d=(px(o), 40))
     for f, cl in zip(furn, cls):
         add(pipe, f, cl)
     add(pipe, F5, P1, d=(37, 39)); add(pipe, F6, P2, d=(51, 39))
@@ -180,7 +220,7 @@ def build(mv=None, soft=True, first_nets=None):
     add(pipe, P1, H1, s=(41, 37)); add(pipe, P2, H2, s=(55, 37))
     for w, sp, fa, fb in (('W1', 'S1', F1, F2), ('W2', 'S2', F3, F4), ('W3', 'S3', F5, F6)):
         add(pipe, m[w], m[sp], de=DOWN)
-        add(pipe, m[sp], fb, se=UP, d=(fb.origin[0], 39)); add(pipe, m[sp], fa, se=RIGHT, d=(fa.origin[0], 39))
+        add(pipe, m[sp], fb, se=UP, d=(ox(fb), 39)); add(pipe, m[sp], fa, se=RIGHT, d=(ox(fa), 39))
     add(pipe, m['W4'], O2, d=(25, 9)); add(pipe, m['W7'], O3, d=(33, 9))
     add(pipe, m['W5'], m['S5'], de=DOWN); add(pipe, m['S5'], O4, d=(42, 9)); add(pipe, m['S5'], O5, d=(49, 9))
     add(pipe, m['W6'], O1, d=(17, 9))
@@ -200,6 +240,9 @@ def build(mv=None, soft=True, first_nets=None):
         if len(L.failures) > before:
             failed.append(i)
     L.failed_nets = failed
+    # 失败的线两头是哪些可调机器（定向搜索只挪这些）
+    name_of = {id(b): name for name, b in m.items() if b is not None}
+    L.failed_names = {name_of[id(b)] for i in failed for b in nets[i][1][:2] if id(b) in name_of}
     if not bad:
         try:
             L.place_diffusers()
@@ -216,7 +259,8 @@ def score(mv):
         L, bad = build(mv, first_nets=first)
         if best is None or len(L.failures) < len(best[0].failures):
             best = (L, bad)
-        if not L.failures or bad:
+        # 失败多的时候重排布线顺序也救不回来，只在接近成功时才重试，搜索快很多
+        if not L.failures or bad or len(L.failures) > 3:
             break
         first = L.failed_nets + [i for i in first if i not in L.failed_nets]
     L, bad = best
@@ -224,29 +268,47 @@ def score(mv):
     return len(bad) * 3 + len(L.failures), length, L
 
 
-def search(iters=4000, seed=1, start=None):
+def search(iters=4000, seed=1, start=None, best_path=None):
     rng = random.Random(seed)
     cur = {k: list(v) for k, v in (start or MOVABLE).items()}
-    best_f, best_len, _ = score(cur)
+    best_f, best_len, best_L = score(cur)
+    focus = best_L.failed_names
     print('start', best_f, best_len, flush=True)
     names = list(cur)
     for it in range(iters):
         cand = {k: list(v) for k, v in cur.items()}
         for _ in range(rng.choice([1, 1, 1, 2, 3])):
-            n = rng.choice(names)
+            # 定向：八成概率只挪卡住的线两头的机器
+            n = rng.choice(sorted(focus)) if focus and rng.random() < 0.8 else rng.choice(names)
             r = rng.random()
-            if r < 0.7:
+            if cand[n][0] in P.PUMP_ZONE_IDS:
+                # 泵固定在右侧水泵区、出口朝左，只能上下挪：多半跟另一台泵对调行（不会撞），少数挪到空行
+                pumps = [k for k in cand if cand[k][0] in P.PUMP_ZONE_IDS and k != n]
+                if r < 0.6:
+                    o = rng.choice(pumps)
+                    cand[n][2], cand[o][2] = cand[o][2], cand[n][2]
+                else:
+                    taken = {cand[k][2] + i for k in pumps for i in range(3)}
+                    free = [y for y in range(0, P.GRID_ROWS - 2) if not {y, y + 1, y + 2} & taken]
+                    if free:
+                        cand[n][2] = rng.choice(free)
+            elif r < 0.7:
                 cand[n][1] += rng.randint(-3, 3); cand[n][2] += rng.randint(-3, 3)
             elif r < 0.9:
                 cand[n][3] = rng.randrange(4)
             else:
                 cand[n][1] = rng.randrange(0, 58); cand[n][2] = rng.randrange(4, 44)
-        f, ln, _ = score(cand)
+        f, ln, cand_L = score(cand)
         if (f, ln) < (best_f, best_len) or (f == best_f and ln <= best_len + 5 and rng.random() < 0.05):
             cur, best_f, best_len = cand, f, ln
+            focus = cand_L.failed_names
+            if best_path:
+                # 每次变好都落盘，进程中途被杀也不丢结果
+                with open(best_path, 'w') as fp:
+                    json.dump({'failures': best_f, 'length': best_len, 'layout': cur}, fp)
             if it % 50 == 0 or f < 3:
                 print(it, best_f, best_len, flush=True)
-        if best_f == 0 and it > 1500:
+        if best_f == 0:
             break
     return cur, best_f, best_len
 
@@ -254,7 +316,8 @@ def search(iters=4000, seed=1, start=None):
 if __name__ == '__main__':
     if len(sys.argv) > 1 and sys.argv[1] == 'search':
         start = json.load(open(sys.argv[4])) if len(sys.argv) > 4 else None
-        cur, f, ln = search(int(sys.argv[2]) if len(sys.argv) > 2 else 4000, int(sys.argv[3]) if len(sys.argv) > 3 else 1, start)
+        cur, f, ln = search(int(sys.argv[2]) if len(sys.argv) > 2 else 4000, int(sys.argv[3]) if len(sys.argv) > 3 else 1, start,
+                            sys.argv[5] if len(sys.argv) > 5 else None)
         print('final', f, ln)
         print(json.dumps(cur))
     else:

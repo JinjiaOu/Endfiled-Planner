@@ -68,7 +68,65 @@ class FactoryViewModel: ObservableObject {
     /// 详情面板点了"移动"后，下一次点网格就把这台建筑挪过去（点的格子是新的左上角）
     @Published var movingBuildingID: UUID? = nil
     @Published var moveFailedMessage: String? = nil
-    @Published var stats: FactoryGridModel.ProductionStats
+    @Published var stats: FactoryGridModel.ProductionStats {
+        didSet { updateHighlight() }
+    }
+    /// 产能统计里点中的产物：画布上生产/消耗/运它的建筑和线高亮，其余变暗；nil = 不高亮
+    @Published var highlightedItem: String? = nil {
+        didSet { updateHighlight() }
+    }
+    /// 跟高亮产物有关的建筑和线（highlightedItem 或统计变了就重算，画布直接查）
+    @Published private(set) var highlightedBuildingIDs: Set<UUID> = []
+    @Published private(set) var highlightedBeltIDs: Set<UUID> = []
+
+    func isDimmedByHighlight(building id: UUID) -> Bool {
+        highlightedItem != nil && !highlightedBuildingIDs.contains(id)
+    }
+
+    func isDimmedByHighlight(belt id: UUID) -> Bool {
+        highlightedItem != nil && !highlightedBeltIDs.contains(id)
+    }
+
+    private func updateHighlight() {
+        guard let item = highlightedItem else {
+            highlightedBuildingIDs = []
+            highlightedBeltIDs = []
+            return
+        }
+        let eps = 1e-9
+        var buildings = Set<UUID>()
+        // 机器（含取货口、协议核心）产出或消耗它
+        for m in stats.machineStates where (m.outputs[item] ?? 0) > eps || (m.inputs[item] ?? 0) > eps || m.activatorItem == item {
+            buildings.insert(m.id)
+        }
+        // 存货口、废水处理机收它
+        for sink in stats.sinkStates where (sink.consumed[item] ?? 0) > eps { buildings.insert(sink.id) }
+        // 热能池烧它
+        for g in stats.generators where g.fuel == item { buildings.insert(g.id) }
+        let belts = Set(stats.beltFlows.filter { ($0.value.flow[item] ?? 0) > eps }.keys)
+
+        // 分流器/汇流器/桥/准入口这类直通节点：接在高亮线两头的也亮
+        var lineEnds = Set<GridPoint>()
+        for belt in layout.beltNetwork.belts where belts.contains(belt.id) {
+            for cell in [belt.headCell, belt.tailCell].compactMap({ $0 }) {
+                lineEnds.insert(cell)
+                for d in [GridPoint(col: 1, row: 0), GridPoint(col: -1, row: 0), GridPoint(col: 0, row: 1), GridPoint(col: 0, row: -1)] {
+                    lineEnds.insert(GridPoint(col: cell.col + d.col, row: cell.row + d.row))
+                }
+            }
+        }
+        for placed in layout.buildings where Self.passthroughIDs.contains(placed.definitionID) {
+            guard let def = BuildingDefinition.find(placed.definitionID) else { continue }
+            if placed.occupiedCells(definition: def).contains(where: lineEnds.contains) { buildings.insert(placed.id) }
+        }
+        highlightedBuildingIDs = buildings
+        highlightedBeltIDs = belts
+    }
+
+    private static let passthroughIDs: Set<String> = [
+        "log_splitter", "log_pipe_splitter", "log_converger", "log_pipe_converger",
+        "log_connector", "log_pipe_connector", "log_conditioner", "log_pipe_conditioner",
+    ]
 
     // 配方数据：按建筑 id 分组，PlacedBuilding 记的是其中的配方 ID
     let machineRecipes: [String: [Recipe]]
@@ -218,11 +276,20 @@ class FactoryViewModel: ObservableObject {
     /// 避免拖拽路径不同导致预览来回跳；还没拖到合法位置时（比如刚从建造面板拿起来）
     /// 才退回一个大概方向，仅供预览用
     func autoOrientedRotation(for def: BuildingDefinition, at cell: GridPoint) -> BuildingRotation? {
-        guard BuildingDefinition.warehousePortIDs.contains(def.id) else { return nil }
+        let isPump = MapRules.pumpZoneBuildingIDs.contains(def.id)
+        guard BuildingDefinition.warehousePortIDs.contains(def.id) || isPump else { return nil }
         for candidate in BuildingRotation.allCases {
             if FactoryGridModel.canPlace(definition: def, at: cell, rotation: candidate,
                                           existing: layout.buildings, mapType: layout.mapType) {
                 return candidate
+            }
+        }
+        // 水泵/气泵：出口朝基地（左）的那个朝向，位置不对时也先转好方向
+        if isPump {
+            return BuildingRotation.allCases.first { rotation in
+                let dummy = PlacedBuilding(definitionID: def.id, origin: cell, rotation: rotation)
+                return def.ports.filter { $0.ioDirection == .output }
+                    .allSatisfy { $0.resolvedPosition(placed: dummy, definition: def).facing == .left }
             }
         }
         switch layout.mapType.rules.warehouseLine {
@@ -620,9 +687,11 @@ class FactoryViewModel: ObservableObject {
         let conflictKeys = Set(existingSegs.map {
             "\($0.cell.col),\($0.cell.row),\($0.axis.rawValue),\($0.lineType.rawValue)"
         })
+        // 水泵区里不走线：泵的出口就贴着基地边，管道从基地这一侧接
+        let rules = layout.mapType.rules
         let filtered = newSegs.filter { seg in
             let key = "\(seg.cell.col),\(seg.cell.row),\(seg.axis.rawValue),\(seg.lineType.rawValue)"
-            return !conflictKeys.contains(key)
+            return !conflictKeys.contains(key) && !rules.isInPumpZone(seg.cell)
         }
         guard !filtered.isEmpty else { return }
         // 中间有段因为跟已有的线重叠被去掉了：剩下的断成几截，各自按一条线处理，不然断口两头会被直接连起来画成斜线
@@ -695,7 +764,11 @@ class FactoryViewModel: ObservableObject {
     /// 传送带/管道渲染用的"挡路格子"：普通建筑挡，但物流桥/管道桥这类交叉节点不挡
     /// （它们本来就是给线穿过去用的）
     func lineBlockingCellKeys() -> Set<String> {
-        Set(layout.buildings
+        let rules = layout.mapType.rules
+        let pumpZone = rules.pumpZoneWidth > 0
+            ? (rules.baseCols..<rules.gridCols).flatMap { col in (0..<rules.gridRows).map { "\(col),\($0)" } }
+            : []
+        return Set(pumpZone).union(layout.buildings
             .filter { !FactoryViewModel.bridgeBuildingIDs.contains($0.definitionID) }
             .flatMap { placed -> [String] in
                 guard let def = BuildingDefinition.find(placed.definitionID) else { return [] }

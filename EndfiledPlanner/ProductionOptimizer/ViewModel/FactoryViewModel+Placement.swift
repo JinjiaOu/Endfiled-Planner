@@ -161,6 +161,7 @@ extension FactoryViewModel {
         for belt in placement.belts {
             for seg in belt.segments {
                 if outOfBounds(seg.cell) { return "超出画布了" }
+                if rules.isInPumpZone(seg.cell) { return "线不能走进水泵区" }
                 if blocking.contains(seg.cell) { return "线穿过了已有的建筑，挪开再确认" }
             }
         }

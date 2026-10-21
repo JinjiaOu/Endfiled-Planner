@@ -6,6 +6,9 @@ struct FactoryStatsView: View {
     let stats: FactoryGridModel.ProductionStats
     @Binding var isExpanded: Bool
     var showsHeader = true
+    /// 当前高亮的产物（行加选中态）；onSelectItem 为 nil 时产物行不可点
+    var highlightedItem: String? = nil
+    var onSelectItem: ((String) -> Void)? = nil
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
@@ -100,7 +103,7 @@ struct FactoryStatsView: View {
     private var lines: some View {
         if !stats.productionLines.isEmpty {
             Divider().overlay(AppColors.border)
-            AppSectionHeader(title: "产出产线")
+            AppSectionHeader(title: "产出产线", subtitle: onSelectItem != nil ? "点产物在画布上高亮相关机器和线" : nil)
             ForEach(stats.productionLines, id: \.output) { line in productionLineRow(line: line) }
         }
         if !stats.consumptionLines.isEmpty {
@@ -179,16 +182,31 @@ struct FactoryStatsView: View {
         .background(AppColors.elevatedSurface, in: RoundedRectangle(cornerRadius: AppRadius.control))
     }
 
+    @ViewBuilder
     private func productionLineRow(line: FactoryGridModel.ProductionLine,
                                    color: Color = AppColors.success) -> some View {
-        HStack(alignment: .top, spacing: AppSpacing.sm) {
+        let row = HStack(alignment: .top, spacing: AppSpacing.sm) {
             ItemIcon(name: line.output, size: AppSize.itemIcon)
             AppKeyValueRow(title: line.output, value: String(format: "%.0f/min", line.ratePerMin))
+            if onSelectItem != nil {
+                Image(systemName: highlightedItem == line.output ? "scope" : "chevron.right")
+                    .font(AppTypography.caption)
+                    .foregroundStyle(highlightedItem == line.output ? AppColors.accent : AppColors.tertiaryText)
+                    .accessibilityHidden(true)
+            }
         }
         .padding(.vertical, AppSpacing.xs)
+        .background(highlightedItem == line.output ? AppColors.accent.opacity(0.12) : .clear)
         .overlay(alignment: .leading) {
             RoundedRectangle(cornerRadius: 1).fill(color).frame(width: 2).offset(x: -AppSpacing.xs)
                 .allowsHitTesting(false)
+        }
+        if let onSelectItem {
+            Button { onSelectItem(line.output) } label: { row.contentShape(Rectangle()) }
+                .buttonStyle(.plain)
+                .accessibilityHint(highlightedItem == line.output ? "取消画布高亮" : "在画布上高亮相关机器和线")
+        } else {
+            row
         }
     }
 }

@@ -94,6 +94,7 @@ struct FactoryLayoutView: View {
     @StateObject private var vm: FactoryViewModel
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.colorScheme) private var colorScheme
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var workspaceSize: CGSize = .zero
 
@@ -207,6 +208,9 @@ struct FactoryLayoutView: View {
                     Button { vm.saveLayout() } label: {
                         Label("保存画布", systemImage: "square.and.arrow.down")
                     }
+                    Button { exportLayoutImage() } label: {
+                        Label("导出布局图片", systemImage: "photo")
+                    }
                     Menu {
                         ForEach(MapType.allCases, id: \.self) { map in
                             Button {
@@ -234,7 +238,7 @@ struct FactoryLayoutView: View {
                     Image(systemName: "ellipsis.circle")
                         .foregroundColor(AppColors.accent)
                 }
-                .accessibilityLabel("画布选项：地图、预设与清空")
+                .accessibilityLabel("画布选项：保存、导出图片、地图、预设与清空")
             }
         }
         .toolbarBackground(.visible, for: .navigationBar)
@@ -281,6 +285,8 @@ struct FactoryLayoutView: View {
                         autoScrollFinger: $autoScrollFinger
                     )
                     .padding(20)
+                    .padding(.top, warehouseMargin.top)
+                    .padding(.leading, warehouseMargin.leading)
                 }
                 .scrollPosition($scrollPosition)
                 .onScrollGeometryChange(for: ScrollMetrics.self) { geo in
@@ -304,9 +310,13 @@ struct FactoryLayoutView: View {
                     powerWarningBanner
                         .padding(.top, 8)
                         .padding(.horizontal, 16)
+                        .allowsHitTesting(false)
+                    if let item = vm.highlightedItem {
+                        highlightChip(item)
+                            .padding(.top, AppSpacing.xs)
+                    }
                     Spacer()
                 }
-                .allowsHitTesting(false)
                 // 悬浮产能按钮（右下角）
                 VStack {
                     Spacer()
@@ -556,12 +566,19 @@ struct FactoryLayoutView: View {
         }
     }
 
+    /// 四号谷地外围画的仓库存取线示意要留出的位置（FactoryGridView.warehouseLineDecoration）
+    private var warehouseMargin: (top: CGFloat, leading: CGFloat) {
+        guard case .perimeter(let edges) = vm.layout.mapType.rules.warehouseLine else { return (0, 0) }
+        let depth = CGFloat(FactoryGridView.warehouseLineDepth) * cellSize
+        return (edges.contains(.up) ? depth : 0, edges.contains(.left) ? depth : 0)
+    }
+
     /// 虚影放在当前画面中央
     private func beginPlacement(_ saved: SavedLayout) {
         let m = scrollGeometry.metrics
         let padding: CGFloat = 20   // 网格外面那圈 .padding(20)
-        let center = GridPoint(col: Int((m.offset.x + m.containerSize.width / 2 - padding) / cellSize),
-                               row: Int((m.offset.y + m.containerSize.height / 2 - padding) / cellSize))
+        let center = GridPoint(col: Int((m.offset.x + m.containerSize.width / 2 - padding - warehouseMargin.leading) / cellSize),
+                               row: Int((m.offset.y + m.containerSize.height / 2 - padding - warehouseMargin.top) / cellSize))
         showBuildingPalette = false
         vm.startPlacement(saved, around: center)
     }
@@ -680,6 +697,42 @@ struct FactoryLayoutView: View {
         }
     }
 
+    /// 整张画布裁到有内容的区域导出成图片，弹分享面板；导出前先取消选中，免得选中框也画进去
+    private func exportLayoutImage() {
+        vm.selectedBuildingID = nil
+        vm.selectedBeltID = nil
+        guard let image = FactoryLayoutExporter.image(vm: vm, colorScheme: colorScheme) else {
+            vm.toastText = "画布是空的，没有可导出的内容"
+            vm.showSaveConfirm = true
+            return
+        }
+        FactoryLayoutExporter.share(image)
+    }
+
+    /// 画布顶部的高亮提示：当前高亮哪个产物，点 × 取消
+    private func highlightChip(_ item: String) -> some View {
+        HStack(spacing: AppSpacing.xs) {
+            ItemIcon(name: item, size: 20)
+            Text("高亮：\(item)")
+                .font(AppTypography.caption.weight(.semibold))
+                .foregroundStyle(AppColors.primaryText)
+                .lineLimit(1)
+            Button {
+                withAnimation(AppMotion.feedback(reduceMotion: reduceMotion)) { vm.highlightedItem = nil }
+            } label: {
+                Image(systemName: "xmark.circle.fill")
+                    .foregroundStyle(AppColors.secondaryText)
+                    .frame(minWidth: AppSize.touchTarget, minHeight: AppSize.touchTarget)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("取消高亮")
+        }
+        .padding(.leading, AppSpacing.sm)
+        .background(AppColors.surface, in: Capsule())
+        .overlay(Capsule().strokeBorder(AppColors.accent, lineWidth: 1).allowsHitTesting(false))
+    }
+
     private var statsFloatingButton: some View {
         Button {
             withAnimation(AppMotion.feedback(reduceMotion: reduceMotion)) { showStats.toggle() }
@@ -712,7 +765,14 @@ struct FactoryLayoutView: View {
                     .padding(AppSpacing.md)
                     Divider().overlay(AppColors.border)
                     ScrollView {
-                        FactoryStatsView(stats: vm.stats, isExpanded: .constant(true), showsHeader: false)
+                        FactoryStatsView(stats: vm.stats, isExpanded: .constant(true), showsHeader: false,
+                                         highlightedItem: vm.highlightedItem) { item in
+                            // 点产物：画布上高亮相关机器和线，关掉统计面板让出画布
+                            withAnimation(AppMotion.feedback(reduceMotion: reduceMotion)) {
+                                vm.highlightedItem = vm.highlightedItem == item ? nil : item
+                                showStats = false
+                            }
+                        }
                     }
                 }
                 .background(AppColors.surface, in: RoundedRectangle(cornerRadius: AppRadius.panel))

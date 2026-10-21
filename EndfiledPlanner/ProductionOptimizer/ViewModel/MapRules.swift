@@ -25,9 +25,20 @@ struct MapRules {
     let unavailableBuildingIDs: Set<String>
     /// 这张图上不能用的配方模式（devices.json 里 modes 的 id）：机器能造，但这些模式的配方不能选
     let blockedRecipeModes: Set<String>
-    /// 画布大小（格）
+    /// 画布大小（格），含右侧的水泵区
     let gridCols: Int
     let gridRows: Int
+    /// 基地右侧的水泵区宽度（格），0 = 没有。水池/酸池/息壤气口在游戏里都在基地范围外，
+    /// 这里在基地右边单独留一条，只能放水泵/气泵，出口朝基地，默认通电（用户 2026-10-20 定）
+    var pumpZoneWidth: Int = 0
+
+    /// 基地本身的列数（不含水泵区），基地占 0..<baseCols 列
+    var baseCols: Int { gridCols - pumpZoneWidth }
+
+    func isInPumpZone(_ cell: GridPoint) -> Bool { pumpZoneWidth > 0 && cell.col >= baseCols }
+
+    /// 只能放在水泵区的建筑：水泵、二型耐酸水泵、气体收集泵
+    static let pumpZoneBuildingIDs: Set<String> = ["pump_1", "pump_2", "gas_pump_1"]
 
     /// 只能在武陵用的建筑（用户 2026-10-06 定）：用水用气的设备、暗管、储液/储气罐、拆解机、息壤供电桩、仓库存取线
     static let wulingOnlyBuildingIDs: Set<String> = [
@@ -62,7 +73,7 @@ struct MapRules {
             warehouseLine: .busDock,
             unavailableBuildingIDs: [],
             blockedRecipeModes: [],
-            gridCols: 80, gridRows: 80),
+            gridCols: 83, gridRows: 80, pumpZoneWidth: 3),
     ]
 
     static func of(_ map: MapType) -> MapRules {

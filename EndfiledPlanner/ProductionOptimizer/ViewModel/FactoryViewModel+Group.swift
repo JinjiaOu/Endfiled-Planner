@@ -135,7 +135,7 @@ extension FactoryViewModel {
         }
         let moving = beltsMovingWithGroup()
         for belt in layout.beltNetwork.belts where moving.contains(belt.id) {
-            if belt.segments.contains(where: { outOfBounds($0.cell + delta) }) { return false }
+            if belt.segments.contains(where: { outOfBounds($0.cell + delta) || rules.isInPumpZone($0.cell + delta) }) { return false }
         }
         return true
     }

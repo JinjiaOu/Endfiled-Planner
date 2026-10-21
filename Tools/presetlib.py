@@ -15,7 +15,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 OTHER = ROOT / 'EndfiledPlanner' / 'other'
 
-GRID_COLS, GRID_ROWS = 80, 80
+GRID_COLS, GRID_ROWS = 80, 80   # 基地本身；线只能走在这里面
+# 同 App 的 MapRules.pumpZoneWidth：基地右侧的水泵区（只放水泵/气泵、出口朝左、默认通电、不走线）
+PUMP_ZONE = {'wuling': 3}
+PUMP_ZONE_IDS = {'pump_1', 'pump_2', 'gas_pump_1'}
 UP, RIGHT, DOWN, LEFT = 0, 1, 2, 3
 OFFSET = {UP: (0, -1), RIGHT: (1, 0), DOWN: (0, 1), LEFT: (-1, 0)}
 DIR_NAME = {UP: '上', RIGHT: '右', DOWN: '下', LEFT: '左'}
@@ -183,6 +186,10 @@ class Layout:
         self.reserved = set()      # 端口外部格：布线时不能占用（除了自己的起止点）
         self.soft = False          # True 时布线失败只记录不抛错，方便一次看到所有问题
         self.failures = []
+        self.cols = GRID_COLS + PUMP_ZONE.get(map_type, 0)
+
+    def in_pump_zone(self, cell):
+        return PUMP_ZONE.get(self.map_type, 0) > 0 and cell[0] >= GRID_COLS
 
     # 放置
     def occupied(self):
@@ -199,8 +206,16 @@ class Layout:
             return 'core'
         dummy = Building(device, origin, rot)
         w, h = dummy.size
-        if origin[0] < 0 or origin[1] < 0 or origin[0] + w > GRID_COLS or origin[1] + h > GRID_ROWS:
+        if origin[0] < 0 or origin[1] < 0 or origin[0] + w > self.cols or origin[1] + h > GRID_ROWS:
             return 'bounds'
+        if PUMP_ZONE.get(self.map_type, 0):
+            if device.id in PUMP_ZONE_IDS:
+                if not all(self.in_pump_zone(c) for c in dummy.cells()):
+                    return 'pump outside zone'
+                if any(dummy.port_pos(p)[1] != LEFT for p in device.ports if p.io == 'output'):
+                    return 'pump output not facing base'
+            elif any(self.in_pump_zone(c) for c in dummy.cells()):
+                return 'pump zone'
         occ = self.occupied()
         for c in dummy.cells():
             if c in occ:
@@ -470,7 +485,8 @@ class Layout:
         line_cells = {c for belt in self.belts for c in belt['cells']}
         placed = 0
         while True:
-            need = [b for b in self.buildings if b.device.power > 0 and not covered(self, b)]
+            need = [b for b in self.buildings if b.device.power > 0 and not covered(self, b)
+                    and not self.in_pump_zone(b.origin)]
             if not need:
                 return placed
             occ = self.occupied()
@@ -526,7 +542,7 @@ class Layout:
                 'mapType': '四号谷地' if self.map_type == 'valley4' else '武陵', 'dataVersion': 2}
 
     def ascii(self):
-        grid = [['.'] * GRID_COLS for _ in range(GRID_ROWS)]
+        grid = [['.'] * self.cols for _ in range(GRID_ROWS)]
         for belt in self.belts:
             ch = {UP: '^', DOWN: 'v', LEFT: '<', RIGHT: '>'} if belt['kind'] == 'item' else {UP: '|', DOWN: '|', LEFT: '-', RIGHT: '-'}
             for c, d in zip(belt['cells'], belt['dirs']):
@@ -690,7 +706,7 @@ def simulate(layout, max_iter=400, eps=1e-7):
     diffusers = [(n.bounds, n.b.device.power_range) for n in nodes if n.b.device.power_range]
     for n in nodes:
         if n.b.device.power > 0:
-            n.unpowered = not any(_overlap(bd, r, n.bounds) for bd, r in diffusers)
+            n.unpowered = not layout.in_pump_zone(n.b.origin) and not any(_overlap(bd, r, n.bounds) for bd, r in diffusers)
 
     links = []
     out_ext, in_ext, in_cell = {}, {}, {}

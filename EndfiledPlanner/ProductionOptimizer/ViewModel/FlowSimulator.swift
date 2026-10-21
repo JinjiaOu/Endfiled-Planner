@@ -293,7 +293,7 @@ private final class Engine {
 
     init(layout: FactoryLayout, recipesFor: (BuildingDefinition) -> [Recipe]) {
         buildNodes(layout: layout, recipesFor: recipesFor)
-        markPowerCoverage()
+        markPowerCoverage(rules: layout.mapType.rules)
         buildLinks(layout: layout)
         classifyNodes()
     }
@@ -391,9 +391,11 @@ private final class Engine {
 
     /// 供电：所有供电桩视为同一张电网，建筑本体只要跟任一供电桩的范围（本体向四周扩 powerRange 格）有重叠就算通电。
     /// 协议核心和热能池只发电，自己不带供电范围
-    private func markPowerCoverage() {
+    /// 水泵区里的泵在基地外，不用放供电桩，默认通电（耗电照算）
+    private func markPowerCoverage(rules: MapRules) {
         let diffusers = nodes.compactMap { node in node.def.powerRange.map { (node.bounds, $0) } }
         for node in nodes where node.def.needsPower {
+            if rules.isInPumpZone(node.placed.origin) { node.unpowered = false; continue }
             node.unpowered = !diffusers.contains { bounds, range in bounds.overlaps(node.bounds, expandedBy: range) }
         }
     }
