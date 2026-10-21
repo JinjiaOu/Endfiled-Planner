@@ -2,7 +2,7 @@
 
 import SwiftUI
 
-/// 首页统一提供三个功能入口、数据概览和设置。
+/// 首页统一提供四个功能入口、数据概览和设置。
 struct HomeView: View {
     var onOpenSection: (AppSection) -> Void
     @ObservedObject private var dataUpdater = DataPackUpdater.shared
@@ -53,6 +53,8 @@ struct HomeView: View {
             AppSectionHeader(title: "开始规划")
             taskRow("基建规划", subtitle: "编辑布局、连接产线、查看运行状态",
                     symbol: "building.2", destination: .factory)
+            taskRow("产量计算", subtitle: "选产物和目标产量，算出机器台数、原料和耗电",
+                    symbol: "function", destination: .calculator)
             taskRow("配方分析", subtitle: "搜索物品，展开完整生产依赖",
                     symbol: "doc.text.magnifyingglass", destination: .recipes)
             taskRow("社区蓝图", subtitle: "按作者和地图查找，复制蓝图码",

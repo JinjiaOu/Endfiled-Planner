@@ -2,9 +2,9 @@
 
 import SwiftUI
 
-/// 首页为唯一功能入口，三个模块共用原生导航栈。
+/// 首页为唯一功能入口，各模块共用原生导航栈。
 enum AppSection: Hashable {
-    case recipes, blueprints, factory
+    case recipes, blueprints, factory, calculator
 }
 
 struct ContentView: View {
@@ -25,6 +25,8 @@ struct ContentView: View {
                     SearchView()
                 case .blueprints:
                     BlueprintSetView()
+                case .calculator:
+                    ProductionCalculatorView()
                 case .factory:
                     FactoryLayoutView(onExit: { path.removeAll() }, entryID: factoryEntryID,
                                       viewModel: factoryViewModel)

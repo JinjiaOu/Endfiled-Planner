@@ -221,9 +221,20 @@ class Layout:
             if c in occ:
                 return f'overlap {occ[c].label}@{occ[c].origin}'
         if device.id == WAREHOUSE_SEGMENT:
-            sources = [b for b in self.buildings if b.device.id == WAREHOUSE_SOURCE]
-            if not any(abs(c[0] - s[0]) + abs(c[1] - s[1]) <= 6 for b in sources for s in b.cells() for c in dummy.cells()):
-                return 'segment not near source'
+            # 同 App 的 isLinkedToWarehouseSource：贴着源桩或已连上源桩的基段（共用一条边）即可，数量方向不限
+            def touches(a, b):
+                return any(add(c, d) in b for c in a for d in (UP, RIGHT, DOWN, LEFT))
+            linked = [set(b.cells()) for b in self.buildings if b.device.id == WAREHOUSE_SOURCE]
+            pending = [set(b.cells()) for b in self.buildings if b.device.id == WAREHOUSE_SEGMENT]
+            grew = True
+            while grew:
+                grew = False
+                for seg in list(pending):
+                    if any(touches(seg, l) for l in linked):
+                        linked.append(seg); pending.remove(seg); grew = True
+            new = set(dummy.cells())
+            if not any(touches(new, l) for l in linked):
+                return 'segment not linked to source'
         if device.id in (WAREHOUSE_OUTLET, WAREHOUSE_INLET):
             cell, facing = dummy.port_pos(device.ports[0])
             if self.map_type == 'valley4':

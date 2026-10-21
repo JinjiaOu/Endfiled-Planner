@@ -160,12 +160,10 @@ class FactoryGridModel {
             if !newCells.isDisjoint(with: occupiedCells) { return false }
         }
 
-        // 仓库存取线基段：必须连着一个源桩才能放（武陵专属，四号谷地放不了这个建筑，
+        // 仓库存取线基段：要贴着源桩，或者贴着一节已经连到源桩的基段（武陵专属，四号谷地放不了这个建筑，
         // isAvailable 那关已经挡掉了，这里只处理武陵）
         if definition.id == BuildingDefinition.warehouseBaseSegmentID {
-            let sources = existing.filter { $0.definitionID == BuildingDefinition.warehouseSourceID }
-            guard !sources.isEmpty, isConnected(cells: newCellsArr, to: sources, within: wulingConnectRange)
-            else { return false }
+            guard isLinkedToWarehouseSource(cells: newCellsArr, existing: existing) else { return false }
         }
 
         // 仓库取货口/存货口的地图专属规则
@@ -232,23 +230,31 @@ class FactoryGridModel {
         return false
     }
 
-    /// 仓库存取线基段连源桩：不做寻路，只判断格子距离，
-    /// 基段体积比较大，不要求贴死，占的格子只要有一个落在源桩外扩 N 格范围内就算连上
-    static let wulingConnectRange = 6
-
-    static func isConnected(cells: [GridPoint], to targets: [PlacedBuilding], within range: Int) -> Bool {
-        for target in targets {
-            guard let def = BuildingDefinition.find(target.definitionID) else { continue }
-            let targetCells = target.occupiedCells(definition: def)
-            for c in cells {
-                for tc in targetCells {
-                    if abs(c.col - tc.col) + abs(c.row - tc.row) <= range {
-                        return true
-                    }
-                }
+    /// 仓库存取线：一个源桩可以带任意多节基段，基段之间首尾、侧面贴着都算接上，能拐弯、能往几个方向分
+    /// （用户 2026-10-21 在游戏里确认）。这里从所有源桩出发，沿"共用一条边"把连得上的基段都找出来，
+    /// 新放的这节只要贴着其中任何一个就算连上
+    static func isLinkedToWarehouseSource(cells: [GridPoint], existing: [PlacedBuilding]) -> Bool {
+        func cellsOf(_ placed: PlacedBuilding) -> Set<GridPoint> {
+            guard let def = BuildingDefinition.find(placed.definitionID) else { return [] }
+            return Set(placed.occupiedCells(definition: def))
+        }
+        let steps = [GridPoint(col: 1, row: 0), GridPoint(col: -1, row: 0), GridPoint(col: 0, row: 1), GridPoint(col: 0, row: -1)]
+        func touches(_ a: Set<GridPoint>, _ b: Set<GridPoint>) -> Bool {
+            a.contains { c in steps.contains { b.contains(c + $0) } }
+        }
+        var linked = existing.filter { $0.definitionID == BuildingDefinition.warehouseSourceID }.map(cellsOf)
+        var pending = existing.filter { $0.definitionID == BuildingDefinition.warehouseBaseSegmentID }.map(cellsOf)
+        var grew = true
+        while grew {
+            grew = false
+            for (i, seg) in pending.enumerated().reversed() where linked.contains(where: { touches(seg, $0) }) {
+                linked.append(seg)
+                pending.remove(at: i)
+                grew = true
             }
         }
-        return false
+        let new = Set(cells)
+        return linked.contains { touches(new, $0) }
     }
 
     // MARK: - 产线分析
