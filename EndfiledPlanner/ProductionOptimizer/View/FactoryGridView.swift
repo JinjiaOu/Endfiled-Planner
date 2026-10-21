@@ -44,6 +44,8 @@ struct FactoryGridView: View {
     @State private var boxDragFingerGlobal: CGPoint? = nil
     /// 网格在屏幕上的位置：滚动时每帧都变，放在引用类型里改，不触发重新计算视图
     @State private var gridFrameBox = GridFrameBox()
+    /// 每帧画线前重算一次的端口方向表（引用类型，画线时只读，不触发重算视图）
+    @State private var portEnds = PortEndDirections()
     /// 拖布局虚影：起点时虚影的 origin 和手指（网格坐标）
     @State private var placementDragStartOrigin: GridPoint? = nil
     @State private var placementDragStartLocal: CGPoint? = nil
@@ -251,6 +253,7 @@ struct FactoryGridView: View {
     // MARK: - 传送带/管道层
     private var beltsLayer: some View {
         Canvas { context, size in
+            refreshPortEnds()
             // 物流桥/管道桥是特意留给线穿过去的交叉节点，不算挡路，排除在外，
             // 不然线一穿过自己触发生成的桥就会被判定成"撞到建筑"整条标红
             let occupied = vm.lineBlockingCellKeys()
@@ -497,6 +500,24 @@ struct FactoryGridView: View {
         }
         guard !kps.isEmpty else { return }
 
+        // 线头接在出口外面、线尾接在入口外面时，按端口朝向画这一格：线从侧面拉出去也会先从口里出来再拐弯，
+        // 一眼能看出是接在这个口上的
+        // 候选方向里去掉跟线的实际走向相反的（线不会掉头钻回自己出来的口），优先用线自己存的方向
+        let kindKey = chain[0].lineType == .belt ? PortKind.item.rawValue : PortKind.pipe.rawValue
+        func pick(_ candidates: [GridPoint]?, stored: GridPoint, notOpposite travel: GridPoint) -> GridPoint? {
+            let ok = (candidates ?? []).filter { $0.col != -travel.col || $0.row != -travel.row }
+            return ok.contains(stored) ? stored : ok.first
+        }
+        let first = kps[0], last = kps[kps.count - 1]
+        if let dir = pick(portEnds.headDir["\(first.cell.col),\(first.cell.row),\(kindKey)"],
+                          stored: first.inDir, notOpposite: first.outDir) {
+            kps[0].inDir = dir
+        }
+        if let dir = pick(portEnds.tailDir["\(last.cell.col),\(last.cell.row),\(kindKey)"],
+                          stored: last.outDir, notOpposite: kps[kps.count - 1].inDir) {
+            kps[kps.count - 1].outDir = dir
+        }
+
         // 按格子实际位置切成几段相邻的连续走线：衔接到侧边的线存的方向和真实相邻关系对不上，
         // 只看存的方向会把两个拐点直接连成斜线；中间断开的格子则单独起笔
         var runs: [[KP]] = [[kps[0]]]
@@ -558,6 +579,25 @@ struct FactoryGridView: View {
             }
         }
         path.addLine(to: pts[pts.count - 1])
+    }
+
+    private func refreshPortEnds() {
+        var head: [String: [GridPoint]] = [:], tail: [String: [GridPoint]] = [:]
+        for placed in vm.layout.buildings {
+            guard let def = BuildingDefinition.find(placed.definitionID) else { continue }
+            for port in def.ports {
+                let (cell, facing) = port.resolvedPosition(placed: placed, definition: def)
+                let out = facing.outputOffset
+                let key = "\(cell.col + out.col),\(cell.row + out.row),\(port.kind.rawValue)"
+                if port.ioDirection == .output {
+                    head[key, default: []].append(out)
+                } else {
+                    tail[key, default: []].append(GridPoint(col: -out.col, row: -out.row))
+                }
+            }
+        }
+        portEnds.headDir = head
+        portEnds.tailDir = tail
     }
 
     private func dist(_ a: CGPoint, _ b: CGPoint) -> CGFloat {
@@ -646,58 +686,74 @@ struct FactoryGridView: View {
         let productName: String? = def.isMultiRecipeMachine || !showsProduct ? nil
             : placed.selectedRecipeID.flatMap { id in vm.availableRecipes(for: def).first { $0.id == id } }?.outputs.first?.name
         return ZStack {
-            FactoryBuildingShell(circularInset: def.powerRange != nil && size.width == size.height)
-            if hasMapConflict {
-                Rectangle().stroke(AppColors.error, lineWidth: 2.5)
-            }
-            if isThin {
-                HStack(spacing: 4) {
-                    buildingSymbol(for: def, material: materialName, size: min(w, h) * 0.48)
-                    VStack(alignment: .leading, spacing: 1) {
+            if let node = Self.logisticsNode(for: def.id) {
+                // 分流器/汇流器/桥/准入口：不画通用卡片和端口槽，直接画分叉/汇合/立交/闸门符号
+                logisticsSymbol(node, placed: placed, def: def)
+                    .overlay(alignment: .bottomTrailing) {
+                        // 准入口设了过滤：右下角小图标显示只放行什么
+                        if node == .gate, let name = placed.filterItemID.flatMap(ItemCatalog.name(for:)), w >= 24 {
+                            ItemIcon(name: name, size: w * 0.34)
+                                .background(FactoryCanvasPalette.badgeFill, in: Circle())
+                                .allowsHitTesting(false)
+                        }
+                    }
+                if hasMapConflict {
+                    Rectangle().stroke(AppColors.error, lineWidth: 2.5)
+                }
+            } else {
+                FactoryBuildingShell(circularInset: def.powerRange != nil && size.width == size.height)
+                if hasMapConflict {
+                    Rectangle().stroke(AppColors.error, lineWidth: 2.5)
+                }
+                if isThin {
+                    HStack(spacing: 4) {
+                        buildingSymbol(for: def, material: materialName, size: min(w, h) * 0.48)
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text(def.name)
+                                .font(.system(size: min(w, h) * 0.32, weight: .bold, design: .monospaced))
+                                .foregroundColor(FactoryCanvasPalette.ink).lineLimit(1)
+                            if let setting = settingLabel {
+                                Text(setting.text)
+                                    .font(.system(size: min(w, h) * 0.26, design: .monospaced))
+                                    .foregroundColor(hasMapConflict ? Color(red: 0.95, green: 0.35, blue: 0.3)
+                                                     : setting.isSet ? AppColors.success
+                                                     : FactoryCanvasPalette.secondaryInk)
+                                    .lineLimit(1)
+                            }
+                        }
+                        Text(flowSymbol)
+                            .font(.system(size: min(w, h) * 0.4))
+                            .foregroundColor(FactoryCanvasPalette.secondaryInk)
+                    }
+                    .padding(4)
+                    .minimumScaleFactor(0.6)
+                } else if let productName {
+                    VStack(spacing: 2) {
+                        itemBadge(productName, size: min(w, h) * 0.42)
+                            .opacity(displayedStatus == .running ? 1 : 0.55)
                         Text(def.name)
-                            .font(.system(size: min(w, h) * 0.32, weight: .bold, design: .monospaced))
+                            .font(.system(size: min(w, h) * 0.11, weight: .bold, design: .monospaced))
+                            .foregroundColor(FactoryCanvasPalette.secondaryInk).lineLimit(1)
+                    }.padding(4)
+                } else {
+                    VStack(spacing: 3) {
+                        buildingSymbol(for: def, material: materialName, size: min(w, h) * 0.28)
+                        Text(def.name)
+                            .font(.system(size: min(w, h) * 0.16, weight: .bold, design: .monospaced))
                             .foregroundColor(FactoryCanvasPalette.ink).lineLimit(1)
                         if let setting = settingLabel {
                             Text(setting.text)
-                                .font(.system(size: min(w, h) * 0.26, design: .monospaced))
+                                .font(.system(size: min(w, h) * 0.14, design: .monospaced))
                                 .foregroundColor(hasMapConflict ? Color(red: 0.95, green: 0.35, blue: 0.3)
                                                  : setting.isSet ? AppColors.success
                                                  : FactoryCanvasPalette.secondaryInk)
                                 .lineLimit(1)
                         }
-                    }
-                    Text(flowSymbol)
-                        .font(.system(size: min(w, h) * 0.4))
-                        .foregroundColor(FactoryCanvasPalette.secondaryInk)
+                        Text(flowSymbol)
+                            .font(.system(size: min(w, h) * 0.18))
+                            .foregroundColor(FactoryCanvasPalette.secondaryInk)
+                    }.padding(4)
                 }
-                .padding(4)
-                .minimumScaleFactor(0.6)
-            } else if let productName {
-                VStack(spacing: 2) {
-                    itemBadge(productName, size: min(w, h) * 0.42)
-                        .opacity(displayedStatus == .running ? 1 : 0.55)
-                    Text(def.name)
-                        .font(.system(size: min(w, h) * 0.11, weight: .bold, design: .monospaced))
-                        .foregroundColor(FactoryCanvasPalette.secondaryInk).lineLimit(1)
-                }.padding(4)
-            } else {
-                VStack(spacing: 3) {
-                    buildingSymbol(for: def, material: materialName, size: min(w, h) * 0.28)
-                    Text(def.name)
-                        .font(.system(size: min(w, h) * 0.16, weight: .bold, design: .monospaced))
-                        .foregroundColor(FactoryCanvasPalette.ink).lineLimit(1)
-                    if let setting = settingLabel {
-                        Text(setting.text)
-                            .font(.system(size: min(w, h) * 0.14, design: .monospaced))
-                            .foregroundColor(hasMapConflict ? Color(red: 0.95, green: 0.35, blue: 0.3)
-                                             : setting.isSet ? AppColors.success
-                                             : FactoryCanvasPalette.secondaryInk)
-                            .lineLimit(1)
-                    }
-                    Text(flowSymbol)
-                        .font(.system(size: min(w, h) * 0.18))
-                        .foregroundColor(FactoryCanvasPalette.secondaryInk)
-                }.padding(4)
             }
             if isSelected {
                 // 选中框：整圈黄色粗边，缩小看全图时也一眼能找到
@@ -785,10 +841,115 @@ struct FactoryGridView: View {
         }
     }
 
+    // MARK: - 物流节点符号
+    enum LogisticsNode { case splitter, converger, bridge, gate }
+
+    static func logisticsNode(for id: String) -> LogisticsNode? {
+        switch id {
+        case "log_splitter", "log_pipe_splitter": return .splitter
+        case "log_converger", "log_pipe_converger": return .converger
+        case "log_connector", "log_pipe_connector": return .bridge
+        case "log_conditioner", "log_pipe_conditioner": return .gate
+        default: return nil
+        }
+    }
+
+    /// 1×1 物流节点的专用符号：分流器 1 进 3 出（中间菱形）、汇流器 3 进 1 出（中间圆点）、
+    /// 物流桥十字立交（竖的从横的上面跨过去）、准入口直通加一道闸门。
+    /// 车道颜色跟线走（传送带黄、管道深色），接上线的方向实色，没接的变淡
+    private func logisticsSymbol(_ node: LogisticsNode, placed: PlacedBuilding, def: BuildingDefinition) -> some View {
+        let isPipe = def.id.contains("pipe")
+        let lane = isPipe ? FactoryCanvasPalette.pipe : FactoryCanvasPalette.belt
+        let arrow = isPipe ? FactoryCanvasPalette.pipeArrow : FactoryCanvasPalette.beltArrow
+        let ports = def.ports.map { port -> (dir: GridPoint, isOutput: Bool, connected: Bool) in
+            let facing = port.resolvedPosition(placed: placed, definition: def).facing
+            return (facing.outputOffset, port.ioDirection == .output,
+                    vm.isPortConnected(port, placed: placed, definition: def))
+        }
+        return Canvas { context, size in
+            let s = min(size.width, size.height)
+            let c = CGPoint(x: size.width / 2, y: size.height / 2)
+            let laneW = s * 0.3
+            let body = CGRect(origin: .zero, size: size).insetBy(dx: s * 0.06, dy: s * 0.06)
+            context.fill(Path(roundedRect: body, cornerRadius: s * 0.12), with: .color(FactoryCanvasPalette.building))
+            context.stroke(Path(roundedRect: body, cornerRadius: s * 0.12),
+                           with: .color(FactoryCanvasPalette.ink.opacity(0.8)), lineWidth: max(1, s * 0.04))
+            func point(_ d: GridPoint, _ f: CGFloat) -> CGPoint {
+                CGPoint(x: c.x + CGFloat(d.col) * s * 0.5 * f, y: c.y + CGFloat(d.row) * s * 0.5 * f)
+            }
+            func triangle(at p: CGPoint, toward d: GridPoint, size a: CGFloat) -> Path {
+                let dx = CGFloat(d.col), dy = CGFloat(d.row)
+                var t = Path()
+                t.move(to: CGPoint(x: p.x + dx * a * 0.6, y: p.y + dy * a * 0.6))
+                t.addLine(to: CGPoint(x: p.x - dx * a * 0.4 - dy * a * 0.55, y: p.y - dy * a * 0.4 + dx * a * 0.55))
+                t.addLine(to: CGPoint(x: p.x - dx * a * 0.4 + dy * a * 0.55, y: p.y - dy * a * 0.4 - dx * a * 0.55))
+                t.closeSubpath()
+                return t
+            }
+            func laneSegment(_ d: GridPoint, connected: Bool) {
+                var path = Path()
+                path.move(to: c)
+                path.addLine(to: point(d, 0.88))
+                context.stroke(path, with: .color(lane.opacity(connected ? 1 : 0.35)),
+                               style: StrokeStyle(lineWidth: laneW, lineCap: .butt))
+            }
+
+            switch node {
+            case .splitter, .converger, .gate:
+                for p in ports { laneSegment(p.dir, connected: p.connected) }
+                for p in ports {
+                    // 出口箭头在外侧朝外，入口箭头在里侧朝中心
+                    let at = point(p.dir, p.isOutput ? 0.62 : 0.5)
+                    let toward = p.isOutput ? p.dir : GridPoint(col: -p.dir.col, row: -p.dir.row)
+                    context.fill(triangle(at: at, toward: toward, size: laneW * 0.8),
+                                 with: .color(arrow.opacity(p.connected ? 1 : 0.5)))
+                }
+                let mark = s * 0.16
+                let markRect = CGRect(x: c.x - mark / 2, y: c.y - mark / 2, width: mark, height: mark)
+                switch node {
+                case .splitter:
+                    var diamond = Path()
+                    diamond.move(to: CGPoint(x: c.x, y: markRect.minY))
+                    diamond.addLine(to: CGPoint(x: markRect.maxX, y: c.y))
+                    diamond.addLine(to: CGPoint(x: c.x, y: markRect.maxY))
+                    diamond.addLine(to: CGPoint(x: markRect.minX, y: c.y))
+                    diamond.closeSubpath()
+                    context.fill(diamond, with: .color(FactoryCanvasPalette.ink))
+                case .converger:
+                    context.fill(Path(ellipseIn: markRect), with: .color(FactoryCanvasPalette.ink))
+                default:
+                    // 闸门：横跨车道的一道粗杠
+                    let along = ports.first?.dir ?? GridPoint(col: 1, row: 0)
+                    let perp = GridPoint(col: along.row, row: along.col)
+                    var bar = Path()
+                    bar.move(to: point(perp, 0.55))
+                    bar.addLine(to: point(GridPoint(col: -perp.col, row: -perp.row), 0.55))
+                    context.stroke(bar, with: .color(FactoryCanvasPalette.ink),
+                                   style: StrokeStyle(lineWidth: max(1.5, s * 0.09), lineCap: .round))
+                }
+            case .bridge:
+                // 横向车道在下，竖向车道从上面跨过去（两侧描边表示桥面）
+                let horizontal = ports.contains { $0.dir.row == 0 && $0.connected }
+                let vertical = ports.contains { $0.dir.col == 0 && $0.connected }
+                var h = Path()
+                h.move(to: point(GridPoint(col: -1, row: 0), 0.88)); h.addLine(to: point(GridPoint(col: 1, row: 0), 0.88))
+                context.stroke(h, with: .color(lane.opacity(horizontal ? 1 : 0.35)), style: StrokeStyle(lineWidth: laneW))
+                let deck = CGRect(x: c.x - laneW / 2, y: c.y - s * 0.44, width: laneW, height: s * 0.88)
+                context.fill(Path(deck), with: .color(lane.opacity(vertical ? 1 : 0.35)))
+                for x in [deck.minX, deck.maxX] {
+                    var edge = Path()
+                    edge.move(to: CGPoint(x: x, y: deck.minY)); edge.addLine(to: CGPoint(x: x, y: deck.maxY))
+                    context.stroke(edge, with: .color(FactoryCanvasPalette.ink), lineWidth: max(1, s * 0.05))
+                }
+            }
+        }
+        .allowsHitTesting(false)
+    }
+
     // MARK: - 端口标记层：依真实位置与方向绘制连接槽，实色短标记表示已连接
     private var portsLayer: some View {
         ForEach(vm.layout.buildings) { placed in
-            if let def = BuildingDefinition.find(placed.definitionID) {
+            if let def = BuildingDefinition.find(placed.definitionID), Self.logisticsNode(for: def.id) == nil {
                 ForEach(Array(def.ports.enumerated()), id: \.offset) { _, port in
                     portMarker(port: port, placed: placed, def: def)
                 }
@@ -1302,4 +1463,12 @@ struct FactoryGridView: View {
 
 private final class GridFrameBox {
     var frame: CGRect = .zero
+}
+
+/// 端口外接格 → 线在这一格该怎么走：出口外接格里线是从口里出来的（沿出口朝向），
+/// 入口外接格里线是要钻进口里的（朝向的反方向）。key 是 "列,行,item/pipe"。
+/// 两台机器面对面只隔一格时，同一格会是两个口的外接格，所以每格存所有候选方向，画的时候再挑
+private final class PortEndDirections {
+    var headDir: [String: [GridPoint]] = [:]
+    var tailDir: [String: [GridPoint]] = [:]
 }

@@ -95,6 +95,7 @@ struct FactoryLayoutView: View {
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorScheme) private var colorScheme
+    @State private var showGuide = false
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var workspaceSize: CGSize = .zero
 
@@ -211,6 +212,9 @@ struct FactoryLayoutView: View {
                     Button { exportLayoutImage() } label: {
                         Label("导出布局图片", systemImage: "photo")
                     }
+                    Button { showGuide = true } label: {
+                        Label("使用指南", systemImage: "questionmark.circle")
+                    }
                     Menu {
                         ForEach(MapType.allCases, id: \.self) { map in
                             Button {
@@ -238,7 +242,11 @@ struct FactoryLayoutView: View {
                     Image(systemName: "ellipsis.circle")
                         .foregroundColor(AppColors.accent)
                 }
-                .accessibilityLabel("画布选项：保存、导出图片、地图、预设与清空")
+                .accessibilityLabel("画布选项：保存、导出图片、使用指南、地图、预设与清空")
+                // 挂在菜单上，不往主视图的修饰链里加（那条链再长会类型检查超时）
+                .sheet(isPresented: $showGuide) {
+                    NavigationStack { FactoryGuideView() }
+                }
             }
         }
         .toolbarBackground(.visible, for: .navigationBar)
