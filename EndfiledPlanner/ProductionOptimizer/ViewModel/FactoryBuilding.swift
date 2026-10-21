@@ -524,7 +524,10 @@ extension BuildingDefinition {
 extension BuildingDefinition {
     static let all: [BuildingDefinition] = BuildingParser.loadAll()
 
+    /// 渲染时每个建筑、每个端口都要查一次，按 id 建好字典，不用每次线性扫一遍
+    private static let byID: [String: BuildingDefinition] = Dictionary(all.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+
     static func find(_ id: String) -> BuildingDefinition? {
-        all.first { $0.id == id }
+        byID[id]
     }
 }

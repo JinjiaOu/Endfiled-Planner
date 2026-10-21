@@ -104,6 +104,13 @@ struct FactoryLayoutView: View {
     @State private var lastCellSize: CGFloat = 72
     private let minCellSize: CGFloat = 16
     private let maxCellSize: CGFloat = 120
+    /// 捏合过程中只对整张画布做缩放变换（显卡完成，不重排版），松手才把 cellSize 改成最终值重画一次；
+    /// 大布局每帧重排几百个建筑、上千个端口会卡
+    @State private var pinchScale: CGFloat = 1
+    /// 捏合起点对应的画布内容坐标（缩放以它为中心，松手后让它停在原来的屏幕位置）
+    @State private var pinchAnchor: PinchAnchor? = nil
+    /// 进图时缩到最小、协议核心放画面中间；要等画布尺寸量出来才能算，先记一个待办
+    @State private var needsCentering = true
 
     // 建筑板
     @State private var showBuildingPalette = false
@@ -292,9 +299,10 @@ struct FactoryLayoutView: View {
                         dragLocationInGrid: $dragLocationInGrid,
                         autoScrollFinger: $autoScrollFinger
                     )
-                    .padding(20)
+                    .padding(Self.canvasPadding)
                     .padding(.top, warehouseMargin.top)
                     .padding(.leading, warehouseMargin.leading)
+                    .scaleEffect(pinchScale, anchor: pinchUnitAnchor)
                 }
                 .scrollPosition($scrollPosition)
                 .onScrollGeometryChange(for: ScrollMetrics.self) { geo in
@@ -302,16 +310,28 @@ struct FactoryLayoutView: View {
                                   containerSize: geo.containerSize)
                 } action: { _, metrics in
                     scrollGeometry.metrics = metrics
+                    if needsCentering && metrics.containerSize.width > 0 { centerOnProtocolCore() }
                 }
+                .onAppear {
+                    // 平级导航会保留编辑器，再次进图时画布尺寸已知，直接居中
+                    if scrollGeometry.metrics.containerSize.width > 0 { centerOnProtocolCore() } else { needsCentering = true }
+                }
+                .onChange(of: entryID) { _, _ in centerOnProtocolCore() }
+                .onChange(of: vm.layout.mapType) { _, _ in centerOnProtocolCore() }
                 .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { scrollGeometry.viewport = $0 }
                 .onReceive(autoScrollTimer) { _ in autoScrollStep() }
                 // simultaneousGesture 让双指缩放和 belt DragGesture 共存
                 .simultaneousGesture(
-                    MagnificationGesture()
+                    MagnifyGesture()
                         .onChanged { v in
-                            cellSize = min(max(lastCellSize * v, minCellSize), maxCellSize)
+                            if pinchAnchor == nil {
+                                let offset = scrollGeometry.metrics.offset
+                                pinchAnchor = PinchAnchor(
+                                    content: CGPoint(x: offset.x + v.startLocation.x, y: offset.y + v.startLocation.y))
+                            }
+                            pinchScale = clampedCellSize(lastCellSize * v.magnification) / lastCellSize
                         }
-                        .onEnded { _ in lastCellSize = cellSize }
+                        .onEnded { v in commitPinch(magnification: v.magnification) }
                 )
                 // 电力提示（画布顶部）：发电不够、或者有建筑不在供电桩范围内时才出现
                 VStack {
@@ -574,17 +594,101 @@ struct FactoryLayoutView: View {
         }
     }
 
-    /// 四号谷地外围画的仓库存取线示意要留出的位置（FactoryGridView.warehouseLineDecoration）
-    private var warehouseMargin: (top: CGFloat, leading: CGFloat) {
+    /// 四号谷地外围画的仓库存取线示意要留出的位置（FactoryGridView.warehouseLineDepth）
+    private var warehouseMargin: (top: CGFloat, leading: CGFloat) { warehouseMargin(cellSize: cellSize) }
+
+    private func warehouseMargin(cellSize: CGFloat) -> (top: CGFloat, leading: CGFloat) {
         guard case .perimeter(let edges) = vm.layout.mapType.rules.warehouseLine else { return (0, 0) }
         let depth = CGFloat(FactoryGridView.warehouseLineDepth) * cellSize
         return (edges.contains(.up) ? depth : 0, edges.contains(.left) ? depth : 0)
     }
 
+    // MARK: - 双指缩放
+    private static let canvasPadding: CGFloat = 20
+
+    private func clampedCellSize(_ value: CGFloat) -> CGFloat { min(max(value, minCellSize), maxCellSize) }
+
+    /// 缩放变换的中心：捏合起点在整个滚动内容里的相对位置
+    private var pinchUnitAnchor: UnitPoint {
+        let size = scrollGeometry.metrics.contentSize
+        guard let anchor = pinchAnchor, size.width > 0, size.height > 0 else { return .center }
+        return UnitPoint(x: anchor.content.x / size.width, y: anchor.content.y / size.height)
+    }
+
+    /// 缩到最小，把协议核心（没有就是基地正中）滚到画面中间
+    private func centerOnProtocolCore() {
+        needsCentering = false
+        let cell = minCellSize
+        let rules = vm.layout.mapType.rules
+        var center = CGPoint(x: CGFloat(rules.baseCols) / 2, y: CGFloat(rules.gridRows) / 2)
+        if let core = vm.layout.buildings.first(where: { $0.definitionID == BuildingDefinition.protocolCoreID }),
+           let def = BuildingDefinition.find(core.definitionID) {
+            let size = core.effectiveSize(definition: def)
+            center = CGPoint(x: CGFloat(core.origin.col) + CGFloat(size.width) / 2,
+                             y: CGFloat(core.origin.row) + CGFloat(size.height) / 2)
+        }
+        let pad = Self.canvasPadding
+        let margin = warehouseMargin(cellSize: cell)
+        let container = scrollGeometry.metrics.containerSize
+        let contentW = pad * 2 + margin.leading + CGFloat(rules.gridCols) * cell
+        let contentH = pad * 2 + margin.top + CGFloat(rules.gridRows) * cell
+        let offset = CGPoint(
+            x: min(max(0, pad + margin.leading + center.x * cell - container.width / 2), max(0, contentW - container.width)),
+            y: min(max(0, pad + margin.top + center.y * cell - container.height / 2), max(0, contentH - container.height)))
+        var transaction = Transaction()
+        transaction.disablesAnimations = true
+        withTransaction(transaction) {
+            cellSize = cell
+            lastCellSize = cell
+            pinchScale = 1
+            pinchAnchor = nil
+            scrollPosition.scrollTo(point: offset)
+        }
+        // 缩小后内容尺寸变了，等新尺寸排好再设一次滚动位置
+        DispatchQueue.main.async {
+            withTransaction(transaction) { scrollPosition.scrollTo(point: offset) }
+        }
+    }
+
+    /// 松手：按最终倍数一次性改 cellSize 重画，再把滚动位置调到让捏合起点那一格还在手指下
+    private func commitPinch(magnification: CGFloat) {
+        let old = lastCellSize
+        let new = clampedCellSize(old * magnification)
+        var offset: CGPoint? = nil
+        if let anchor = pinchAnchor {
+            let pad = Self.canvasPadding
+            let oldMargin = warehouseMargin(cellSize: old), newMargin = warehouseMargin(cellSize: new)
+            // 外边距 20 不随缩放变，网格和外围存取线示意按格子尺寸等比变
+            let gx = (anchor.content.x - pad - oldMargin.leading) * new / old
+            let gy = (anchor.content.y - pad - oldMargin.top) * new / old
+            // 缩放中心现在在屏幕上的位置：捏合时手指一起移动，画布会被顺带拖动，
+            // 要用松手这一刻的滚动位置算，不能用捏合开始时手指的位置，不然松手会跳回去一截
+            let now = scrollGeometry.metrics.offset
+            let onScreen = CGPoint(x: anchor.content.x - now.x, y: anchor.content.y - now.y)
+            offset = CGPoint(x: max(0, pad + newMargin.leading + gx - onScreen.x),
+                             y: max(0, pad + newMargin.top + gy - onScreen.y))
+        }
+        var transaction = Transaction()
+        transaction.disablesAnimations = true
+        withTransaction(transaction) {
+            cellSize = new
+            lastCellSize = new
+            pinchScale = 1
+            pinchAnchor = nil
+            if let offset { scrollPosition.scrollTo(point: offset) }
+        }
+        // 放大时新位置可能超出旧内容的可滚范围被截断，等新尺寸排好后再设一次
+        if let offset {
+            DispatchQueue.main.async {
+                withTransaction(transaction) { scrollPosition.scrollTo(point: offset) }
+            }
+        }
+    }
+
     /// 虚影放在当前画面中央
     private func beginPlacement(_ saved: SavedLayout) {
         let m = scrollGeometry.metrics
-        let padding: CGFloat = 20   // 网格外面那圈 .padding(20)
+        let padding = Self.canvasPadding   // 网格外面那圈留白
         let center = GridPoint(col: Int((m.offset.x + m.containerSize.width / 2 - padding - warehouseMargin.leading) / cellSize),
                                row: Int((m.offset.y + m.containerSize.height / 2 - padding - warehouseMargin.top) / cellSize))
         showBuildingPalette = false
@@ -845,6 +949,11 @@ private struct PaletteHoldDragGesture: UIGestureRecognizerRepresentable {
             break
         }
     }
+}
+
+/// 捏合起点对应的画布内容坐标（未缩放时的坐标），缩放以它为中心
+private struct PinchAnchor {
+    var content: CGPoint
 }
 
 private final class ScrollGeometryBox {

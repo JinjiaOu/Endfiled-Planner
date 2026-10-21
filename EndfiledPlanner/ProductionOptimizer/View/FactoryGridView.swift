@@ -947,22 +947,43 @@ struct FactoryGridView: View {
     }
 
     // MARK: - 端口标记层：依真实位置与方向绘制连接槽，实色短标记表示已连接
+    /// 格子小于这个尺寸时端口槽已经看不清，不画（缩到看全图时省掉上千个小图形）
+    static let portMinCellSize: CGFloat = 20
+
+    /// 所有端口槽画在同一张 Canvas 里：原来每个端口一个视图，大布局有上千个，缩放松手重画时会卡
     private var portsLayer: some View {
-        ForEach(vm.layout.buildings) { placed in
-            if let def = BuildingDefinition.find(placed.definitionID), Self.logisticsNode(for: def.id) == nil {
-                ForEach(Array(def.ports.enumerated()), id: \.offset) { _, port in
-                    portMarker(port: port, placed: placed, def: def)
+        Canvas { context, _ in
+            guard cellSize >= Self.portMinCellSize else { return }
+            // 线头/线尾所在的格：端口外接格在这里面就算接上了（同 vm.isPortConnected）
+            var lineEnds = Set<GridPoint>()
+            for belt in vm.layout.beltNetwork.belts {
+                if let head = belt.headCell { lineEnds.insert(head) }
+                if let tail = belt.tailCell { lineEnds.insert(tail) }
+            }
+            for placed in vm.layout.buildings {
+                guard let def = BuildingDefinition.find(placed.definitionID),
+                      Self.logisticsNode(for: def.id) == nil else { continue }
+                var layer = context
+                if vm.isDimmedByHighlight(building: placed.id) { layer.opacity = 0.22 }
+                for port in def.ports {
+                    let (cell, facing) = port.resolvedPosition(placed: placed, definition: def)
+                    let out = facing.outputOffset
+                    let connected = lineEnds.contains(GridPoint(col: cell.col + out.col, row: cell.row + out.row))
+                    drawPortSlot(port: port, cell: cell, facing: facing, connected: connected, context: &layer)
                 }
             }
         }
+        .frame(width: CGFloat(cols) * cellSize, height: CGFloat(rows) * cellSize)
+        .allowsHitTesting(false)
     }
 
-    private func portMarker(port: BuildingPort, placed: PlacedBuilding, def: BuildingDefinition) -> some View {
-        let (cell, facing) = port.resolvedPosition(placed: placed, definition: def)
+    /// 官方蓝图式端口槽：沿建筑边缘的长条凹槽，里面一个箭头标流向；管道口两端做成圆角；
+    /// 接上线后槽外沿一条线色短条
+    private func drawPortSlot(port: BuildingPort, cell: GridPoint, facing: BuildingRotation,
+                              connected: Bool, context: inout GraphicsContext) {
         let center = cellCenter(cell)
-        let connected = vm.isPortConnected(port, placed: placed, definition: def)
-        let color = port.kind == .pipe ? pipeColor : beltColor
-        // 官方蓝图式端口槽：沿建筑边缘的长条凹槽，里面一个箭头标流向；管道口两端做成圆角
+        let out = facing.outputOffset
+        let dx = CGFloat(out.col), dy = CGFloat(out.row)
         let length = cellSize * 0.7
         let depth = cellSize * 0.24
         let isVertical = facing == .left || facing == .right
@@ -970,31 +991,32 @@ struct FactoryGridView: View {
         let slotH = isVertical ? length : depth
         // 槽外沿贴着机身边框内侧
         let inset = cellSize * 0.5 - max(2, cellSize * 0.06) - depth / 2
-        let cx = center.x + CGFloat(facing.outputOffset.col) * inset
-        let cy = center.y + CGFloat(facing.outputOffset.row) * inset
+        let c = CGPoint(x: center.x + dx * inset, y: center.y + dy * inset)
+        let rect = CGRect(x: c.x - slotW / 2, y: c.y - slotH / 2, width: slotW, height: slotH)
         let corner = port.kind == .pipe ? depth / 2 : max(1, depth * 0.12)
-        let stripe = max(1, depth * 0.14)
+        let slot = Path(roundedRect: rect, cornerRadius: corner)
+        context.fill(slot, with: .color(FactoryCanvasPalette.portSlot))
+        context.stroke(slot, with: .color(FactoryCanvasPalette.structure), lineWidth: max(0.6, cellSize * 0.012))
 
-        return ZStack {
-            RoundedRectangle(cornerRadius: corner).fill(FactoryCanvasPalette.portSlot)
-            RoundedRectangle(cornerRadius: corner)
-                .stroke(FactoryCanvasPalette.structure, lineWidth: max(0.6, cellSize * 0.012))
-            Image(systemName: port.ioDirection == .output ? "chevron.right" : "chevron.left")
-                .font(.system(size: max(4, depth * 0.5), weight: .bold))
-                .foregroundStyle(connected ? FactoryCanvasPalette.ink : FactoryCanvasPalette.secondaryInk)
-                .rotationEffect(.degrees(facing == .up ? -90 : facing == .down ? 90 : facing == .left ? 180 : 0))
-            // 已连接：槽外沿一条线色短条
-            if connected {
-                Rectangle().fill(color)
-                    .frame(width: isVertical ? stripe : length * 0.5, height: isVertical ? length * 0.5 : stripe)
-                    .offset(x: CGFloat(facing.outputOffset.col) * (depth / 2 - stripe / 2),
-                            y: CGFloat(facing.outputOffset.row) * (depth / 2 - stripe / 2))
-            }
+        // 箭头：出口朝外，入口朝里
+        let sign: CGFloat = port.ioDirection == .output ? 1 : -1
+        let a = max(2, depth * 0.22)
+        let tip = CGPoint(x: c.x + dx * sign * a * 0.5, y: c.y + dy * sign * a * 0.5)
+        var chevron = Path()
+        chevron.move(to: CGPoint(x: tip.x - dx * sign * a - dy * a, y: tip.y - dy * sign * a + dx * a))
+        chevron.addLine(to: tip)
+        chevron.addLine(to: CGPoint(x: tip.x - dx * sign * a + dy * a, y: tip.y - dy * sign * a - dx * a))
+        context.stroke(chevron, with: .color(connected ? FactoryCanvasPalette.ink : FactoryCanvasPalette.secondaryInk),
+                       style: StrokeStyle(lineWidth: max(1, depth * 0.12), lineCap: .round, lineJoin: .round))
+
+        if connected {
+            let stripe = max(1, depth * 0.14)
+            let along = length * 0.5
+            let sc = CGPoint(x: c.x + dx * (depth / 2 - stripe / 2), y: c.y + dy * (depth / 2 - stripe / 2))
+            let w = isVertical ? stripe : along, h = isVertical ? along : stripe
+            context.fill(Path(CGRect(x: sc.x - w / 2, y: sc.y - h / 2, width: w, height: h)),
+                         with: .color(port.kind == .pipe ? pipeColor : beltColor))
         }
-        .frame(width: slotW, height: slotH)
-        .opacity(vm.isDimmedByHighlight(building: placed.id) ? 0.22 : 1)
-        .offset(x: cx - slotW / 2, y: cy - slotH / 2)
-        .allowsHitTesting(false)
     }
 
     // MARK: - 供电范围：选中供电桩、或正在放/拖供电桩时，把所有供电桩的范围（本体向四周扩 powerRange 格）画出来
