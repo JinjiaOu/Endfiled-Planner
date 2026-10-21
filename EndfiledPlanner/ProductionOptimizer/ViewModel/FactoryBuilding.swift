@@ -82,9 +82,21 @@ enum BuildingCategory: String, Codable, CaseIterable {
 /// 所以布局本身要记住自己是哪张地图，建筑清单也要按地图过滤
 enum MapType: String, Codable, CaseIterable {
     case valley4 = "四号谷地"
+    /// 谷地通道、供能高地这类分基地（满级 40×40），用户 2026-10-21 定
+    case valley4Small = "四号谷地小基地"
     case wuling  = "武陵"
+    /// 景玉谷、首墩、应龙关这类分基地（满级 50×50）
+    case wulingSmall = "武陵小基地"
 
     var displayName: String { rawValue }
+
+    /// 所属大地图：小基地跟主基地用同一套建筑、配方、管道规则，只是画布大小和仓库线不同
+    var region: MapType {
+        switch self {
+        case .valley4, .valley4Small: return .valley4
+        case .wuling, .wulingSmall: return .wuling
+        }
+    }
 }
 
 // MARK: - 端口类型

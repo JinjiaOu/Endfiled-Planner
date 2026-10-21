@@ -399,13 +399,20 @@ class FactoryGridModel {
     }
 
     // MARK: - 地图冲突
-    /// 每次重算统计都重新检查：建筑在这张图上不能造、配方模式在这张图上不能用、
+    /// 每次重算统计都重新检查：建筑超出画布、建筑在这张图上不能造、配方模式在这张图上不能用、
     /// 仓库取货口/存货口没贴好（贴的源桩/基段被删了也算）、基段没连着源桩。返回 建筑 ID → 原因
     static func mapConflicts(in layout: FactoryLayout, machineRecipes: [String: [Recipe]]) -> [UUID: String] {
         let rules = layout.mapType.rules
         var conflicts: [UUID: String] = [:]
         for placed in layout.buildings {
             guard let def = BuildingDefinition.find(placed.definitionID) else { continue }
+            // 画布缩小过（四号谷地 80→70）的旧存档：落在画布外的建筑标出来
+            if placed.occupiedCells(definition: def).contains(where: {
+                $0.col < 0 || $0.row < 0 || $0.col >= rules.gridCols || $0.row >= rules.gridRows
+            }) {
+                conflicts[placed.id] = "超出基地范围（\(rules.baseCols)×\(rules.gridRows)）"
+                continue
+            }
             if !rules.allows(def) {
                 let maps = MapRules.maps(allowing: def).map(\.displayName).joined(separator: "、")
                 conflicts[placed.id] = "\(layout.mapType.displayName)不能造（仅\(maps)）"

@@ -15,7 +15,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 OTHER = ROOT / 'EndfiledPlanner' / 'other'
 
-GRID_COLS, GRID_ROWS = 80, 80   # 基地本身；线只能走在这里面
+GRID_COLS, GRID_ROWS = 80, 80   # 武陵主基地；线只能走在基地里面
+# 同 App 的 MapRules：各地图基地大小（不含水泵区）
+BASE_SIZE = {'valley4': (70, 70), 'wuling': (80, 80)}
 # 同 App 的 MapRules.pumpZoneWidth：基地右侧的水泵区（只放水泵/气泵、出口朝左、默认通电、不走线）
 PUMP_ZONE = {'wuling': 3}
 PUMP_ZONE_IDS = {'pump_1', 'pump_2', 'gas_pump_1'}
@@ -186,10 +188,11 @@ class Layout:
         self.reserved = set()      # 端口外部格：布线时不能占用（除了自己的起止点）
         self.soft = False          # True 时布线失败只记录不抛错，方便一次看到所有问题
         self.failures = []
-        self.cols = GRID_COLS + PUMP_ZONE.get(map_type, 0)
+        self.base_cols, self.rows = BASE_SIZE[map_type]
+        self.cols = self.base_cols + PUMP_ZONE.get(map_type, 0)
 
     def in_pump_zone(self, cell):
-        return PUMP_ZONE.get(self.map_type, 0) > 0 and cell[0] >= GRID_COLS
+        return PUMP_ZONE.get(self.map_type, 0) > 0 and cell[0] >= self.base_cols
 
     # 放置
     def occupied(self):
@@ -206,7 +209,7 @@ class Layout:
             return 'core'
         dummy = Building(device, origin, rot)
         w, h = dummy.size
-        if origin[0] < 0 or origin[1] < 0 or origin[0] + w > self.cols or origin[1] + h > GRID_ROWS:
+        if origin[0] < 0 or origin[1] < 0 or origin[0] + w > self.cols or origin[1] + h > self.rows:
             return 'bounds'
         if PUMP_ZONE.get(self.map_type, 0):
             if device.id in PUMP_ZONE_IDS:
@@ -407,7 +410,7 @@ class Layout:
         occ = self.occupied()
         lines = self._line_map()
         for c in (head, tail):
-            if not (0 <= c[0] < GRID_COLS and 0 <= c[1] < GRID_ROWS) or c in occ or c in lines:
+            if not (0 <= c[0] < self.base_cols and 0 <= c[1] < self.rows) or c in occ or c in lines:
                 return None
         if head == tail:
             return [head] if head_facing == final_dir and not via else None
@@ -429,7 +432,7 @@ class Layout:
         - 起点、终点都可以从侧面拐，只是不能倒着走回口里
         代价：步数 + 转弯 + 交叉惩罚"""
         def enter_cost(c, d):
-            if not (0 <= c[0] < GRID_COLS and 0 <= c[1] < GRID_ROWS) or c in occ or c in used:
+            if not (0 <= c[0] < self.base_cols and 0 <= c[1] < self.rows) or c in occ or c in used:
                 return None
             if c in self.reserved and c not in (head, tail):
                 return None
@@ -502,13 +505,13 @@ class Layout:
                 return placed
             occ = self.occupied()
             best = None
-            x0, x1, y0, y1 = region or (0, GRID_COLS - 2, 0, GRID_ROWS - 2)
+            x0, x1, y0, y1 = region or (0, self.base_cols - 2, 0, self.rows - 2)
             for y in range(y0, y1 + 1):
                 for x in range(x0, x1 + 1):
                     cells = [(x, y), (x + 1, y), (x, y + 1), (x + 1, y + 1)]
                     if any(c in occ or c in line_cells for c in cells):
                         continue
-                    if not all(0 <= c[0] < GRID_COLS and 0 <= c[1] < GRID_ROWS for c in cells):
+                    if not all(0 <= c[0] < self.base_cols and 0 <= c[1] < self.rows for c in cells):
                         continue
                     bd = (x, x + 1, y, y + 1)
                     n = sum(1 for b in need if _overlap(bd, dev.power_range, b.bounds()))
@@ -553,7 +556,7 @@ class Layout:
                 'mapType': '四号谷地' if self.map_type == 'valley4' else '武陵', 'dataVersion': 2}
 
     def ascii(self):
-        grid = [['.'] * self.cols for _ in range(GRID_ROWS)]
+        grid = [['.'] * self.cols for _ in range(self.rows)]
         for belt in self.belts:
             ch = {UP: '^', DOWN: 'v', LEFT: '<', RIGHT: '>'} if belt['kind'] == 'item' else {UP: '|', DOWN: '|', LEFT: '-', RIGHT: '-'}
             for c, d in zip(belt['cells'], belt['dirs']):

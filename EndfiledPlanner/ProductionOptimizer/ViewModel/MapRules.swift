@@ -59,6 +59,8 @@ struct MapRules {
     ]
 
     static let table: [MapType: MapRules] = [
+        // 画布按各基地满级大小（解包 LevelData 的 factoryRegions.levelBounds）：
+        // 四号谷地主基地枢纽区 70×70，小基地 40×40；武陵城 80×80，小基地 50×50（另加右侧 3 格水泵区）
         .valley4: MapRules(
             map: .valley4,
             allowsPipes: false,
@@ -66,7 +68,15 @@ struct MapRules {
             unavailableBuildingIDs: wulingOnlyBuildingIDs,
             // 精炼炉/灌装机/塑形机/种植机两图都能放，但四号谷地只能用基础模式
             blockedRecipeModes: ["liquid", "gas", "gasliquid"],
-            gridCols: 80, gridRows: 80),
+            gridCols: 70, gridRows: 70),
+        // 小基地的固定仓库线只有一条边（解包里谷地通道、供能高地都只有一边 3 段），统一放上边
+        .valley4Small: MapRules(
+            map: .valley4Small,
+            allowsPipes: false,
+            warehouseLine: .perimeter(edges: [.up]),
+            unavailableBuildingIDs: wulingOnlyBuildingIDs,
+            blockedRecipeModes: ["liquid", "gas", "gasliquid"],
+            gridCols: 40, gridRows: 40),
         .wuling: MapRules(
             map: .wuling,
             allowsPipes: true,
@@ -74,6 +84,13 @@ struct MapRules {
             unavailableBuildingIDs: [],
             blockedRecipeModes: [],
             gridCols: 83, gridRows: 80, pumpZoneWidth: 3),
+        .wulingSmall: MapRules(
+            map: .wulingSmall,
+            allowsPipes: true,
+            warehouseLine: .busDock,
+            unavailableBuildingIDs: [],
+            blockedRecipeModes: [],
+            gridCols: 53, gridRows: 50, pumpZoneWidth: 3),
     ]
 
     static func of(_ map: MapType) -> MapRules {
@@ -92,12 +109,13 @@ struct MapRules {
     }
 
     /// 只能在哪些地图用（给"仅武陵"这类标签用）
+    /// 只列大地图（小基地规则跟所属大地图一样，标签里写"仅武陵"就够了）
     static func maps(allowing def: BuildingDefinition) -> [MapType] {
-        MapType.allCases.filter { of($0).allows(def) }
+        MapType.allCases.filter { $0.region == $0 && of($0).allows(def) }
     }
 
     static func maps(allowing recipe: Recipe, on def: BuildingDefinition) -> [MapType] {
-        MapType.allCases.filter { of($0).blockedMode(of: recipe, on: def) == nil }
+        MapType.allCases.filter { $0.region == $0 && of($0).blockedMode(of: recipe, on: def) == nil }
     }
 }
 

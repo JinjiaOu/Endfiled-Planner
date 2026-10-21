@@ -11,12 +11,14 @@ struct SettingsView: View {
 
     var isPresentedModally = false
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.openURL) private var openURL
+    private static let repositoryURL = URL(string: "https://github.com/JinjiaOu/Endfiled-Planner")!
     
     @AppStorage("darkMode") private var darkMode = false
-    @AppStorage("showGrid") private var showGrid = true
-    @AppStorage("autoSave") private var autoSave = true
     @ObservedObject private var dataUpdater = DataPackUpdater.shared
     @State private var confirmRestore = false
+    @State private var showReportOptions = false
+    @State private var showFeedback = false
     
     var body: some View {
         NavigationStack {
@@ -24,42 +26,6 @@ struct SettingsView: View {
                 AppTopographicBackground()
                 
                 List {
-                    
-                    // 显示设置
-                    Section {
-                        Toggle(isOn: $showGrid) {
-                            HStack {
-                                Image(systemName: "square.grid.3x3")
-                                    .foregroundColor(Color(red: 1.0, green: 0.8, blue: 0.0))
-                                Text("网格背景")
-                                    .foregroundColor(AppColors.primaryText)
-                            }
-                        }
-                        .tint(Color(red: 1.0, green: 0.8, blue: 0.0))
-                    } header: {
-                        Text("DISPLAY")
-                            .font(.system(size: 11, weight: .bold, design: .monospaced))
-                            .foregroundColor(Color(red: 1.0, green: 0.8, blue: 0.0))
-                    }
-                    .listRowBackground(AppColors.surface)
-                    
-                    // 功能设置
-                    Section {
-                        Toggle(isOn: $autoSave) {
-                            HStack {
-                                Image(systemName: "arrow.clockwise")
-                                    .foregroundColor(Color(red: 0.4, green: 0.8, blue: 0.2))
-                                Text("自动保存")
-                                    .foregroundColor(AppColors.primaryText)
-                            }
-                        }
-                        .tint(Color(red: 0.4, green: 0.8, blue: 0.2))
-                    } header: {
-                        Text("FUNCTIONS")
-                            .font(.system(size: 11, weight: .bold, design: .monospaced))
-                            .foregroundColor(Color(red: 0.4, green: 0.8, blue: 0.2))
-                    }
-                    .listRowBackground(AppColors.surface)
                     
                     // 关于
                     Section {
@@ -73,7 +39,7 @@ struct SettingsView: View {
                         }
                         
                         Button {
-                            // 打开GitHub
+                            openURL(Self.repositoryURL)
                         } label: {
                             HStack {
                                 Image(systemName: "link")
@@ -84,7 +50,7 @@ struct SettingsView: View {
                         }
                         
                         Button {
-                            // 反馈
+                            showReportOptions = true
                         } label: {
                             HStack {
                                 Image(systemName: "exclamationmark.bubble")
@@ -135,23 +101,6 @@ struct SettingsView: View {
                             .foregroundColor(AppColors.primaryText.opacity(0.4))
                     }
                     .listRowBackground(AppColors.surface)
-
-                    // 数据管理
-                    Section {
-                        Button(role: .destructive) {
-                            // 清除缓存
-                        } label: {
-                            HStack {
-                                Image(systemName: "trash")
-                                Text("Clear Cache")
-                            }
-                        }
-                    } header: {
-                        Text("DATA")
-                            .font(.system(size: 11, weight: .bold, design: .monospaced))
-                            .foregroundColor(.red.opacity(0.8))
-                    }
-                    .listRowBackground(AppColors.surface)
                 }
                 .scrollContentBackground(.hidden)
             }
@@ -166,6 +115,17 @@ struct SettingsView: View {
             }
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbarBackground(AppColors.background, for: .navigationBar)
+            // 反馈：普通玩家用 App 内反馈（存 CloudKit，不用邮箱和账号），会用 GitHub 的走 Issues（正文预填版本信息）
+            .confirmationDialog("反馈问题", isPresented: $showReportOptions, titleVisibility: .visible) {
+                Button("在 App 内反馈") { showFeedback = true }
+                Button("GitHub Issues") { openURL(FeedbackInfo.githubIssueURL) }
+                Button("取消", role: .cancel) {}
+            } message: {
+                Text("App 内反馈不用注册账号，直接发送；GitHub Issues 需要 GitHub 账号。")
+            }
+            .sheet(isPresented: $showFeedback) {
+                NavigationStack { FeedbackView() }
+            }
             .confirmationDialog("恢复成安装包自带的数据？", isPresented: $confirmRestore, titleVisibility: .visible) {
                 Button("恢复内置数据", role: .destructive) { dataUpdater.restoreBuiltIn() }
             } message: {
