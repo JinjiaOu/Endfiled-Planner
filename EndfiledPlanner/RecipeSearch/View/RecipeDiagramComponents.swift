@@ -14,14 +14,14 @@ struct RecipeDiagramCard: View {
             HStack(spacing: 5) {
                 if !compact { ItemIcon(name: node.name, size: 20) }
                 Text(verbatim: DisplayName.item(node.name)).font(.system(size: compact ? 9 : 14, weight: .semibold))
-                    .lineLimit(2)
+                    .lineLimit(2).minimumScaleFactor(0.5)
             }
             .foregroundStyle(AppColors.primaryText)
             Text("×\(node.amount)")
                 .font(.system(size: compact ? 8 : 12, weight: .medium, design: .monospaced))
                 .foregroundStyle(AppColors.secondaryText)
             if !compact, let recipe = node.recipe {
-                Text(verbatim: recipe.displayMachine).font(.system(size: 10)).foregroundStyle(AppColors.secondaryText).lineLimit(1)
+                Text(verbatim: recipe.displayMachine).font(.system(size: 10)).foregroundStyle(AppColors.secondaryText).lineLimit(1).minimumScaleFactor(0.5)
                 if recipe.time > 0 && !RecipeViewModel.isMiningMachine(recipe.machine) {
                     Text("\(recipe.time)s").font(.system(size: 10, design: .monospaced))
                         .foregroundStyle(AppColors.secondaryText)

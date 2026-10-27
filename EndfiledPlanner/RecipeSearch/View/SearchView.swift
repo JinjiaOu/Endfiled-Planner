@@ -190,7 +190,7 @@ struct SearchView: View {
                 Image(systemName: "magnifyingglass").foregroundStyle(AppColors.secondaryText)
                 ZStack(alignment: .leading) {
                     if showDropdown, !searchText.isEmpty, let first = suggestions.first,
-                       first.matchType == .prefixMatch, first.name.count > searchText.count {
+                       first.matchType == .prefixMatch, DisplayName.item(first.name).count > searchText.count {
                         Text(verbatim: DisplayName.item(first.name)).foregroundStyle(AppColors.tertiaryText.opacity(0.45))
                             .allowsHitTesting(false).accessibilityHidden(true)
                     }
@@ -338,7 +338,7 @@ struct RecipeDisclaimerOverlay: View {
                 DisclaimerRow(icon: "arrow.triangle.branch",
                               text: String(localized: "本功能展示的生产时间基于单条串行链路计算，即从原材料到成品的最长路径耗时。"))
                 DisclaimerRow(icon: "minus.circle",
-                              text: "计算结果不包含采矿、种植等原材料采集环节的时间，亦未考虑传送带运输延迟、建筑数量限制、产线调度等实际因素。")
+                              text: String(localized: "计算结果不包含采矿、种植等原材料采集环节的时间，亦未考虑传送带运输延迟、建筑数量限制、产线调度等实际因素。"))
                 DisclaimerRow(icon: "info.circle",
                               text: String(localized: "展示数据仅供规划参考，实际生产效率以游戏内表现为准。"))
             }
@@ -460,7 +460,7 @@ struct HighlightedText: View {
     let highlightColor: Color
     
     var body: some View {
-        highlight.isEmpty ? Text(text).foregroundColor(baseColor) : build()
+        highlight.isEmpty ? Text(verbatim: text).foregroundColor(baseColor) : build()
     }
     
     private func build() -> Text {
@@ -469,12 +469,12 @@ struct HighlightedText: View {
         while idx < lower.endIndex {
             if let r = lower.range(of: lowHL, range: idx..<lower.endIndex) {
                 if idx < r.lowerBound {
-                    result = result + Text(String(text[idx..<r.lowerBound])).foregroundColor(baseColor)
+                    result = result + Text(verbatim: String(text[idx..<r.lowerBound])).foregroundColor(baseColor)
                 }
-                result = result + Text(String(text[r])).foregroundColor(highlightColor).fontWeight(.bold)
+                result = result + Text(verbatim: String(text[r])).foregroundColor(highlightColor).fontWeight(.bold)
                 idx = r.upperBound
             } else {
-                result = result + Text(String(text[idx...])).foregroundColor(baseColor)
+                result = result + Text(verbatim: String(text[idx...])).foregroundColor(baseColor)
                 break
             }
         }

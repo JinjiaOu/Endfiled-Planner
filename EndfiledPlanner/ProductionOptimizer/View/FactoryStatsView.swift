@@ -90,7 +90,7 @@ struct FactoryStatsView: View {
                       text: String(localized: "直通节点 ×\(stats.passthroughCount)（分流器/汇流器等，不计入产线）"), color: AppColors.info)
         }
         if !stats.outletMaterials.isEmpty {
-            noticeRow(icon: "shippingbox.fill", text: String(localized: "仓库取线：\(stats.outletMaterials.map(DisplayName.item).joined(separator: "、"))"),
+            noticeRow(icon: "shippingbox.fill", text: String(localized: "仓库取线：\(stats.outletMaterials.map { $0 == "未设置" ? String(localized: "未设置") : DisplayName.item($0) }.joined(separator: "、"))"),
                       color: AppColors.success)
         }
         ForEach(stats.sinkStates) { sink in

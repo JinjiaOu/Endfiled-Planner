@@ -177,7 +177,7 @@ struct ProductionCalculatorView: View {
             ItemIcon(name: step.item, size: AppSize.itemIcon)
             VStack(alignment: .leading, spacing: AppSpacing.xxs) {
                 Text(verbatim: DisplayName.item(step.item)).font(AppTypography.rowTitle).foregroundStyle(AppColors.primaryText)
-                Text("\(step.recipe.displayMachine) × \(step.machineCount)")
+                Text(verbatim: "\(step.recipe.displayMachine) × \(step.machineCount)")
                     .font(AppTypography.supporting).foregroundStyle(AppColors.accent)
                 Text(String(localized: "精确 \(String(format: "%.2f", step.machines)) 台 · 每台 \(step.recipe.time) 秒一次"))
                     .font(AppTypography.caption).foregroundStyle(AppColors.secondaryText)

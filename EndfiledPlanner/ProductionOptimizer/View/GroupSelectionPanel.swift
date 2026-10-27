@@ -27,7 +27,7 @@ struct GroupSelectionPanel: View {
                               maxPanelHeight: style == .bottom ? maxPanelHeight : nil,
                               onClose: { vm.editMode = .select }) {
             Text(!vm.hasGroupSelection
-                 ? "在空地上拖出一个框，整个落在框里的建筑和线会被选中，拖到画面边缘会自动滚动；点单个建筑或线也能加入/移出"
+                 ? String(localized: "在空地上拖出一个框，整个落在框里的建筑和线会被选中，拖到画面边缘会自动滚动；点单个建筑或线也能加入/移出")
                  : String(localized: "按住任一选中的建筑或线拖动整组；继续拉框或点建筑/线可以加入/移出"))
                 .font(AppTypography.supporting).foregroundStyle(AppColors.secondaryText)
                 .fixedSize(horizontal: false, vertical: true)

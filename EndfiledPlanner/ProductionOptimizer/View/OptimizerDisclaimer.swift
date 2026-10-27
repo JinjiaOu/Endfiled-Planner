@@ -28,11 +28,11 @@ struct OptimizerDisclaimerModifier: ViewModifier {
                 Button(String(localized: "我知道了"), role: .cancel) {}
                 Button(String(localized: "不再提示")) { hidden = true }
             } message: {
-                Text("""
+                Text(String(localized: """
                 本模块为玩家自制的非官方工具，与《明日方舟：终末地》官方无关。
 
                 建筑和配方数据来自游戏解包与社区资料，产能、电力等结果是按简化规则模拟的估算，可能与游戏内实际表现不一致，请以游戏内为准。规划结果仅供参考。
-                """)
+                """))
             }
     }
 }

@@ -232,7 +232,7 @@ enum FeedbackInfo {
 
     /// GitHub 新建 Issue 页面，正文预填版本信息
     static var githubIssueURL: URL {
-        let body = """
+        let body = String(localized: """
         **问题描述**
 
 
@@ -241,7 +241,7 @@ enum FeedbackInfo {
 
         ---
         \(lines.map { "- \($0.0)：\($0.1)" }.joined(separator: "\n"))
-        """
+        """)
         var components = URLComponents(string: "https://github.com/JinjiaOu/Endfiled-Planner/issues/new")!
         components.queryItems = [URLQueryItem(name: "body", value: body)]
         return components.url!

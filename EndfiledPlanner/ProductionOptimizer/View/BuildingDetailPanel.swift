@@ -128,7 +128,7 @@ struct BuildingDetailPanel: View {
     private var movingBanner: some View {
         HStack(spacing: 8) {
             Image(systemName: "hand.tap.fill").foregroundColor(AppColors.info)
-            Text(vm.moveFailedMessage ?? "点按网格上的目标位置（点的格子是建筑新的左上角），已连接的线路会尝试重新连接，无法连接时会提示")
+            Text(vm.moveFailedMessage ?? String(localized: "点按网格上的目标位置（点的格子是建筑新的左上角），已连接的线路会尝试重新连接，无法连接时会提示"))
                 .font(AppTypography.supporting)
                 .foregroundColor(vm.moveFailedMessage == nil ? AppColors.primaryText : red)
             Spacer()

@@ -19,28 +19,28 @@ struct BlueprintDisclaimerView: View {
                 DisclaimerItem(
                     number: "2",
                     title: String(localized: "使用风险"),
-                    content: "蓝图使用前请自行测试和验证，开发者不对蓝图的正确性、完整性或适用性做任何保证。使用蓝图导致的任何游戏内损失由玩家自行承担。"
+                    content: String(localized: "蓝图使用前请自行测试和验证，开发者不对蓝图的正确性、完整性或适用性做任何保证。使用蓝图导致的任何游戏内损失由玩家自行承担。")
                 )
                 
                 // 条款3
                 DisclaimerItem(
                     number: "3",
                     title: String(localized: "知识产权"),
-                    content: "所有蓝图的知识产权归原作者所有。本应用仅作为展示平台，不主张任何蓝图的所有权。"
+                    content: String(localized: "所有蓝图的知识产权归原作者所有。本应用仅作为展示平台，不主张任何蓝图的所有权。")
                 )
                 
                 // 条款4
                 DisclaimerItem(
                     number: "4",
                     title: String(localized: "内容审核"),
-                    content: "虽然我们尽力审核蓝图内容，但无法保证所有内容的准确性。如发现问题蓝图，请及时反馈。"
+                    content: String(localized: "虽然我们尽力审核蓝图内容，但无法保证所有内容的准确性。如发现问题蓝图，请及时反馈。")
                 )
                 
                 // 条款5
                 DisclaimerItem(
                     number: "5",
                     title: String(localized: "游戏数据"),
-                    content: "本应用为《明日方舟：终末地》游戏的非官方辅助工具，所有内容均为虚拟游戏数据，与现实无关。"
+                    content: String(localized: "本应用为《明日方舟：终末地》游戏的非官方辅助工具，所有内容均为虚拟游戏数据，与现实无关。")
                 )
 
             }

@@ -25,9 +25,9 @@ enum FactoryPreset: String, CaseIterable, Identifiable {
     var summary: String {
         switch self {
         case .valley4Battery:
-            return "从仓库取源矿、蓝铁矿、砂叶，满载产出高容谷地电池 6 个/分钟。将切换到四号谷地并替换当前布局（不会自动保存）。"
+            return String(localized: "从仓库取源矿、蓝铁矿、砂叶，满载产出高容谷地电池 6 个/分钟。将切换到四号谷地并替换当前布局（不会自动保存）。")
         case .wulingEquipment:
-            return "从仓库取赤铜矿、稳定碳块，满载产出灼铜装备原件 6 个/分钟。将切换到武陵并替换当前布局（不会自动保存）。"
+            return String(localized: "从仓库取赤铜矿、稳定碳块，满载产出灼铜装备原件 6 个/分钟。将切换到武陵并替换当前布局（不会自动保存）。")
         }
     }
 

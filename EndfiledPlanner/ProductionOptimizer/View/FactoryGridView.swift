@@ -709,7 +709,7 @@ struct FactoryGridView: View {
                     HStack(spacing: 4) {
                         buildingSymbol(for: def, material: materialName, size: min(w, h) * 0.48)
                         VStack(alignment: .leading, spacing: 1) {
-                            Text(verbatim: def.displayName)
+                            Text(verbatim: def.displayName).minimumScaleFactor(0.35)
                                 .font(.system(size: min(w, h) * 0.32, weight: .bold, design: .monospaced))
                                 .foregroundColor(FactoryCanvasPalette.ink).lineLimit(1)
                             if let setting = settingLabel {
@@ -731,14 +731,14 @@ struct FactoryGridView: View {
                     VStack(spacing: 2) {
                         itemBadge(productName, size: min(w, h) * 0.42)
                             .opacity(displayedStatus == .running ? 1 : 0.55)
-                        Text(verbatim: def.displayName)
+                        Text(verbatim: def.displayName).minimumScaleFactor(0.35)
                             .font(.system(size: min(w, h) * 0.11, weight: .bold, design: .monospaced))
                             .foregroundColor(FactoryCanvasPalette.secondaryInk).lineLimit(1)
                     }.padding(4)
                 } else {
                     VStack(spacing: 3) {
                         buildingSymbol(for: def, material: materialName, size: min(w, h) * 0.28)
-                        Text(verbatim: def.displayName)
+                        Text(verbatim: def.displayName).minimumScaleFactor(0.35)
                             .font(.system(size: min(w, h) * 0.16, weight: .bold, design: .monospaced))
                             .foregroundColor(FactoryCanvasPalette.ink).lineLimit(1)
                         if let setting = settingLabel {
@@ -1214,7 +1214,7 @@ struct FactoryGridView: View {
                         Rectangle().fill(def.category.color.opacity(0.3))
                         Rectangle().stroke(conflicts.contains(index) ? Color(red: 0.95, green: 0.25, blue: 0.2) : def.category.color,
                                            style: StrokeStyle(lineWidth: 2, dash: [6, 3]))
-                        Text(verbatim: def.displayName)
+                        Text(verbatim: def.displayName).minimumScaleFactor(0.35)
                             .font(.system(size: min(w, h) * 0.16, weight: .bold, design: .monospaced))
                             .foregroundColor(.white.opacity(0.85)).lineLimit(1)
                             .minimumScaleFactor(0.5)

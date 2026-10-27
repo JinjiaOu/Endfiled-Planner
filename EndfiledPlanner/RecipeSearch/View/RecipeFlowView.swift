@@ -197,7 +197,7 @@ struct NodeViewRecursive: View {
             Text(verbatim: DisplayName.item(node.name))
                 .font(.system(size: 16, weight: .semibold))
                 .multilineTextAlignment(.center)
-                .lineLimit(2)
+                .lineLimit(2).minimumScaleFactor(0.5)
                 .foregroundColor(.primary)
             
             // 数量标签
