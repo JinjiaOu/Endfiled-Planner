@@ -95,7 +95,7 @@ struct RecipeDetailView: View {
             }
             .safeAreaInset(edge: .top, spacing: 0) {
                 VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                    Text(root.name).font(AppTypography.rowTitle).foregroundStyle(AppColors.primaryText)
+                    Text(verbatim: DisplayName.item(root.name)).font(AppTypography.rowTitle).foregroundStyle(AppColors.primaryText)
                         .fixedSize(horizontal: false, vertical: true)
                     Picker("查看方式", selection: $showsOutline) {
                         Text("图形").tag(false)

@@ -74,17 +74,17 @@ extension FactoryViewModel {
             guard let def = BuildingDefinition.find(placed.definitionID) else { continue }
             let reason: String?
             if !rules.allows(def) {
-                reason = "\(def.name)（\(map.displayName)不能造）"
+                reason = "\(def.displayName)（\(map.displayName)不能造）"
             } else if let mode = recipesOf(placed, def: def).compactMap({ rules.blockedMode(of: $0, on: def) }).first {
-                reason = "\(def.name)（\(mode.name)配方\(map.displayName)不能用）"
+                reason = "\(def.displayName)（\(mode.displayName)配方\(map.displayName)不能用）"
             } else if BuildingDefinition.warehousePortIDs.contains(def.id) {
-                reason = "\(def.name)（两张地图接仓库的方式不同，要重新贴好）"
+                reason = "\(def.displayName)（两张地图接仓库的方式不同，要重新贴好）"
             } else {
                 reason = nil
             }
             if let reason { counts[reason, default: 0] += 1 }
         }
-        var lines = counts.sorted { $0.key < $1.key }.map { "\($0.key) ×\($0.value)" }
+        var lines = counts.sorted { $0.key < $1.key }.map { "\(DisplayName.device($0.key)) ×\($0.value)" }
         let pipeCount = saved.belts.filter { $0.lineType == .pipe }.count
         if !rules.allowsPipes && pipeCount > 0 {
             lines.append("管道 ×\(pipeCount)（\(map.displayName)不能用管道，不参与计算）")

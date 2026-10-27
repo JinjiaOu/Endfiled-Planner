@@ -14,7 +14,7 @@ struct NodeView: View {
     var body: some View {
         VStack(spacing: 6) {
             
-            Text(node.name)
+            Text(verbatim: DisplayName.item(node.name))
                 .font(.headline)
             
             Text("x\(node.amount)")
@@ -22,7 +22,7 @@ struct NodeView: View {
                 .foregroundColor(.gray)
             
             if let recipe = node.recipe {
-                Text(recipe.machine)
+                Text(verbatim: recipe.displayMachine)
                     .font(.caption)
                     .foregroundColor(.blue)
             }

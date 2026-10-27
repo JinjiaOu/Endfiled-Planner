@@ -56,9 +56,9 @@ struct AppInlineNotice: View {
                 .foregroundStyle(tone.color)
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: AppSpacing.xxs) {
-                Text(title).font(AppTypography.rowTitle).foregroundStyle(AppColors.primaryText)
+                Text(verbatim: title).font(AppTypography.rowTitle).foregroundStyle(AppColors.primaryText)
                 if let message {
-                    Text(message).font(AppTypography.supporting).foregroundStyle(AppColors.secondaryText)
+                    Text(verbatim: message).font(AppTypography.supporting).foregroundStyle(AppColors.secondaryText)
                 }
             }
             .fixedSize(horizontal: false, vertical: true)
@@ -107,11 +107,11 @@ struct AppLoadingState: View {
     var body: some View {
         VStack(alignment: .leading, spacing: AppSpacing.sm) {
             if let progress {
-                ProgressView(value: progress) { Text(title) }
+                ProgressView(value: progress) { Text(verbatim: title) }
             } else {
                 HStack(spacing: AppSpacing.sm) {
                     ProgressView().accessibilityHidden(true)
-                    Text(title)
+                    Text(verbatim: title)
                 }
             }
             if let detail {

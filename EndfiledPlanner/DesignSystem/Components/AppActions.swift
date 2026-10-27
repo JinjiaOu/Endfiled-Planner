@@ -76,7 +76,7 @@ struct AppToolButton: View {
         Button(action: action) {
             VStack(spacing: AppSpacing.xxs) {
                 Image(systemName: systemImage).font(.body.weight(.semibold))
-                Text(title).font(AppTypography.caption).multilineTextAlignment(.center)
+                Text(verbatim: title).font(AppTypography.caption).multilineTextAlignment(.center)
             }
             .foregroundStyle(isEnabled ? (isSelected ? AppColors.accent : AppColors.primaryText) : AppColors.disabledText)
             .padding(AppSpacing.xs)

@@ -194,7 +194,7 @@ struct NodeViewRecursive: View {
         VStack(spacing: 8) {
             
             // 物品名称
-            Text(node.name)
+            Text(verbatim: DisplayName.item(node.name))
                 .font(.system(size: 16, weight: .semibold))
                 .multilineTextAlignment(.center)
                 .lineLimit(2)
@@ -212,7 +212,7 @@ struct NodeViewRecursive: View {
             // 机器信息
             if let recipe = node.recipe {
                 VStack(spacing: 2) {
-                    Text(recipe.machine)
+                    Text(verbatim: recipe.displayMachine)
                         .font(.system(size: 12, weight: .medium))
                         .foregroundColor(.white)
                         .padding(.horizontal, 8)

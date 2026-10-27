@@ -671,10 +671,10 @@ struct FactoryGridView: View {
             settingLabel = ("地图不支持", false)
         } else if def.choosesOutletMaterial {
             let name = placed.outletMaterialID.flatMap(ItemCatalog.name(for:))
-            settingLabel = (name ?? "未设置", name != nil)
+            settingLabel = (name.map(DisplayName.item) ?? String(localized: "未设置"), name != nil)
         } else if def.id == "log_conditioner" || def.id == "log_pipe_conditioner",
                   let name = placed.filterItemID.flatMap(ItemCatalog.name(for:)) {
-            settingLabel = (name, true)
+            settingLabel = (DisplayName.item(name), true)
         } else {
             settingLabel = nil
         }
@@ -709,7 +709,7 @@ struct FactoryGridView: View {
                     HStack(spacing: 4) {
                         buildingSymbol(for: def, material: materialName, size: min(w, h) * 0.48)
                         VStack(alignment: .leading, spacing: 1) {
-                            Text(def.name)
+                            Text(verbatim: def.displayName)
                                 .font(.system(size: min(w, h) * 0.32, weight: .bold, design: .monospaced))
                                 .foregroundColor(FactoryCanvasPalette.ink).lineLimit(1)
                             if let setting = settingLabel {
@@ -731,14 +731,14 @@ struct FactoryGridView: View {
                     VStack(spacing: 2) {
                         itemBadge(productName, size: min(w, h) * 0.42)
                             .opacity(displayedStatus == .running ? 1 : 0.55)
-                        Text(def.name)
+                        Text(verbatim: def.displayName)
                             .font(.system(size: min(w, h) * 0.11, weight: .bold, design: .monospaced))
                             .foregroundColor(FactoryCanvasPalette.secondaryInk).lineLimit(1)
                     }.padding(4)
                 } else {
                     VStack(spacing: 3) {
                         buildingSymbol(for: def, material: materialName, size: min(w, h) * 0.28)
-                        Text(def.name)
+                        Text(verbatim: def.displayName)
                             .font(.system(size: min(w, h) * 0.16, weight: .bold, design: .monospaced))
                             .foregroundColor(FactoryCanvasPalette.ink).lineLimit(1)
                         if let setting = settingLabel {
@@ -795,7 +795,7 @@ struct FactoryGridView: View {
             }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(def.name)
+        .accessibilityLabel(def.displayName)
         .accessibilityValue([displayedStatus?.label, settingLabel?.text].compactMap { $0 }.joined(separator: "，"))
         .accessibilityAddTraits(.isButton)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
@@ -1214,7 +1214,7 @@ struct FactoryGridView: View {
                         Rectangle().fill(def.category.color.opacity(0.3))
                         Rectangle().stroke(conflicts.contains(index) ? Color(red: 0.95, green: 0.25, blue: 0.2) : def.category.color,
                                            style: StrokeStyle(lineWidth: 2, dash: [6, 3]))
-                        Text(def.name)
+                        Text(verbatim: def.displayName)
                             .font(.system(size: min(w, h) * 0.16, weight: .bold, design: .monospaced))
                             .foregroundColor(.white.opacity(0.85)).lineLimit(1)
                             .minimumScaleFactor(0.5)

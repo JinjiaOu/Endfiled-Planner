@@ -90,7 +90,7 @@ struct FactoryStatsView: View {
                       text: "直通节点 ×\(stats.passthroughCount)（分流器/汇流器等，不计入产线）", color: AppColors.info)
         }
         if !stats.outletMaterials.isEmpty {
-            noticeRow(icon: "shippingbox.fill", text: "仓库取线：\(stats.outletMaterials.joined(separator: "、"))",
+            noticeRow(icon: "shippingbox.fill", text: "仓库取线：\(stats.outletMaterials.map(DisplayName.item).joined(separator: "、"))",
                       color: AppColors.success)
         }
         ForEach(stats.sinkStates) { sink in
@@ -123,7 +123,7 @@ struct FactoryStatsView: View {
             ForEach(stats.categoryBreakdown.sorted(by: { $0.value > $1.value }), id: \.key) { category, count in
                 HStack(alignment: .top, spacing: AppSpacing.sm) {
                     Image(systemName: category.icon).foregroundStyle(category.color).accessibilityHidden(true)
-                    AppKeyValueRow(title: category.rawValue, value: "\(count)")
+                    AppKeyValueRow(title: category.displayName, value: "\(count)")
                 }
             }
         }
@@ -134,7 +134,7 @@ struct FactoryStatsView: View {
         if stats.hubPower > 0 { parts.append(String(format: "协议核心 %.0f", stats.hubPower)) }
         for generator in stats.generators {
             if let fuel = generator.fuel {
-                parts.append(String(format: "热能池·%@ %.0f", fuel, generator.power))
+                parts.append(String(format: "热能池·%@ %.0f", DisplayName.item(fuel), generator.power))
             } else {
                 parts.append("热能池·无燃料 0")
             }
@@ -144,7 +144,7 @@ struct FactoryStatsView: View {
     }
 
     private func machineStateText(_ machine: FlowSimulator.MachineState) -> String {
-        var text = "\(machine.name)：\(machine.status.label)"
+        var text = "\(DisplayName.device(machine.name))：\(machine.status.label)"
         if machine.status != .noRecipe, machine.status != .inactive {
             text += "（\(Int((machine.throttle * 100).rounded()))%）"
         }
@@ -156,8 +156,8 @@ struct FactoryStatsView: View {
         let items = sink.consumed
             .filter { $0.value > 1e-9 }
             .sorted { $0.key < $1.key }
-            .map { $0.key + " " + String(format: "%.1f", $0.value * 60) + "/min" }
-        return "\(sink.name)：" + (items.isEmpty ? "无消耗" : items.joined(separator: "、"))
+            .map { DisplayName.item($0.key) + " " + String(format: "%.1f", $0.value * 60) + "/min" }
+        return "\(DisplayName.device(sink.name))：" + (items.isEmpty ? "无消耗" : items.joined(separator: "、"))
     }
 
     private func noticeRow(icon: String, text: String, itemNames: [String] = [], color: Color) -> some View {
@@ -187,7 +187,7 @@ struct FactoryStatsView: View {
                                    color: Color = AppColors.success) -> some View {
         let row = HStack(alignment: .top, spacing: AppSpacing.sm) {
             ItemIcon(name: line.output, size: AppSize.itemIcon)
-            AppKeyValueRow(title: line.output, value: String(format: "%.0f/min", line.ratePerMin))
+            AppKeyValueRow(title: DisplayName.item(line.output), value: String(format: "%.0f/min", line.ratePerMin))
             if onSelectItem != nil {
                 Image(systemName: highlightedItem == line.output ? "scope" : "chevron.right")
                     .font(AppTypography.caption)

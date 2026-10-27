@@ -47,7 +47,7 @@ struct AppFilterChip<Icon: View>: View {
         Button(action: action) {
             HStack(spacing: AppSpacing.xs) {
                 icon().accessibilityHidden(true)
-                Text(title).font(AppTypography.rowTitle)
+                Text(verbatim: title).font(AppTypography.rowTitle)
                 if isSelected {
                     Image(systemName: "checkmark").font(AppTypography.caption.weight(.bold))
                 }
@@ -92,10 +92,10 @@ struct AppSelectionRow<Icon: View>: View {
             HStack(alignment: .top, spacing: AppSpacing.sm) {
                 icon().accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: AppSpacing.xxs) {
-                    Text(title).font(AppTypography.rowTitle)
+                    Text(verbatim: title).font(AppTypography.rowTitle)
                         .foregroundStyle(isSelectable ? AppColors.primaryText : AppColors.disabledText)
                     if let subtitle {
-                        Text(subtitle).font(AppTypography.supporting).foregroundStyle(AppColors.secondaryText)
+                        Text(verbatim: subtitle).font(AppTypography.supporting).foregroundStyle(AppColors.secondaryText)
                     }
                     if let restriction {
                         Label(restriction, systemImage: "info.circle")

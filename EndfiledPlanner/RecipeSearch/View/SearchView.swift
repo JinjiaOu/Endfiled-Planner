@@ -83,10 +83,10 @@ struct SearchView: View {
             return historyMgr.history.map { SuggestionItem(name: $0, matchType: .history) }
         }
         let all = vm.recipes.keys.sorted()
-        let prefix   = all.filter { $0.lowercased().hasPrefix(query.lowercased()) }
+        let prefix   = all.filter { DisplayName.hasPrefix($0, query: query) }
         let contains = all.filter {
-            !$0.lowercased().hasPrefix(query.lowercased()) &&
-            $0.localizedCaseInsensitiveContains(query)
+            !DisplayName.hasPrefix($0, query: query) &&
+            DisplayName.matches($0, query: query)
         }
         return prefix.map  { SuggestionItem(name: $0, matchType: .prefixMatch)   }
              + contains.map { SuggestionItem(name: $0, matchType: .containsMatch) }
@@ -159,7 +159,7 @@ struct SearchView: View {
                                        onClearHistory: { historyMgr.clear() })
                 }
                 if let selectedItem {
-                    Label(selectedItem, systemImage: "checkmark.circle.fill")
+                    Label { Text(verbatim: DisplayName.item(selectedItem)) } icon: { Image(systemName: "checkmark.circle.fill") }
                         .font(AppTypography.supporting).foregroundStyle(AppColors.success)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -191,7 +191,7 @@ struct SearchView: View {
                 ZStack(alignment: .leading) {
                     if showDropdown, !searchText.isEmpty, let first = suggestions.first,
                        first.matchType == .prefixMatch, first.name.count > searchText.count {
-                        Text(first.name).foregroundStyle(AppColors.tertiaryText.opacity(0.45))
+                        Text(verbatim: DisplayName.item(first.name)).foregroundStyle(AppColors.tertiaryText.opacity(0.45))
                             .allowsHitTesting(false).accessibilityHidden(true)
                     }
                     TextField("搜索物品", text: $searchText)
@@ -227,7 +227,7 @@ struct SearchView: View {
             }
             Menu {
                 ForEach(vm.recipes.keys.sorted(), id: \.self) { item in
-                    Button(item) { selectItem(item) }
+                    Button { selectItem(item) } label: { Text(verbatim: DisplayName.item(item)) }
                 }
             } label: {
                 Image(systemName: "list.bullet")
@@ -244,7 +244,7 @@ struct SearchView: View {
             VStack(alignment: .leading, spacing: AppSpacing.md) {
                 AppSurface {
                     VStack(alignment: .leading, spacing: AppSpacing.md) {
-                        AppSectionHeader(title: root.name, subtitle: "分析结果 · 目标数量 \(root.amount)")
+                        AppSectionHeader(title: DisplayName.item(root.name), subtitle: "分析结果 · 目标数量 \(root.amount)")
                         LazyVGrid(columns: Array(repeating: GridItem(.flexible(), alignment: .leading),
                                                  count: dynamicTypeSize.isAccessibilitySize ? 1 : 3),
                                   alignment: .leading, spacing: AppSpacing.md) {
@@ -307,7 +307,7 @@ struct SearchView: View {
     private func selectItem(_ item: String) {
         withAnimation(AppMotion.feedback(reduceMotion: reduceMotion)) {
             selectedItem = item
-            searchText = item
+            searchText = DisplayName.item(item)
             showDropdown = false
             searchFocused = false
             showEmptyHint = false
@@ -413,7 +413,7 @@ struct SuggestionDropdown: View {
                                     Button { onSelect(item.name) } label: {
                                         HStack(spacing: AppSpacing.xs) {
                                             ItemIcon(name: item.name, size: AppSize.itemIcon)
-                                            HighlightedText(text: item.name, highlight: searchText,
+                                            HighlightedText(text: DisplayName.item(item.name), highlight: searchText,
                                                             baseColor: AppColors.primaryText, highlightColor: AppColors.accent)
                                                 .font(AppTypography.rowTitle)
                                                 .fixedSize(horizontal: false, vertical: true)

@@ -454,7 +454,7 @@ struct FactoryLayoutView: View {
                 HStack(spacing: AppSpacing.xxs) {
                     categoryChip(category: nil, label: "全部")
                     ForEach(BuildingCategory.allCases, id: \.self) { cat in
-                        categoryChip(category: cat, label: cat.rawValue)
+                        categoryChip(category: cat, label: cat.displayName)
                     }
                 }
                 .padding(.horizontal, AppSpacing.xs)
@@ -530,7 +530,7 @@ struct FactoryLayoutView: View {
                 .font(.title3.weight(.medium))
                 .foregroundStyle(def.category.color)
                 .frame(height: 28)
-            Text(def.name).font(AppTypography.caption.weight(.medium))
+            Text(verbatim: def.displayName).font(AppTypography.caption.weight(.medium))
                 .foregroundStyle(AppColors.primaryText)
                 .fixedSize(horizontal: false, vertical: true)
             Text("\(def.size.width)×\(def.size.height)")
@@ -825,7 +825,7 @@ struct FactoryLayoutView: View {
     private func highlightChip(_ item: String) -> some View {
         HStack(spacing: AppSpacing.xs) {
             ItemIcon(name: item, size: 20)
-            Text("高亮：\(item)")
+            Text("高亮：\(DisplayName.item(item))")
                 .font(AppTypography.caption.weight(.semibold))
                 .foregroundStyle(AppColors.primaryText)
                 .lineLimit(1)

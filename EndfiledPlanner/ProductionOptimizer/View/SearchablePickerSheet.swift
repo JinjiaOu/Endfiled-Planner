@@ -15,6 +15,7 @@ struct SearchablePickerItem: Identifiable {
     /// 非 nil 时这一行标灰、点不了，右边显示这段标签（比如四号谷地里液体模式配方标"仅武陵"）；
     /// 多选模式下已经勾上的还能取消勾选
     var disabledTag: String? = nil
+    var searchTerms: String = ""
 }
 
 /// 全屏搜索选择弹窗：长列表（取货材料 170+ 个、多配方）用原生 Menu 很难点选，换成大行高 + 搜索框。
@@ -44,14 +45,16 @@ struct SearchablePickerSheet: View {
         var result = items
         if let activeChip {
             result = result.filter {
-                $0.title.localizedCaseInsensitiveContains(activeChip) ||
-                ($0.subtitle?.localizedCaseInsensitiveContains(activeChip) ?? false)
+                $0.title.localizedCaseInsensitiveContains(DisplayName.item(activeChip)) ||
+                ($0.subtitle?.localizedCaseInsensitiveContains(DisplayName.item(activeChip)) ?? false)
             }
         }
         let keyword = searchText.trimmingCharacters(in: .whitespaces)
         guard !keyword.isEmpty else { return result }
         return result.filter {
             $0.title.localizedCaseInsensitiveContains(keyword) ||
+            DisplayName.matches($0.iconName ?? "", query: keyword) ||
+            $0.searchTerms.localizedCaseInsensitiveContains(keyword) ||
             ($0.subtitle?.localizedCaseInsensitiveContains(keyword) ?? false)
         }
     }
@@ -123,7 +126,7 @@ struct SearchablePickerSheet: View {
                 HStack(spacing: AppSpacing.xs) {
                     ForEach(filterChips, id: \.self) { chip in
                         let isOn = activeChip == chip
-                        AppFilterChip(title: chip, isSelected: isOn, action: {
+                        AppFilterChip(title: DisplayName.item(chip), isSelected: isOn, action: {
                             activeChip = isOn ? nil : chip
                         }) {
                             ItemIcon(name: chip, size: AppSize.icon)

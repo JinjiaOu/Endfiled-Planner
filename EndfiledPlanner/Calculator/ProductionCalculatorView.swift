@@ -72,7 +72,7 @@ struct ProductionCalculatorView: View {
             SearchablePickerSheet(
                 title: "\(entry.item) 用哪条配方",
                 items: list.map { recipe in
-                    SearchablePickerItem(id: recipe.id, title: recipe.machine,
+                    SearchablePickerItem(id: recipe.id, title: recipe.displayMachine,
                                          subtitle: recipeSummary(recipe), iconName: entry.item)
                 },
                 selectedID: current,
@@ -89,7 +89,7 @@ struct ProductionCalculatorView: View {
         recipeVM.recipes.keys
             .filter { !ProductionCalculator.candidates(for: $0, in: recipeVM.recipes).isEmpty }
             .sorted()
-            .map { SearchablePickerItem(id: $0, title: $0, iconName: $0) }
+            .map { SearchablePickerItem(id: $0, title: DisplayName.item($0), iconName: $0) }
     }
 
     private var targetCard: some View {
@@ -106,7 +106,7 @@ struct ProductionCalculatorView: View {
                         }
                         VStack(alignment: .leading, spacing: AppSpacing.xxs) {
                             Text("目标产物").font(AppTypography.caption).foregroundStyle(AppColors.secondaryText)
-                            Text(target.isEmpty ? "选择产物" : target)
+                            Text(verbatim: target.isEmpty ? String(localized: "选择产物") : DisplayName.item(target))
                                 .font(AppTypography.sectionTitle).foregroundStyle(AppColors.primaryText)
                         }
                         Spacer()
@@ -175,8 +175,8 @@ struct ProductionCalculatorView: View {
         HStack(alignment: .center, spacing: AppSpacing.sm) {
             ItemIcon(name: step.item, size: AppSize.itemIcon)
             VStack(alignment: .leading, spacing: AppSpacing.xxs) {
-                Text(step.item).font(AppTypography.rowTitle).foregroundStyle(AppColors.primaryText)
-                Text("\(step.recipe.machine) × \(step.machineCount)")
+                Text(verbatim: DisplayName.item(step.item)).font(AppTypography.rowTitle).foregroundStyle(AppColors.primaryText)
+                Text("\(step.recipe.displayMachine) × \(step.machineCount)")
                     .font(AppTypography.supporting).foregroundStyle(AppColors.accent)
                 Text(String(format: "精确 %.2f 台 · 每台 %@ 秒一次", step.machines, "\(step.recipe.time)"))
                     .font(AppTypography.caption).foregroundStyle(AppColors.secondaryText)
@@ -200,7 +200,7 @@ struct ProductionCalculatorView: View {
                     .frame(width: AppSize.touchTarget, height: AppSize.touchTarget)
                     .contentShape(Rectangle())
             }
-            .accessibilityLabel("\(step.item) 的选项")
+            .accessibilityLabel("\(DisplayName.item(step.item)) 的选项")
         }
         .padding(.leading, AppSpacing.sm)
         .padding(.vertical, AppSpacing.xs)
@@ -227,7 +227,7 @@ struct ProductionCalculatorView: View {
         return HStack(spacing: AppSpacing.sm) {
             ItemIcon(name: item, size: AppSize.itemIcon)
             VStack(alignment: .leading, spacing: AppSpacing.xxs) {
-                Text(item).font(AppTypography.rowTitle).foregroundStyle(AppColors.primaryText)
+                Text(verbatim: DisplayName.item(item)).font(AppTypography.rowTitle).foregroundStyle(AppColors.primaryText)
                 Text(isCycle ? "循环依赖，这一截按原料算" : lineHint(item, rate: rate))
                     .font(AppTypography.caption)
                     .foregroundStyle(isCycle ? AppColors.warning : AppColors.secondaryText)
@@ -244,7 +244,7 @@ struct ProductionCalculatorView: View {
                         .frame(width: AppSize.touchTarget, height: AppSize.touchTarget)
                         .contentShape(Rectangle())
                 }
-                .accessibilityLabel("\(item) 的选项")
+                .accessibilityLabel("\(DisplayName.item(item)) 的选项")
             } else {
                 Color.clear.frame(width: AppSize.touchTarget, height: 1)
             }
@@ -262,7 +262,7 @@ struct ProductionCalculatorView: View {
                     ForEach(result.byproducts, id: \.item) { by in
                         HStack(spacing: AppSpacing.sm) {
                             ItemIcon(name: by.item, size: AppSize.itemIcon)
-                            Text(by.item).font(AppTypography.rowTitle).foregroundStyle(AppColors.primaryText)
+                            Text(verbatim: DisplayName.item(by.item)).font(AppTypography.rowTitle).foregroundStyle(AppColors.primaryText)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                             Text("\(Self.format(by.ratePerMin))/分").font(AppTypography.numeric)
                                 .foregroundStyle(AppColors.primaryText)
@@ -296,8 +296,8 @@ struct ProductionCalculatorView: View {
     }
 
     private func recipeSummary(_ recipe: Recipe) -> String {
-        let ins = recipe.inputs.map { "\($0.name)×\($0.count)" }.joined(separator: "、")
-        let outs = recipe.outputs.map { "\($0.name)×\($0.count)" }.joined(separator: "、")
+        let ins = recipe.inputs.map { "\(DisplayName.item($0.name))×\($0.count)" }.joined(separator: "、")
+        let outs = recipe.outputs.map { "\(DisplayName.item($0.name))×\($0.count)" }.joined(separator: "、")
         return "\(ins.isEmpty ? "无原料" : ins) → \(outs) · \(recipe.time) 秒"
     }
 

@@ -34,7 +34,7 @@ struct BuildingDetailPanel: View {
     private var isMoving: Bool { vm.movingBuildingID == placed.id }
 
     var body: some View {
-        AppInspectorContainer(title: def.name, subtitle: headerStatus,
+        AppInspectorContainer(title: def.displayName, subtitle: headerStatus,
                               placement: style == .side ? .side : .bottom,
                               isExpanded: $expanded,
                               maxContentHeight: style == .bottom ? maxContentHeight : nil,
@@ -70,7 +70,7 @@ struct BuildingDetailPanel: View {
         if vm.stats.mapConflicts[placed.id] != nil { return "地图不支持" }
         if !placed.isActive { return "已关闭" }
         if isUnpowered { return "未通电" }
-        return state?.status.label ?? def.category.rawValue
+        return state?.status.label ?? def.category.displayName
     }
 
     private var powerSummary: String {
@@ -253,7 +253,7 @@ struct BuildingDetailPanel: View {
                 if let generator, let fuel = generator.fuel {
                     HStack(spacing: 6) {
                         ItemIcon(name: fuel, size: 20)
-                        Text("正在烧 \(fuel)").font(AppTypography.rowTitle).foregroundColor(AppColors.primaryText)
+                        Text("正在烧 \(DisplayName.item(fuel))").font(AppTypography.rowTitle).foregroundColor(AppColors.primaryText)
                         Spacer()
                         Text(String(format: "%.0f MW", generator.power))
                             .font(AppTypography.supporting).foregroundColor(yellow)
@@ -265,7 +265,7 @@ struct BuildingDetailPanel: View {
                     infoText("没有燃料，不发电。接一条传送带送燃料进来：")
                 }
                 ForEach(FuelCatalog.all, id: \.itemId) { fuel in
-                    Text(String(format: "%@  %.0f MW，每个烧 %.0f 秒", fuel.name, fuel.powerProvide, fuel.secondsPerItem))
+                    Text(String(format: "%@  %.0f MW，每个烧 %.0f 秒", DisplayName.item(fuel.name), fuel.powerProvide, fuel.secondsPerItem))
                         .font(AppTypography.supporting).foregroundColor(AppColors.secondaryText)
                 }
             }
@@ -326,7 +326,7 @@ struct BuildingDetailPanel: View {
                         ItemIcon(name: output.name, size: 20)
                     }
                     Label(
-                    current?.outputs.first?.name ?? "配方一览",
+                    current?.outputs.first.map { DisplayName.item($0.name) } ?? String(localized: "配方一览"),
                     systemImage: "list.bullet.rectangle"
                     )
                 }
@@ -338,8 +338,8 @@ struct BuildingDetailPanel: View {
                 SearchablePickerSheet(
                     title: "配方一览",
                     items: recipes.map { recipe in
-                        let outputText = recipe.outputs.map { "\($0.name)×\($0.count)" }.joined(separator: " + ")
-                        let inputText = recipe.inputs.map { "\($0.name)×\($0.count)" }.joined(separator: " + ")
+                        let outputText = recipe.outputs.map { "\(DisplayName.item($0.name))×\($0.count)" }.joined(separator: " + ")
+                        let inputText = recipe.inputs.map { "\(DisplayName.item($0.name))×\($0.count)" }.joined(separator: " + ")
                         return SearchablePickerItem(
                             id: recipe.id,
                             title: "\(outputText)（\(recipe.time)s）",
@@ -387,8 +387,8 @@ struct BuildingDetailPanel: View {
                     SearchablePickerSheet(
                         title: "配方一览",
                         items: recipes.map { recipe in
-                            let outputText = recipe.outputs.map { "\($0.name)×\($0.count)" }.joined(separator: " + ")
-                            let inputText = recipe.inputs.map { "\($0.name)×\($0.count)" }.joined(separator: " + ")
+                            let outputText = recipe.outputs.map { "\(DisplayName.item($0.name))×\($0.count)" }.joined(separator: " + ")
+                            let inputText = recipe.inputs.map { "\(DisplayName.item($0.name))×\($0.count)" }.joined(separator: " + ")
                             return SearchablePickerItem(
                                 id: recipe.id,
                                 title: "\(outputText)（\(recipe.time)s）",
@@ -428,14 +428,14 @@ struct BuildingDetailPanel: View {
                     ForEach(internalItems, id: \.name) { item in
                         ItemIcon(name: item.name, size: 18)
                     }
-                    Text("内部循环：\(internalItems.map { $0.name }.joined(separator: "、"))（不占外部口）")
+                    Text("内部循环：\(internalItems.map { DisplayName.item($0.name) }.joined(separator: "、"))（不占外部口）")
                 }
                     .font(AppTypography.supporting)
                     .foregroundColor(AppColors.info)
             }
             if !analysis.externalInputs.isEmpty {
                 let text = analysis.externalInputs
-                    .map { "\($0.name) \(String(format: "%.0f", -$0.net * 60))/min" }
+                    .map { "\(DisplayName.item($0.name)) \(String(format: "%.0f", -$0.net * 60))/min" }
                     .joined(separator: "、")
                 HStack(spacing: 3) {
                     ForEach(analysis.externalInputs, id: \.name) { item in
@@ -471,7 +471,7 @@ struct BuildingDetailPanel: View {
         let ports = outputPortsOfKind(def, isSolid: isSolid)
         HStack(spacing: 6) {
             ItemIcon(name: item, size: 18)
-            Text("输出：\(item) \(String(format: "%.0f", rate * 60))/min")
+            Text("输出：\(DisplayName.item(item)) \(String(format: "%.0f", rate * 60))/min")
                 .font(AppTypography.supporting)
                 .foregroundColor(AppColors.primaryText)
             if ports.count > 1 {
@@ -508,7 +508,7 @@ struct BuildingDetailPanel: View {
     private func recipeSubtitle(inputText: String, env: String?) -> String? {
         var parts: [String] = []
         if !inputText.isEmpty { parts.append("原料：\(inputText)") }
-        if let env { parts.append("需要\(env)环境") }
+        if let env { parts.append("需要\(DisplayName.environment(env + "环境"))") }
         return parts.isEmpty ? nil : parts.joined(separator: " · ")
     }
 
@@ -548,7 +548,7 @@ struct BuildingDetailPanel: View {
             } label: {
                 HStack(spacing: 4) {
                     if let current { ItemIcon(name: current, size: 20) }
-                    Label(current ?? "全部通过", systemImage: "line.3.horizontal.decrease.circle")
+                    Label(current.map(DisplayName.item) ?? String(localized: "全部通过"), systemImage: "line.3.horizontal.decrease.circle")
                 }
                     .font(AppTypography.supporting)
                     .foregroundColor(AppColors.success)
@@ -557,7 +557,7 @@ struct BuildingDetailPanel: View {
             .sheet(isPresented: $showFilterSheet) {
                 SearchablePickerSheet(
                     title: "只放行哪种物品",
-                    items: candidates.map { SearchablePickerItem(id: $0.itemId, title: $0.name, iconName: $0.name) },
+                    items: candidates.map { SearchablePickerItem(id: $0.itemId, title: DisplayName.item($0.name), iconName: $0.name) },
                     selectedID: vm.selectedPlaced?.filterItemID,
                     clearTitle: "全部通过",
                     onSelect: { item in
@@ -590,7 +590,7 @@ struct BuildingDetailPanel: View {
                                 .foregroundColor(AppColors.primaryText)
                                 .fixedSize(horizontal: true, vertical: true)
                             if let material { ItemIcon(name: material, size: 24) }
-                            Text(material ?? "不出货")
+                            Text(verbatim: material.map(DisplayName.item) ?? String(localized: "不出货"))
                                 .font(AppTypography.rowTitle)
                                 .fixedSize(horizontal: false, vertical: true)
                                 .foregroundColor(material == nil ? AppColors.secondaryText : AppColors.success)
@@ -604,7 +604,7 @@ struct BuildingDetailPanel: View {
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel("\(port.label)，\(material ?? "不出货")")
+                    .accessibilityLabel("\(port.label)，\(material.map(DisplayName.item) ?? String(localized: "不出货"))")
                     .accessibilityHint("选择该出货口的材料")
                     Divider().overlay(AppColors.border)
                 }
@@ -614,7 +614,7 @@ struct BuildingDetailPanel: View {
                 if let portIndex = corePortSheetIndex {
                     SearchablePickerSheet(
                         title: "\(ports.first { $0.index == portIndex }?.label ?? "出货口") 出什么",
-                        items: vm.solidMaterials.map { SearchablePickerItem(id: $0.itemId, title: $0.name, iconName: $0.name) },
+                        items: vm.solidMaterials.map { SearchablePickerItem(id: $0.itemId, title: DisplayName.item($0.name), iconName: $0.name) },
                         selectedID: current.portMaterialIDs[portIndex],
                         clearTitle: "不出货",
                         onSelect: { material in
@@ -657,7 +657,7 @@ struct BuildingDetailPanel: View {
             } label: {
                 HStack(spacing: 4) {
                     if let current { ItemIcon(name: current, size: 20) }
-                    Label(current ?? "选择材料", systemImage: "shippingbox.fill")
+                    Label(current.map(DisplayName.item) ?? String(localized: "选择材料"), systemImage: "shippingbox.fill")
                 }
                     .font(AppTypography.supporting)
                     .foregroundColor(AppColors.success)
@@ -666,7 +666,7 @@ struct BuildingDetailPanel: View {
             .sheet(isPresented: $showMaterialSheet) {
                 SearchablePickerSheet(
                     title: def.isUndergroundOutlet ? "暗管出口出什么" : "选择取货材料",
-                    items: candidates.map { SearchablePickerItem(id: $0.itemId, title: $0.name, iconName: $0.name) },
+                    items: candidates.map { SearchablePickerItem(id: $0.itemId, title: DisplayName.item($0.name), iconName: $0.name) },
                     selectedID: vm.selectedPlaced?.outletMaterialID,
                     clearTitle: "未设置",
                     onSelect: { material in

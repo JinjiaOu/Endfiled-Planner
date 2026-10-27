@@ -36,6 +36,9 @@ def generate(tablecfg):
     def load(name):
         return json.loads((tablecfg / (name + '.json')).read_text(encoding='utf-8'))
     texts, items, buildings = load('I18nTextTable_CN'), load('ItemTable'), load('FactoryBuildingTable')
+    english = load('I18nTextTable_EN')
+    def en(ref):
+        return english.get(str(ref.get('id')), '')
     def name(ref):
         return texts.get(str(ref.get('id')), ref.get('text', ''))
     containers = {}
@@ -151,7 +154,24 @@ def generate(tablecfg):
                       'secondsPerItem': f['progressRound'] * station_ms / 1000})
     fuels.sort(key=lambda x: x['powerProvide'])
     common = {'schemaVersion': 1, 'source': 'EndfieldData/TableCfg', 'language': 'zh-CN'}
-    return {'fuels.json': dict(common, fuels=fuels), 'recipes.json': dict(common, recipes=recipes), 'devices.json': dict(common, categories=categories, devices=devices), 'items.json': item_rows}
+    # Presentation-only translations. Never replace the Chinese identifiers in schema-1 data.
+    names = {
+        'items': {k: en(v['name']) for k, v in items.items() if en(v['name'])},
+        'devices': {d['id']: en(buildings[d['id']]['name']) for d in devices if d['id'] in buildings and en(buildings[d['id']]['name'])},
+        'categories': {k: en(v['name']) for k, v in load('FactoryQuickBarTypeTable').items() if en(v['name'])},
+        'modes': {k: en(v['machineModeTypeName']) for k, v in mode_names.items() if en(v['machineModeTypeName'])},
+    }
+    names['categories']['hub'] = 'Core'
+    for table, data_key, _, _ in LOGISTICS:
+        for key, row in load(table).items():
+            if en(row[data_key]['name']):
+                names['devices'][key] = en(row[data_key]['name'])
+    # Container display names follow the same composition as the Chinese data.
+    for key, (container, content) in containers.items():
+        if en(items[container]['name']) and en(items[content]['name']):
+            names['items'][key] = f"{en(items[container]['name'])} ({en(items[content]['name'])})"
+    names = {kind: dict(sorted(values.items())) for kind, values in sorted(names.items())}
+    return {'names_en.json': names, 'fuels.json': dict(common, fuels=fuels), 'recipes.json': dict(common, recipes=recipes), 'devices.json': dict(common, categories=categories, devices=devices), 'items.json': item_rows}
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
@@ -167,7 +187,7 @@ def main():
     commit = subprocess.check_output(['git', '-C', str(args.tablecfg), 'rev-parse', 'HEAD'], text=True).strip()
     meta_path = args.output / 'datapack_meta.json'
     # Preserve generation time when contents and source commit are unchanged.
-    unchanged = all((args.output / file).exists() and json.loads((args.output / file).read_text(encoding='utf-8')) == value for file, value in pack.items())
+    unchanged = all((args.output / file).exists() and json.loads((args.output / file).read_text(encoding='utf-8')) == value for file, value in pack.items() if file != 'names_en.json')
     previous = json.loads(meta_path.read_text(encoding='utf-8')) if meta_path.exists() else {}
     timestamp = previous.get('generatedAt') if unchanged and previous.get('sourceCommit') == commit else None
     pack['datapack_meta.json'] = {'schemaVersion': 1, 'sourceCommit': commit,

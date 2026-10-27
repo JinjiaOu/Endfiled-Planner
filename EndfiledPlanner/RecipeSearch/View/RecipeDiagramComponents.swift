@@ -13,7 +13,7 @@ struct RecipeDiagramCard: View {
         VStack(alignment: .leading, spacing: compact ? 2 : 5) {
             HStack(spacing: 5) {
                 if !compact { ItemIcon(name: node.name, size: 20) }
-                Text(node.name).font(.system(size: compact ? 9 : 14, weight: .semibold))
+                Text(verbatim: DisplayName.item(node.name)).font(.system(size: compact ? 9 : 14, weight: .semibold))
                     .lineLimit(2)
             }
             .foregroundStyle(AppColors.primaryText)
@@ -21,7 +21,7 @@ struct RecipeDiagramCard: View {
                 .font(.system(size: compact ? 8 : 12, weight: .medium, design: .monospaced))
                 .foregroundStyle(AppColors.secondaryText)
             if !compact, let recipe = node.recipe {
-                Text(recipe.machine).font(.system(size: 10)).foregroundStyle(AppColors.secondaryText).lineLimit(1)
+                Text(verbatim: recipe.displayMachine).font(.system(size: 10)).foregroundStyle(AppColors.secondaryText).lineLimit(1)
                 if recipe.time > 0 && !RecipeViewModel.isMiningMachine(recipe.machine) {
                     Text("\(recipe.time)s").font(.system(size: 10, design: .monospaced))
                         .foregroundStyle(AppColors.secondaryText)
@@ -51,12 +51,12 @@ struct RecipeDependencyOutline: View {
                     HStack(alignment: .top, spacing: AppSpacing.sm) {
                         ItemIcon(name: node.name, size: AppSize.itemIcon)
                         VStack(alignment: .leading, spacing: AppSpacing.xxs) {
-                            Text(node.name).font(AppTypography.rowTitle).foregroundStyle(AppColors.primaryText)
+                            Text(verbatim: DisplayName.item(node.name)).font(AppTypography.rowTitle).foregroundStyle(AppColors.primaryText)
                             Text("数量 \(node.amount)").font(AppTypography.numeric).foregroundStyle(AppColors.secondaryText)
                         }
                     }
                     if let recipe = node.recipe {
-                        Text(recipe.machine).font(AppTypography.supporting).foregroundStyle(AppColors.secondaryText)
+                        Text(verbatim: recipe.displayMachine).font(AppTypography.supporting).foregroundStyle(AppColors.secondaryText)
                         if recipe.time > 0 && !RecipeViewModel.isMiningMachine(recipe.machine) {
                             Label("\(recipe.time) 秒", systemImage: "clock")
                                 .font(AppTypography.supporting).foregroundStyle(AppColors.secondaryText)

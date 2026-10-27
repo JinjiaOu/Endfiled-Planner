@@ -79,14 +79,14 @@ struct BeltDetailPanel: View {
     @ViewBuilder
     private var content: some View {
         if let flow {
-            AppKeyValueRow(title: "连接", value: "\(flow.fromName) → \(flow.toName ?? "（未接）")")
+            AppKeyValueRow(title: "连接", value: "\(DisplayName.device(flow.fromName)) → \(flow.toName.map(DisplayName.device) ?? String(localized: "（未接）"))")
             let items = flow.flow.filter { $0.value > 1e-9 }
             if !items.isEmpty {
                 AppSectionHeader(title: "货物")
                 ForEach(items.keys.sorted(), id: \.self) { item in
                     HStack(alignment: .top, spacing: AppSpacing.xs) {
                         ItemIcon(name: item, size: AppSize.icon)
-                        AppKeyValueRow(title: item, value: String(format: "%.1f /min", (items[item] ?? 0) * 60))
+                        AppKeyValueRow(title: DisplayName.item(item), value: String(format: "%.1f /min", (items[item] ?? 0) * 60))
                     }
                 }
             }

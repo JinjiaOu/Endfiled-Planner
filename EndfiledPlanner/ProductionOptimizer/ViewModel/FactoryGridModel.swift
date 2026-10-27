@@ -341,7 +341,7 @@ class FactoryGridModel {
         }
         let lines = outputRates.map { key, value in
             ProductionLine(output: key, ratePerMin: value.rate,
-                           buildingNames: value.buildings.sorted { $0.key < $1.key }.map { "\($0.key) ×\($0.value)" })
+                           buildingNames: value.buildings.sorted { $0.key < $1.key }.map { "\(DisplayName.device($0.key)) ×\($0.value)" })
         }.sorted { $0.ratePerMin > $1.ratePerMin }
 
         var inputRates: [String: (rate: Double, buildings: [String: Int])] = [:]
@@ -364,7 +364,7 @@ class FactoryGridModel {
         }
         let consumption = inputRates.map { key, value in
             ProductionLine(output: key, ratePerMin: value.rate,
-                           buildingNames: value.buildings.sorted { $0.key < $1.key }.map { "\($0.key) ×\($0.value)" })
+                           buildingNames: value.buildings.sorted { $0.key < $1.key }.map { "\(DisplayName.device($0.key)) ×\($0.value)" })
         }.sorted { $0.ratePerMin > $1.ratePerMin }
 
         let worst = sim.machines
@@ -423,7 +423,7 @@ class FactoryGridModel {
                 .filter { recipeIDs.contains($0.id) }
                 .compactMap { rules.blockedMode(of: $0, on: def) }
             if let mode = blocked.first {
-                conflicts[placed.id] = "\(layout.mapType.displayName)不能用\(mode.name)配方"
+                conflicts[placed.id] = "\(layout.mapType.displayName)不能用\(mode.displayName)配方"
                 continue
             }
             if let hint = pumpZoneViolation(definition: def, placed: placed, rules: rules) {

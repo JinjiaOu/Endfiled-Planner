@@ -1,7 +1,7 @@
 {
   "formatVersion": 1,
-  "dataVersion": "23dcbfe95c9f82a7",
-  "builtAt": "2026-10-19T04:21:32+00:00",
+  "dataVersion": "9abf33416f7a5cdc",
+  "builtAt": "2026-10-27T15:12:07+00:00",
   "sourceCommit": "8b955ea78c6f04b6e5164b75f63f46b503c5f6f2",
   "files": {
     "recipes.json": {
@@ -23,6 +23,10 @@
     "icon_fallbacks.json": {
       "sha256": "d46ffaae32d9030859a91c5a8691c15d5096da41868d74e382da1ec9d30e4333",
       "size": 4351
+    },
+    "names_en.json": {
+      "sha256": "a170c82c3b1cd23fc1ae60247ab056814255e83b573f74dabeb186a7ee888fb5",
+      "size": 184659
     }
   },
   "icons": {

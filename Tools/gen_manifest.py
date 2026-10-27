@@ -14,7 +14,7 @@ OTHER = ROOT / 'EndfiledPlanner/other'
 # 数据包格式版本：App 只接受不高于自己认识的版本（DataPackStore.supportedFormat），字段结构变了才加
 FORMAT_VERSION = 1
 # 能下发的数据文件。legacy_recipe_index.json 是旧存档一次性迁移表，不会再变，不下发
-FILES = ['recipes.json', 'items.json', 'devices.json', 'fuels.json', 'icon_fallbacks.json']
+FILES = ['recipes.json', 'items.json', 'devices.json', 'fuels.json', 'icon_fallbacks.json', 'names_en.json']
 
 def entry(path):
     data = path.read_bytes()

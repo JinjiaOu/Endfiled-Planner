@@ -26,12 +26,12 @@ struct AppPageHeader: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppSpacing.xs) {
-            Text(title)
+            Text(verbatim: title)
                 .font(AppTypography.pageTitle)
                 .foregroundStyle(AppColors.primaryText)
                 .accessibilityAddTraits(.isHeader)
             if let subtitle {
-                Text(subtitle)
+                Text(verbatim: subtitle)
                     .font(AppTypography.supporting)
                     .foregroundStyle(AppColors.secondaryText)
             }
@@ -47,12 +47,12 @@ struct AppSectionHeader: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppSpacing.xxs) {
-            Text(title)
+            Text(verbatim: title)
                 .font(AppTypography.sectionTitle)
                 .foregroundStyle(AppColors.primaryText)
                 .accessibilityAddTraits(.isHeader)
             if let subtitle {
-                Text(subtitle)
+                Text(verbatim: subtitle)
                     .font(AppTypography.supporting)
                     .foregroundStyle(AppColors.secondaryText)
             }
