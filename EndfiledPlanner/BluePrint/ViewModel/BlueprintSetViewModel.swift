@@ -89,6 +89,6 @@ class BlueprintSetViewModel: ObservableObject {
     
     var availableRegions: [String] {
         let regions = Set(blueprintSets.map { $0.region })
-        return [String(localized: "全部")] + regions.sorted()
+        return ["全部"] + regions.sorted()
     }
 }

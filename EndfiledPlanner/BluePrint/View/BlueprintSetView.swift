@@ -136,7 +136,7 @@ struct BlueprintSetRegionMenu: View {
         Menu {
             ForEach(options, id: \.self) { option in
                 Button { selection = option == "全部" ? nil : option } label: {
-                    if option == (selection ?? String(localized: "全部")) { Label(DisplayName.region(option), systemImage: "checkmark") }
+                    if option == (selection ?? "全部") { Label(DisplayName.region(option), systemImage: "checkmark") }
                     else { Text(verbatim: DisplayName.region(option)) }
                 }
             }

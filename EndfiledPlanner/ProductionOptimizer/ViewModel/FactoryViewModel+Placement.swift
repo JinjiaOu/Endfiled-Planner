@@ -70,21 +70,30 @@ extension FactoryViewModel {
         guard saved.mapType != map else { return [] }
         let rules = map.rules
         var counts: [String: Int] = [:]
+        var displayReasons: [String: String] = [:]
         for placed in saved.buildings {
             guard let def = BuildingDefinition.find(placed.definitionID) else { continue }
             let reason: String?
+            let displayReason: String?
             if !rules.allows(def) {
-                reason = String(localized: "\(def.displayName)（\(map.displayName)不能造）")
+                reason = "\(def.name)（\(map.rawValue)不能造）"
+                displayReason = String(localized: "\(def.displayName)（\(map.displayName)不能造）")
             } else if let mode = recipesOf(placed, def: def).compactMap({ rules.blockedMode(of: $0, on: def) }).first {
-                reason = String(localized: "\(def.displayName)（\(mode.displayName)配方\(map.displayName)不能用）")
+                reason = "\(def.name)（\(mode.name)配方\(map.rawValue)不能用）"
+                displayReason = String(localized: "\(def.displayName)（\(mode.displayName)配方\(map.displayName)不能用）")
             } else if BuildingDefinition.warehousePortIDs.contains(def.id) {
-                reason = String(localized: "\(def.displayName)（两张地图接仓库的方式不同，要重新贴好）")
+                reason = "\(def.name)（两张地图接仓库的方式不同，要重新贴好）"
+                displayReason = String(localized: "\(def.displayName)（两张地图接仓库的方式不同，要重新贴好）")
             } else {
                 reason = nil
+                displayReason = nil
             }
-            if let reason { counts[reason, default: 0] += 1 }
+            if let reason {
+                counts[reason, default: 0] += 1
+                displayReasons[reason] = displayReason
+            }
         }
-        var lines = counts.sorted { $0.key < $1.key }.map { "\(DisplayName.device($0.key)) ×\($0.value)" }
+        var lines = counts.sorted { $0.key < $1.key }.map { "\(displayReasons[$0.key] ?? $0.key) ×\($0.value)" }
         let pipeCount = saved.belts.filter { $0.lineType == .pipe }.count
         if !rules.allowsPipes && pipeCount > 0 {
             lines.append(String(localized: "管道 ×\(pipeCount)（\(map.displayName)不能用管道，不参与计算）"))
