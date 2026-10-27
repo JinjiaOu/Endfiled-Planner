@@ -104,7 +104,7 @@ struct FactoryGridView: View {
             ZStack(alignment: .top) {
                 Rectangle().fill(AppColors.info.opacity(0.08))
                 if cellSize >= 18 {
-                    Text("水泵区 · 默认通电")
+                    Text(String(localized: "水泵区 · 默认通电"))
                         .font(.system(size: max(8, min(cellSize * 0.32, 13)), weight: .semibold))
                         .foregroundStyle(AppColors.info)
                         .lineLimit(1)
@@ -165,7 +165,7 @@ struct FactoryGridView: View {
                     }
                     context.stroke(rails, with: .color(FactoryCanvasPalette.structure.opacity(0.6)), lineWidth: max(0.75, c * 0.03))
                     if c >= 18 {
-                        let label = Text("仓库存取线")
+                        let label = Text(String(localized: "仓库存取线"))
                             .font(.system(size: min(c * 0.45, 14), weight: .semibold))
                             .foregroundColor(FactoryCanvasPalette.secondaryInk)
                         context.draw(label, at: CGPoint(x: r.midX, y: r.midY))
@@ -668,7 +668,7 @@ struct FactoryGridView: View {
         let settingLabel: (text: String, isSet: Bool)?
         let hasMapConflict = vm.stats.mapConflicts[placed.id] != nil
         if hasMapConflict {
-            settingLabel = ("地图不支持", false)
+            settingLabel = (String(localized: "地图不支持"), false)
         } else if def.choosesOutletMaterial {
             let name = placed.outletMaterialID.flatMap(ItemCatalog.name(for:))
             settingLabel = (name.map(DisplayName.item) ?? String(localized: "未设置"), name != nil)
@@ -779,7 +779,7 @@ struct FactoryGridView: View {
                     .padding(3)
                     .background(Color.black.opacity(0.55))
                     .padding(3)
-                    .accessibilityLabel("未通电")
+                    .accessibilityLabel(String(localized: "未通电"))
                     .allowsHitTesting(false)
             }
         }
@@ -790,16 +790,16 @@ struct FactoryGridView: View {
                     .overlay(Circle().stroke(Color.black.opacity(0.5), lineWidth: 1))
                     .frame(width: 8, height: 8)
                     .padding(4)
-                    .accessibilityLabel(displayedStatus.label)
+                    .accessibilityLabel(displayedStatus.displayLabel)
                     .allowsHitTesting(false)
             }
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(def.displayName)
-        .accessibilityValue([displayedStatus?.label, settingLabel?.text].compactMap { $0 }.joined(separator: "，"))
+        .accessibilityValue([displayedStatus?.displayLabel, settingLabel?.text].compactMap { $0 }.joined(separator: "，"))
         .accessibilityAddTraits(.isButton)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
-        .accessibilityHint("双击选择建筑")
+        .accessibilityHint(String(localized: "双击选择建筑"))
         .accessibilityAction {
             vm.editMode = .select
             vm.selectedBuildingID = placed.id

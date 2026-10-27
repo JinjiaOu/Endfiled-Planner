@@ -4,7 +4,7 @@ import SwiftUI
 
 struct AppSearchField: View {
     @Binding var text: String
-    var prompt = "搜索"
+    var prompt = String(localized: "搜索")
     @FocusState private var isFocused: Bool
 
     var body: some View {
@@ -21,7 +21,7 @@ struct AppSearchField: View {
                 .submitLabel(.search)
                 .accessibilityLabel(prompt)
             if !text.isEmpty {
-                AppIconButton(title: "清除搜索", systemImage: "xmark.circle.fill") { text = "" }
+                AppIconButton(title: String(localized: "清除搜索"), systemImage: "xmark.circle.fill") { text = "" }
             }
         }
         .padding(.leading, AppSpacing.sm)
@@ -122,7 +122,7 @@ struct AppSelectionRow<Icon: View>: View {
         .disabled(!isSelectable)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(spokenLabel)
-        .accessibilityValue(isSelected ? "已选择" : "未选择")
+        .accessibilityValue(isSelected ? String(localized: "已选择") : String(localized: "未选择"))
         .accessibilityHint(hint)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }

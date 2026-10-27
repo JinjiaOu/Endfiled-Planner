@@ -24,9 +24,9 @@ struct OptimizerDisclaimerModifier: ViewModifier {
                 presented = true
                 showing = true
             }
-            .alert("免责声明", isPresented: $showing) {
-                Button("我知道了", role: .cancel) {}
-                Button("不再提示") { hidden = true }
+            .alert(String(localized: "免责声明"), isPresented: $showing) {
+                Button(String(localized: "我知道了"), role: .cancel) {}
+                Button(String(localized: "不再提示")) { hidden = true }
             } message: {
                 Text("""
                 本模块为玩家自制的非官方工具，与《明日方舟：终末地》官方无关。

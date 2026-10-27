@@ -19,22 +19,22 @@ private struct FactoryAlertsModifier: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .alert("清空布局", isPresented: $showClearConfirm) {
-                Button("取消", role: .cancel) {}
-                Button("清空", role: .destructive) { vm.clearLayout() }
+            .alert(String(localized: "清空布局"), isPresented: $showClearConfirm) {
+                Button(String(localized: "取消"), role: .cancel) {}
+                Button(String(localized: "清空"), role: .destructive) { vm.clearLayout() }
             } message: {
-                Text("将删除所有建筑和传送带（可以撤销）。")
+                Text(String(localized: "将删除所有建筑和传送带（可以撤销）。"))
             }
             .alert(
-                "加载预设产线",
+                String(localized: "加载预设产线"),
                 isPresented: Binding(
                     get: { pendingPreset != nil },
                     set: { if !$0 { pendingPreset = nil } }
                 ),
                 presenting: pendingPreset
             ) { preset in
-                Button("取消", role: .cancel) { pendingPreset = nil }
-                Button("加载", role: .destructive) {
+                Button(String(localized: "取消"), role: .cancel) { pendingPreset = nil }
+                Button(String(localized: "加载"), role: .destructive) {
                     vm.loadPreset(preset)
                     pendingPreset = nil
                 }
@@ -43,41 +43,41 @@ private struct FactoryAlertsModifier: ViewModifier {
             }
             // 切换地图确认
             .alert(
-                pendingMapSwitch.map { "切换到\($0.displayName)？" } ?? "切换地图",
+                pendingMapSwitch.map { String(localized: "切换到\($0.displayName)？") } ?? String(localized: "切换地图"),
                 isPresented: Binding(
                     get: { pendingMapSwitch != nil },
                     set: { if !$0 { pendingMapSwitch = nil } }
                 )
             ) {
-                Button("取消", role: .cancel) { pendingMapSwitch = nil }
-                Button("切换", role: .destructive) {
+                Button(String(localized: "取消"), role: .cancel) { pendingMapSwitch = nil }
+                Button(String(localized: "切换"), role: .destructive) {
                     if let map = pendingMapSwitch { vm.switchMap(to: map) }
                     pendingMapSwitch = nil
                 }
             } message: {
-                Text("两张地图的仓库取线规则不一样，切换会清空当前所有建筑和传送带（可以撤销）。")
+                Text(String(localized: "两张地图的仓库取线规则不一样，切换会清空当前所有建筑和传送带（可以撤销）。"))
             }
             // 挪动/旋转建筑后有线走不通被断开
             .alert(
-                "线路已断开",
+                String(localized: "线路已断开"),
                 isPresented: Binding(
                     get: { vm.lineReattachMessage != nil },
                     set: { if !$0 { vm.lineReattachMessage = nil } }
                 )
             ) {
-                Button("知道了", role: .cancel) { vm.lineReattachMessage = nil }
+                Button(String(localized: "知道了"), role: .cancel) { vm.lineReattachMessage = nil }
             } message: {
                 Text(vm.lineReattachMessage ?? "")
             }
             // 协议核心不让删的提示
             .alert(
-                "无法收纳",
+                String(localized: "无法收纳"),
                 isPresented: Binding(
                     get: { vm.eraseBlockedMessage != nil },
                     set: { if !$0 { vm.eraseBlockedMessage = nil } }
                 )
             ) {
-                Button("知道了", role: .cancel) { vm.eraseBlockedMessage = nil }
+                Button(String(localized: "知道了"), role: .cancel) { vm.eraseBlockedMessage = nil }
             } message: {
                 Text(vm.eraseBlockedMessage ?? "")
             }
@@ -199,28 +199,28 @@ struct FactoryLayoutView: View {
             if vm.showSaveConfirm { saveToast }
         }
         .onGeometryChange(for: CGSize.self) { $0.size } action: { workspaceSize = $0 }
-        .navigationTitle("基建规划")
+        .navigationTitle(String(localized: "基建规划"))
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(onExit != nil)
         .toolbar {
             if let onExit {
                 ToolbarItem(placement: .topBarLeading) {
                     Button(action: onExit) {
-                        Label("工作台", systemImage: "chevron.left")
+                        Label(String(localized: "工作台"), systemImage: "chevron.left")
                     }
-                    .accessibilityLabel("返回工作台，保留当前编辑状态")
+                    .accessibilityLabel(String(localized: "返回工作台，保留当前编辑状态"))
                 }
             }
             ToolbarItem(placement: .navigationBarTrailing) {
                 Menu {
                     Button { vm.saveLayout() } label: {
-                        Label("保存画布", systemImage: "square.and.arrow.down")
+                        Label(String(localized: "保存画布"), systemImage: "square.and.arrow.down")
                     }
                     Button { exportLayoutImage() } label: {
-                        Label("导出布局图片", systemImage: "photo")
+                        Label(String(localized: "导出布局图片"), systemImage: "photo")
                     }
                     Button { showGuide = true } label: {
-                        Label("使用指南", systemImage: "questionmark.circle")
+                        Label(String(localized: "使用指南"), systemImage: "questionmark.circle")
                     }
                     Menu {
                         ForEach(MapType.allCases, id: \.self) { map in
@@ -235,7 +235,7 @@ struct FactoryLayoutView: View {
                             }
                         }
                     } label: {
-                        Label("切换地图（当前：\(vm.layout.mapType.displayName)）", systemImage: "map")
+                        Label(String(localized: "切换地图（当前：\(vm.layout.mapType.displayName)）"), systemImage: "map")
                     }
                     ForEach(FactoryPreset.allCases) { preset in
                         Button { pendingPreset = preset } label: {
@@ -243,13 +243,13 @@ struct FactoryLayoutView: View {
                         }
                     }
                     Button(role: .destructive) { showClearConfirm = true } label: {
-                        Label("清空布局", systemImage: "trash")
+                        Label(String(localized: "清空布局"), systemImage: "trash")
                     }
                 } label: {
                     Image(systemName: "ellipsis.circle")
                         .foregroundColor(AppColors.accent)
                 }
-                .accessibilityLabel("画布选项：保存、导出图片、使用指南、地图、预设与清空")
+                .accessibilityLabel(String(localized: "画布选项：保存、导出图片、使用指南、地图、预设与清空"))
                 // 挂在菜单上，不往主视图的修饰链里加（那条链再长会类型检查超时）
                 .sheet(isPresented: $showGuide) {
                     NavigationStack { FactoryGuideView() }
@@ -259,24 +259,24 @@ struct FactoryLayoutView: View {
         .toolbarBackground(.visible, for: .navigationBar)
         .toolbarBackground(AppColors.background, for: .navigationBar)
         .tint(AppColors.accent)
-        .alert("存为布局", isPresented: $showSaveGroupPrompt) {
-            TextField("布局名字", text: $saveGroupName)
-            Button("取消", role: .cancel) {}
-            Button("保存") { saveGroup() }
+        .alert(String(localized: "存为布局"), isPresented: $showSaveGroupPrompt) {
+            TextField(String(localized: "布局名字"), text: $saveGroupName)
+            Button(String(localized: "取消"), role: .cancel) {}
+            Button(String(localized: "保存")) { saveGroup() }
         } message: {
-            Text("选中的建筑和它们的设置、选中的线，以及两头接在这些建筑上的线会一起存下来")
+            Text(String(localized: "选中的建筑和它们的设置、选中的线，以及两头接在这些建筑上的线会一起存下来"))
         }
         .sheet(isPresented: $showMyLayouts, onDismiss: handleLayoutToPlace) {
             MyLayoutsView(store: myLayouts, currentMap: vm.layout.mapType) { layoutToPlace = $0 }
         }
-        .alert("跨地图放置", isPresented: Binding(get: { crossMapLayout != nil }, set: { if !$0 { crossMapLayout = nil } })) {
-            Button("取消", role: .cancel) { crossMapLayout = nil }
-            Button("仍然放置") {
+        .alert(String(localized: "跨地图放置"), isPresented: Binding(get: { crossMapLayout != nil }, set: { if !$0 { crossMapLayout = nil } })) {
+            Button(String(localized: "取消"), role: .cancel) { crossMapLayout = nil }
+            Button(String(localized: "仍然放置")) {
                 if let saved = crossMapLayout { beginPlacement(saved) }
                 crossMapLayout = nil
             }
         } message: {
-            Text("这份布局来自\(crossMapLayout?.mapType.displayName ?? "")，放到\(vm.layout.mapType.displayName)后下面这些会标红、不参与计算：\n"
+            Text(String(localized: "这份布局来自\(crossMapLayout?.mapType.displayName ?? "")，放到\(vm.layout.mapType.displayName)后下面这些会标红、不参与计算：\n")
                  + crossMapWarnings.joined(separator: "\n"))
         }
         .modifier(FactoryAlertsModifier(vm: vm, showClearConfirm: $showClearConfirm,
@@ -404,8 +404,8 @@ struct FactoryLayoutView: View {
                 .id(belt.id)
         } else {
             VStack(alignment: .leading, spacing: AppSpacing.md) {
-                AppSectionHeader(title: "属性检查器", subtitle: "选择建筑或线路")
-                Text("点按画布中的设施查看配置与运行状态，也可以从建造面板添加设施。")
+                AppSectionHeader(title: String(localized: "属性检查器"), subtitle: String(localized: "选择建筑或线路"))
+                Text(String(localized: "点按画布中的设施查看配置与运行状态，也可以从建造面板添加设施。"))
                     .font(AppTypography.supporting)
                     .foregroundStyle(AppColors.secondaryText)
                     .fixedSize(horizontal: false, vertical: true)
@@ -413,7 +413,7 @@ struct FactoryLayoutView: View {
                     showBuildingPalette = true
                     vm.editMode = .select
                 } label: {
-                    Label("建造设施", systemImage: "plus")
+                    Label(String(localized: "建造设施"), systemImage: "plus")
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(AppActionStyle(emphasis: .secondary))
@@ -435,11 +435,11 @@ struct FactoryLayoutView: View {
     private func buildingPalette(vertical: Bool) -> some View {
         VStack(spacing: 0) {
             HStack(spacing: AppSpacing.xs) {
-                Text("设施").font(AppTypography.rowTitle)
-                Text("长按拖入画布").font(AppTypography.caption).foregroundStyle(AppColors.secondaryText)
+                Text(String(localized: "设施")).font(AppTypography.rowTitle)
+                Text(String(localized: "长按拖入画布")).font(AppTypography.caption).foregroundStyle(AppColors.secondaryText)
                 Spacer(minLength: 0)
                 placementRotationButton
-                AppIconButton(title: "关闭建造面板", systemImage: "xmark") {
+                AppIconButton(title: String(localized: "关闭建造面板"), systemImage: "xmark") {
                     withAnimation(AppMotion.panel(reduceMotion: reduceMotion)) {
                         showBuildingPalette = false
                         vm.editMode = .select
@@ -452,7 +452,7 @@ struct FactoryLayoutView: View {
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: AppSpacing.xxs) {
-                    categoryChip(category: nil, label: "全部")
+                    categoryChip(category: nil, label: String(localized: "全部"))
                     ForEach(BuildingCategory.allCases, id: \.self) { cat in
                         categoryChip(category: cat, label: cat.displayName)
                     }
@@ -495,7 +495,7 @@ struct FactoryLayoutView: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("放置前旋转，当前朝向 \(vm.pendingRotation.symbol)")
+        .accessibilityLabel(String(localized: "放置前旋转，当前朝向 \(vm.pendingRotation.symbol)"))
     }
 
     private var filteredBuildings: [BuildingDefinition] {
@@ -547,7 +547,7 @@ struct FactoryLayoutView: View {
         // 手势系统，按下就滑时长按自动失败，滚动不受影响；长按成功后手指移动会持续回调位置。
         // 原来长按弹出的"旋转"菜单会跟这个冲突，去掉了，放置前旋转用工具栏的旋转按钮
         .accessibilityElement(children: .combine)
-        .accessibilityHint("长按并拖到画布放置")
+        .accessibilityHint(String(localized: "长按并拖到画布放置"))
         .gesture(PaletteHoldDragGesture(
             onChanged: { location in
                 if draggingDef == nil {
@@ -577,7 +577,7 @@ struct FactoryLayoutView: View {
     private func saveGroup() {
         guard let saved = vm.makeSavedLayout(name: saveGroupName) else { return }
         myLayouts.add(saved)
-        vm.toastText = "已存到我的布局：\(saved.name)"
+        vm.toastText = String(localized: "已存到我的布局：\(saved.name)")
         withAnimation { vm.showSaveConfirm = true }
     }
 
@@ -727,12 +727,12 @@ struct FactoryLayoutView: View {
             let red = Color(red: 0.95, green: 0.3, blue: 0.25)
             VStack(alignment: .leading, spacing: 3) {
                 if shortage > 0.5 {
-                    Label(String(format: "电力不足：缺 %.0f MW（耗电 %.0f / 发电 %.0f）",
+                    Label(String(format: String(localized: "电力不足：缺 %.0f MW（耗电 %.0f / 发电 %.0f）"),
                                  shortage, stats.totalPowerConsumed, stats.totalPowerGenerated),
                           systemImage: "bolt.trianglebadge.exclamationmark.fill")
                 }
                 if unpowered > 0 {
-                    Label("\(unpowered) 个建筑不在供电桩范围内，不运行", systemImage: "bolt.slash.fill")
+                    Label(String(localized: "\(unpowered) 个建筑不在供电桩范围内，不运行"), systemImage: "bolt.slash.fill")
                 }
             }
             .font(AppTypography.supporting)
@@ -749,7 +749,7 @@ struct FactoryLayoutView: View {
         HStack(spacing: 0) {
             utilizationButton
             if vm.showUtilization {
-                AppIconButton(title: "查看利用率图例", systemImage: "info.circle") { showUtilizationLegend = true }
+                AppIconButton(title: String(localized: "查看利用率图例"), systemImage: "info.circle") { showUtilizationLegend = true }
                     .popover(isPresented: $showUtilizationLegend, arrowEdge: .bottom) {
                         utilizationLegend
                             .padding(AppSpacing.xs)
@@ -771,7 +771,7 @@ struct FactoryLayoutView: View {
         Button {
             withAnimation(AppMotion.feedback(reduceMotion: reduceMotion)) { vm.showUtilization.toggle() }
         } label: {
-            Label("线的利用率", systemImage: "gauge.with.dots.needle.50percent")
+            Label(String(localized: "线的利用率"), systemImage: "gauge.with.dots.needle.50percent")
                 .font(AppTypography.caption.weight(.medium))
                 .foregroundStyle(vm.showUtilization ? AppColors.accent : AppColors.secondaryText)
                 .padding(.horizontal, AppSpacing.sm)
@@ -779,20 +779,20 @@ struct FactoryLayoutView: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(vm.showUtilization ? "关闭利用率视图" : "打开利用率视图")
+        .accessibilityLabel(vm.showUtilization ? String(localized: "关闭利用率视图") : String(localized: "打开利用率视图"))
         .accessibilityAddTraits(vm.showUtilization ? .isSelected : [])
     }
 
     private var utilizationLegend: some View {
         VStack(alignment: .leading, spacing: 0) {
             VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                Text("线的利用率").font(AppTypography.supporting.weight(.semibold))
-                legendRow(swatch: AnyView(Rectangle().fill(FactoryGridView.utilizationFullColor)), text: "跑满")
+                Text(String(localized: "线的利用率")).font(AppTypography.supporting.weight(.semibold))
+                legendRow(swatch: AnyView(Rectangle().fill(FactoryGridView.utilizationFullColor)), text: String(localized: "跑满"))
                 legendRow(swatch: AnyView(Text("60%").font(AppTypography.caption).foregroundStyle(.white)
-                    .background(.black)), text: "没跑满（刻度与百分比）")
+                    .background(.black)), text: String(localized: "没跑满（刻度与百分比）"))
                 legendRow(swatch: AnyView(Rectangle().fill(FactoryCanvasPalette.belt.opacity(0.25))),
-                          text: "空闲（变暗）")
-                legendRow(swatch: AnyView(Rectangle().fill(FactoryGridView.utilizationOverColor)), text: "被限流（瓶颈）")
+                          text: String(localized: "空闲（变暗）"))
+                legendRow(swatch: AnyView(Rectangle().fill(FactoryGridView.utilizationOverColor)), text: String(localized: "被限流（瓶颈）"))
             }
             .foregroundStyle(AppColors.primaryText)
         }
@@ -814,7 +814,7 @@ struct FactoryLayoutView: View {
         vm.selectedBuildingID = nil
         vm.selectedBeltID = nil
         guard let image = FactoryLayoutExporter.image(vm: vm, colorScheme: colorScheme) else {
-            vm.toastText = "画布是空的，没有可导出的内容"
+            vm.toastText = String(localized: "画布是空的，没有可导出的内容")
             vm.showSaveConfirm = true
             return
         }
@@ -825,7 +825,7 @@ struct FactoryLayoutView: View {
     private func highlightChip(_ item: String) -> some View {
         HStack(spacing: AppSpacing.xs) {
             ItemIcon(name: item, size: 20)
-            Text("高亮：\(DisplayName.item(item))")
+            Text(verbatim: String(localized: "高亮：\(DisplayName.item(item))"))
                 .font(AppTypography.caption.weight(.semibold))
                 .foregroundStyle(AppColors.primaryText)
                 .lineLimit(1)
@@ -838,7 +838,7 @@ struct FactoryLayoutView: View {
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("取消高亮")
+            .accessibilityLabel(String(localized: "取消高亮"))
         }
         .padding(.leading, AppSpacing.sm)
         .background(AppColors.surface, in: Capsule())
@@ -849,7 +849,7 @@ struct FactoryLayoutView: View {
         Button {
             withAnimation(AppMotion.feedback(reduceMotion: reduceMotion)) { showStats.toggle() }
         } label: {
-            Label("统计 · \(vm.stats.buildingCount)", systemImage: "chart.bar")
+            Label(String(localized: "统计 · \(vm.stats.buildingCount)"), systemImage: "chart.bar")
                 .font(AppTypography.caption.weight(.medium))
                 .foregroundStyle(AppColors.secondaryText)
                 .padding(.horizontal, AppSpacing.sm)
@@ -857,7 +857,7 @@ struct FactoryLayoutView: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("产能统计，\(vm.stats.buildingCount) 个建筑")
+        .accessibilityLabel(String(localized: "产能统计，\(vm.stats.buildingCount) 个建筑"))
     }
 
     private var statsOverlay: some View {
@@ -871,8 +871,8 @@ struct FactoryLayoutView: View {
                     .accessibilityHidden(true)
                 VStack(spacing: 0) {
                     HStack(alignment: .top, spacing: AppSpacing.xs) {
-                        AppSectionHeader(title: "产能统计", subtitle: "当前布局的稳定产能估算")
-                        AppIconButton(title: "关闭产能统计", systemImage: "xmark") { showStats = false }
+                        AppSectionHeader(title: String(localized: "产能统计"), subtitle: String(localized: "当前布局的稳定产能估算"))
+                        AppIconButton(title: String(localized: "关闭产能统计"), systemImage: "xmark") { showStats = false }
                     }
                     .padding(AppSpacing.md)
                     Divider().overlay(AppColors.border)

@@ -21,7 +21,7 @@ struct BlueprintSetCard: View {
                 }
                 Divider().overlay(AppColors.border)
                 HStack(spacing: AppSpacing.xs) {
-                    Label("\(blueprintSet.blueprints.count) 个蓝图", systemImage: "square.stack")
+                    Label(String(localized: "\(blueprintSet.blueprints.count) 个蓝图"), systemImage: "square.stack")
                         .font(AppTypography.caption.monospacedDigit())
                     Spacer(minLength: AppSpacing.xs)
                     Image(systemName: "chevron.right").font(AppTypography.caption)
@@ -39,7 +39,7 @@ struct BlueprintLocation: View {
     let location: String
 
     var body: some View {
-        Label(location.isEmpty ? region : "\(region) · \(location)", systemImage: "map")
+        Label(location.isEmpty ? DisplayName.region(region) : "\(DisplayName.region(region)) · \(location)", systemImage: "map")
             .font(AppTypography.caption)
             .foregroundStyle(AppColors.secondaryText)
             .fixedSize(horizontal: false, vertical: true)

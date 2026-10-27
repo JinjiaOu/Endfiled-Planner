@@ -74,11 +74,11 @@ extension FactoryViewModel {
             guard let def = BuildingDefinition.find(placed.definitionID) else { continue }
             let reason: String?
             if !rules.allows(def) {
-                reason = "\(def.displayName)（\(map.displayName)不能造）"
+                reason = String(localized: "\(def.displayName)（\(map.displayName)不能造）")
             } else if let mode = recipesOf(placed, def: def).compactMap({ rules.blockedMode(of: $0, on: def) }).first {
-                reason = "\(def.displayName)（\(mode.displayName)配方\(map.displayName)不能用）"
+                reason = String(localized: "\(def.displayName)（\(mode.displayName)配方\(map.displayName)不能用）")
             } else if BuildingDefinition.warehousePortIDs.contains(def.id) {
-                reason = "\(def.displayName)（两张地图接仓库的方式不同，要重新贴好）"
+                reason = String(localized: "\(def.displayName)（两张地图接仓库的方式不同，要重新贴好）")
             } else {
                 reason = nil
             }
@@ -87,7 +87,7 @@ extension FactoryViewModel {
         var lines = counts.sorted { $0.key < $1.key }.map { "\(DisplayName.device($0.key)) ×\($0.value)" }
         let pipeCount = saved.belts.filter { $0.lineType == .pipe }.count
         if !rules.allowsPipes && pipeCount > 0 {
-            lines.append("管道 ×\(pipeCount)（\(map.displayName)不能用管道，不参与计算）")
+            lines.append(String(localized: "管道 ×\(pipeCount)（\(map.displayName)不能用管道，不参与计算）"))
         }
         return lines
     }
@@ -154,14 +154,14 @@ extension FactoryViewModel {
         for placed in placement.buildings {
             guard let def = BuildingDefinition.find(placed.definitionID) else { continue }
             for cell in placed.occupiedCells(definition: def) {
-                if outOfBounds(cell) { return "超出画布了" }
+                if outOfBounds(cell) { return String(localized: "超出画布了") }
                 if occupied.contains(cell) { return "压到已有的建筑了，挪开再确认" }
             }
         }
         for belt in placement.belts {
             for seg in belt.segments {
-                if outOfBounds(seg.cell) { return "超出画布了" }
-                if rules.isInPumpZone(seg.cell) { return "线不能走进水泵区" }
+                if outOfBounds(seg.cell) { return String(localized: "超出画布了") }
+                if rules.isInPumpZone(seg.cell) { return String(localized: "线不能走进水泵区") }
                 if blocking.contains(seg.cell) { return "线穿过了已有的建筑，挪开再确认" }
             }
         }

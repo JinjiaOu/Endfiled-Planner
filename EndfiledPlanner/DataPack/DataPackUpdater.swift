@@ -75,7 +75,7 @@ final class DataPackUpdater: ObservableObject {
         let previous = state
         state = .checking
         guard let remote = await fetchManifest() else {
-            state = silent ? previous : .failed("连不上更新服务器，请稍后再试")
+            state = silent ? previous : .failed(String(localized: "连不上更新服务器，请稍后再试"))
             return
         }
         // 已经选了恢复内置时，下次启动用的是安装包数据，要跟安装包比
@@ -163,7 +163,7 @@ final class DataPackUpdater: ObservableObject {
         } catch {
             try? fm.removeItem(at: staging)
             print("数据包下载失败:", error)
-            state = .failed("下载失败，当前数据没有改动，可以再试一次")
+            state = .failed(String(localized: "下载失败，当前数据没有改动，可以再试一次"))
         }
     }
 

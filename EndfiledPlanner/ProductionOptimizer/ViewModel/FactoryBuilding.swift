@@ -88,7 +88,14 @@ enum MapType: String, Codable, CaseIterable {
     /// 景玉谷、首墩、应龙关这类分基地（满级 50×50）
     case wulingSmall = "武陵小基地"
 
-    var displayName: String { rawValue }
+    var displayName: String {
+        switch self {
+        case .valley4: return String(localized: "四号谷地")
+        case .valley4Small: return String(localized: "四号谷地小基地")
+        case .wuling: return String(localized: "武陵")
+        case .wulingSmall: return String(localized: "武陵小基地")
+        }
+    }
 
     /// 所属大地图：小基地跟主基地用同一套建筑、配方、管道规则，只是画布大小和仓库线不同
     var region: MapType {
@@ -331,8 +338,8 @@ enum LineType: String, Codable, CaseIterable {
 
     var displayName: String {
         switch self {
-        case .belt: return "传送带"
-        case .pipe: return "管道"
+        case .belt: return String(localized: "传送带")
+        case .pipe: return String(localized: "管道")
         }
     }
 }

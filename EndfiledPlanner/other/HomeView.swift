@@ -11,7 +11,7 @@ struct HomeView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: AppSpacing.xl) {
-                AppPageHeader(title: "终末地生产规划", subtitle: "查配方、找蓝图、规划产线。")
+                AppPageHeader(title: String(localized: "终末地生产规划"), subtitle: String(localized: "查配方、找蓝图、规划产线。"))
 
                 if dataUpdater.showsHomeBanner {
                     DataUpdateBanner()
@@ -25,7 +25,7 @@ struct HomeView: View {
             .frame(maxWidth: 1040, alignment: .leading)
             .frame(maxWidth: .infinity)
         }
-        .navigationTitle("工作台")
+        .navigationTitle(String(localized: "工作台"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -39,7 +39,7 @@ struct HomeView: View {
                             }
                         }
                 }
-                .accessibilityLabel(dataUpdater.hasUpdate ? "设置，有新数据可下载" : "设置")
+                .accessibilityLabel(dataUpdater.hasUpdate ? String(localized: "设置，有新数据可下载") : String(localized: "设置"))
             }
         }
         .appPageStyle(topographicBackground: true)
@@ -50,14 +50,14 @@ struct HomeView: View {
 
     private var taskList: some View {
         VStack(alignment: .leading, spacing: AppSpacing.md) {
-            AppSectionHeader(title: "开始规划")
-            taskRow("基建规划", subtitle: "编辑布局、连接产线、查看运行状态",
+            AppSectionHeader(title: String(localized: "开始规划"))
+            taskRow(String(localized: "基建规划"), subtitle: String(localized: "编辑布局、连接产线、查看运行状态"),
                     symbol: "building.2", destination: .factory)
-            taskRow("产量计算", subtitle: "选产物和目标产量，算出机器台数、原料和耗电",
+            taskRow(String(localized: "产量计算"), subtitle: String(localized: "选产物和目标产量，算出机器台数、原料和耗电"),
                     symbol: "function", destination: .calculator)
-            taskRow("配方分析", subtitle: "搜索物品，展开完整生产依赖",
+            taskRow(String(localized: "配方分析"), subtitle: String(localized: "搜索物品，展开完整生产依赖"),
                     symbol: "doc.text.magnifyingglass", destination: .recipes)
-            taskRow("社区蓝图", subtitle: "按作者和地图查找，复制蓝图码",
+            taskRow(String(localized: "社区蓝图"), subtitle: String(localized: "按作者和地图查找，复制蓝图码"),
                     symbol: "square.stack", destination: .blueprints)
         }
     }
@@ -141,20 +141,20 @@ private struct HomeDatabaseSummary: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppSpacing.sm) {
-            AppSectionHeader(title: "数据概览")
+            AppSectionHeader(title: String(localized: "数据概览"))
             VStack(alignment: .leading, spacing: AppSpacing.md) {
                 if dynamicTypeSize.isAccessibilitySize {
-                    AppKeyValueRow(title: "配方", value: "\(recipeCount)")
-                    AppKeyValueRow(title: "产物", value: "\(vm.recipes.keys.count)")
-                    AppKeyValueRow(title: "设备", value: "\(machineCount)")
+                    AppKeyValueRow(title: String(localized: "配方"), value: "\(recipeCount)")
+                    AppKeyValueRow(title: String(localized: "产物"), value: "\(vm.recipes.keys.count)")
+                    AppKeyValueRow(title: String(localized: "设备"), value: "\(machineCount)")
                 } else {
                     HStack(alignment: .top, spacing: AppSpacing.md) {
-                        AppMetricCell(title: "配方", value: "\(recipeCount)")
-                        AppMetricCell(title: "产物", value: "\(vm.recipes.keys.count)")
-                        AppMetricCell(title: "设备", value: "\(machineCount)")
+                        AppMetricCell(title: String(localized: "配方"), value: "\(recipeCount)")
+                        AppMetricCell(title: String(localized: "产物"), value: "\(vm.recipes.keys.count)")
+                        AppMetricCell(title: String(localized: "设备"), value: "\(machineCount)")
                     }
                 }
-                Text("配方按产物分组统计，多产物配方会分别计入。")
+                Text(String(localized: "配方按产物分组统计，多产物配方会分别计入。"))
                     .font(AppTypography.caption)
                     .foregroundStyle(AppColors.secondaryText)
                     .fixedSize(horizontal: false, vertical: true)

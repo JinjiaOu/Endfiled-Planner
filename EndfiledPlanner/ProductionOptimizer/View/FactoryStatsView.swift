@@ -18,7 +18,7 @@ struct FactoryStatsView: View {
                     withAnimation(AppMotion.panel(reduceMotion: reduceMotion)) { isExpanded.toggle() }
                 } label: {
                     HStack(alignment: .top, spacing: AppSpacing.xs) {
-                        AppSectionHeader(title: "产能统计", subtitle: String(format: "电力余量 %+.1f MW", powerMargin))
+                        AppSectionHeader(title: String(localized: "产能统计"), subtitle: String(localized: "电力余量 \(String(format: "%+.1f", powerMargin)) MW"))
                         Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
                             .foregroundStyle(AppColors.accent)
                     }
@@ -26,7 +26,7 @@ struct FactoryStatsView: View {
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .accessibilityValue(isExpanded ? "已展开" : "已折叠")
+                .accessibilityValue(isExpanded ? String(localized: "已展开") : String(localized: "已折叠"))
             }
             if isExpanded {
                 summary
@@ -44,11 +44,11 @@ struct FactoryStatsView: View {
 
     private var summary: some View {
         AppMetricGrid {
-            AppMetricCell(title: "建筑", value: "\(stats.buildingCount)", unit: "总数")
-            AppMetricCell(title: "总发电量", value: String(format: "%.0f", stats.totalPowerGenerated), unit: "MW")
-            AppMetricCell(title: "用电量", value: String(format: "%.0f", stats.totalPowerConsumed), unit: "MW")
-            AppMetricCell(title: "产线", value: "\(stats.productionLines.count)", unit: "条")
-            AppMetricCell(title: "电力余量", value: String(format: "%+.1f", powerMargin), unit: "MW",
+            AppMetricCell(title: String(localized: "建筑"), value: "\(stats.buildingCount)", unit: String(localized: "总数"))
+            AppMetricCell(title: String(localized: "总发电量"), value: String(format: "%.0f", stats.totalPowerGenerated), unit: "MW")
+            AppMetricCell(title: String(localized: "用电量"), value: String(format: "%.0f", stats.totalPowerConsumed), unit: "MW")
+            AppMetricCell(title: String(localized: "产线"), value: "\(stats.productionLines.count)", unit: String(localized: "条"))
+            AppMetricCell(title: String(localized: "电力余量"), value: String(format: "%+.1f", powerMargin), unit: "MW",
                           tone: powerMargin >= 0 ? .success : .error)
         }
     }
@@ -58,19 +58,19 @@ struct FactoryStatsView: View {
         if stats.bottleneck != nil || stats.powerShortage > 1e-6 || stats.unpoweredCount > 0
             || !stats.flowConverged || stats.machineStates.contains(where: { $0.status != .running }) {
             Divider().overlay(AppColors.border)
-            AppSectionHeader(title: "运行诊断", subtitle: "异常原因与当前模拟状态")
+            AppSectionHeader(title: String(localized: "运行诊断"), subtitle: String(localized: "异常原因与当前模拟状态"))
             if let bottleneck = stats.bottleneck {
-                AppInlineNotice(title: "瓶颈", message: bottleneck, tone: .warning)
+                AppInlineNotice(title: String(localized: "瓶颈"), message: bottleneck, tone: .warning)
             }
             if stats.powerShortage > 1e-6 {
-                AppInlineNotice(title: "电力不足", message: String(format: "还差 %.1f MW", stats.powerShortage), tone: .error)
+                AppInlineNotice(title: String(localized: "电力不足"), message: String(localized: "还差 \(String(format: "%.1f", stats.powerShortage)) MW"), tone: .error)
             }
             if stats.unpoweredCount > 0 {
-                AppInlineNotice(title: "未通电 ×\(stats.unpoweredCount)",
-                                message: "不在供电桩范围内，不运行", tone: .error)
+                AppInlineNotice(title: String(localized: "未通电 ×\(stats.unpoweredCount)"),
+                                message: String(localized: "不在供电桩范围内，不运行"), tone: .error)
             }
             if !stats.flowConverged {
-                AppInlineNotice(title: "流量模拟未收敛", message: "可能有环路，数字仅供参考", tone: .error)
+                AppInlineNotice(title: String(localized: "流量模拟未收敛"), message: String(localized: "可能有环路，数字仅供参考"), tone: .error)
             }
             ForEach(stats.machineStates.filter { $0.status != .running }) { machine in
                 noticeRow(icon: "gearshape.fill", text: machineStateText(machine), color: AppColors.warning)
@@ -81,16 +81,16 @@ struct FactoryStatsView: View {
     @ViewBuilder
     private var logistics: some View {
         Divider().overlay(AppColors.border)
-        AppSectionHeader(title: "电力与物流")
+        AppSectionHeader(title: String(localized: "电力与物流"))
         if stats.totalPowerGenerated > 0 || stats.totalPowerConsumed > 0 {
             noticeRow(icon: "bolt.horizontal.fill", text: powerText(stats), color: AppColors.accent)
         }
         if stats.passthroughCount > 0 {
             noticeRow(icon: "arrow.triangle.branch",
-                      text: "直通节点 ×\(stats.passthroughCount)（分流器/汇流器等，不计入产线）", color: AppColors.info)
+                      text: String(localized: "直通节点 ×\(stats.passthroughCount)（分流器/汇流器等，不计入产线）"), color: AppColors.info)
         }
         if !stats.outletMaterials.isEmpty {
-            noticeRow(icon: "shippingbox.fill", text: "仓库取线：\(stats.outletMaterials.map(DisplayName.item).joined(separator: "、"))",
+            noticeRow(icon: "shippingbox.fill", text: String(localized: "仓库取线：\(stats.outletMaterials.map(DisplayName.item).joined(separator: "、"))"),
                       color: AppColors.success)
         }
         ForEach(stats.sinkStates) { sink in
@@ -103,12 +103,12 @@ struct FactoryStatsView: View {
     private var lines: some View {
         if !stats.productionLines.isEmpty {
             Divider().overlay(AppColors.border)
-            AppSectionHeader(title: "产出产线", subtitle: onSelectItem != nil ? "点产物在画布上高亮相关机器和线" : nil)
+            AppSectionHeader(title: String(localized: "产出产线"), subtitle: onSelectItem != nil ? String(localized: "点产物在画布上高亮相关机器和线") : nil)
             ForEach(stats.productionLines, id: \.output) { line in productionLineRow(line: line) }
         }
         if !stats.consumptionLines.isEmpty {
             Divider().overlay(AppColors.border)
-            AppSectionHeader(title: "消耗统计")
+            AppSectionHeader(title: String(localized: "消耗统计"))
             ForEach(stats.consumptionLines, id: \.output) { line in
                 productionLineRow(line: line, color: AppColors.warning)
             }
@@ -119,7 +119,7 @@ struct FactoryStatsView: View {
     private var categories: some View {
         if !stats.categoryBreakdown.isEmpty {
             Divider().overlay(AppColors.border)
-            AppSectionHeader(title: "建筑分类")
+            AppSectionHeader(title: String(localized: "建筑分类"))
             ForEach(stats.categoryBreakdown.sorted(by: { $0.value > $1.value }), id: \.key) { category, count in
                 HStack(alignment: .top, spacing: AppSpacing.sm) {
                     Image(systemName: category.icon).foregroundStyle(category.color).accessibilityHidden(true)
@@ -131,24 +131,24 @@ struct FactoryStatsView: View {
 
     private func powerText(_ stats: FactoryGridModel.ProductionStats) -> String {
         var parts: [String] = []
-        if stats.hubPower > 0 { parts.append(String(format: "协议核心 %.0f", stats.hubPower)) }
+        if stats.hubPower > 0 { parts.append(String(localized: "\(DisplayName.device("协议核心")) \(String(format: "%.0f", stats.hubPower))")) }
         for generator in stats.generators {
             if let fuel = generator.fuel {
-                parts.append(String(format: "热能池·%@ %.0f", DisplayName.item(fuel), generator.power))
+                parts.append(String(localized: "\(DisplayName.device("热能池"))·\(DisplayName.item(fuel)) \(String(format: "%.0f", generator.power))"))
             } else {
-                parts.append("热能池·无燃料 0")
+                parts.append(String(localized: "\(DisplayName.device("热能池"))·无燃料 0"))
             }
         }
         let detail = parts.isEmpty ? "" : "（" + parts.joined(separator: " + ") + "）"
-        return String(format: "耗电 %.1f MW，发电 %.1f MW", stats.totalPowerConsumed, stats.totalPowerGenerated) + detail
+        return String(localized: "耗电 \(String(format: "%.1f", stats.totalPowerConsumed)) MW，发电 \(String(format: "%.1f", stats.totalPowerGenerated)) MW") + detail
     }
 
     private func machineStateText(_ machine: FlowSimulator.MachineState) -> String {
-        var text = "\(DisplayName.device(machine.name))：\(machine.status.label)"
+        var text = "\(DisplayName.device(machine.name))：\(machine.status.displayLabel)"
         if machine.status != .noRecipe, machine.status != .inactive {
             text += "（\(Int((machine.throttle * 100).rounded()))%）"
         }
-        if let detail = machine.detail { text += " · \(detail)" }
+        if let detail = machine.detail { text += " · \(DisplayName.diagnostic(detail))" }
         return text
     }
 
@@ -157,7 +157,7 @@ struct FactoryStatsView: View {
             .filter { $0.value > 1e-9 }
             .sorted { $0.key < $1.key }
             .map { DisplayName.item($0.key) + " " + String(format: "%.1f", $0.value * 60) + "/min" }
-        return "\(DisplayName.device(sink.name))：" + (items.isEmpty ? "无消耗" : items.joined(separator: "、"))
+        return "\(DisplayName.device(sink.name))：" + (items.isEmpty ? String(localized: "无消耗") : items.joined(separator: "、"))
     }
 
     private func noticeRow(icon: String, text: String, itemNames: [String] = [], color: Color) -> some View {
@@ -204,7 +204,7 @@ struct FactoryStatsView: View {
         if let onSelectItem {
             Button { onSelectItem(line.output) } label: { row.contentShape(Rectangle()) }
                 .buttonStyle(.plain)
-                .accessibilityHint(highlightedItem == line.output ? "取消画布高亮" : "在画布上高亮相关机器和线")
+                .accessibilityHint(highlightedItem == line.output ? String(localized: "取消画布高亮") : String(localized: "在画布上高亮相关机器和线"))
         } else {
             row
         }

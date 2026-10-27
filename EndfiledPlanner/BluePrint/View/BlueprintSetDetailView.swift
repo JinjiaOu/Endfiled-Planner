@@ -17,7 +17,7 @@ struct BlueprintSetDetailView: View {
                             VStack(alignment: .leading, spacing: AppSpacing.sm) {
                                 BlueprintLocation(region: blueprintSet.region, location: blueprintSet.location)
                                 AppPageHeader(title: blueprintSet.name)
-                                Label("作者：\(blueprintSet.author)", systemImage: "person")
+                                Label(String(localized: "作者：\(blueprintSet.author)"), systemImage: "person")
                                     .font(AppTypography.supporting).foregroundStyle(AppColors.secondaryText)
                                 if !blueprintSet.description.isEmpty {
                                     Text(blueprintSet.description).font(AppTypography.body)
@@ -26,7 +26,7 @@ struct BlueprintSetDetailView: View {
                                 }
                             }
                         }
-                        AppSectionHeader(title: "蓝图清单", subtitle: "共 \(blueprintSet.blueprints.count) 个 · 按原序号排列")
+                        AppSectionHeader(title: String(localized: "蓝图清单"), subtitle: String(localized: "共 \(blueprintSet.blueprints.count) 个 · 按原序号排列"))
                         ForEach(blueprintSet.blueprints.sorted(by: { $0.order < $1.order })) { blueprint in
                             BlueprintItemRow(blueprint: blueprint,
                                              isCopied: copiedBlueprintId == blueprint.id,
@@ -38,11 +38,11 @@ struct BlueprintSetDetailView: View {
                     .frame(maxWidth: .infinity)
                 }
             }
-            .navigationTitle("蓝图集详情")
+            .navigationTitle(String(localized: "蓝图集详情"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("关闭") { dismiss() }
+                    Button(String(localized: "关闭")) { dismiss() }
                 }
             }
             .toolbarBackground(.visible, for: .navigationBar)
@@ -83,20 +83,20 @@ struct BlueprintItemRow: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 Divider().overlay(AppColors.border)
-                Text("分享码").font(AppTypography.caption).foregroundStyle(AppColors.secondaryText)
+                Text(String(localized: "分享码")).font(AppTypography.caption).foregroundStyle(AppColors.secondaryText)
                 Text(blueprint.code).font(AppTypography.code).foregroundStyle(AppColors.primaryText)
                     .textSelection(.enabled)
                     .fixedSize(horizontal: false, vertical: true)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(AppSpacing.sm)
                     .background(AppColors.background, in: RoundedRectangle(cornerRadius: AppRadius.control))
-                    .accessibilityLabel("蓝图分享码：\(blueprint.code)")
+                    .accessibilityLabel(String(localized: "蓝图分享码：\(blueprint.code)"))
                 Button(action: onCopy) {
-                    Label(isCopied ? "已复制" : "复制分享码", systemImage: isCopied ? "checkmark" : "doc.on.doc")
+                    Label(isCopied ? String(localized: "已复制") : String(localized: "复制分享码"), systemImage: isCopied ? "checkmark" : "doc.on.doc")
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(AppActionStyle(emphasis: .secondary))
-                .accessibilityLabel("\(isCopied ? "已复制" : "复制分享码")：\(blueprint.name)")
+                .accessibilityLabel(String(localized: "\(isCopied ? String(localized: "已复制") : String(localized: "复制分享码"))：\(blueprint.name)"))
             }
         }
     }

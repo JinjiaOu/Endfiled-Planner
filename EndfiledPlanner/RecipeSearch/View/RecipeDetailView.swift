@@ -97,9 +97,9 @@ struct RecipeDetailView: View {
                 VStack(alignment: .leading, spacing: AppSpacing.xs) {
                     Text(verbatim: DisplayName.item(root.name)).font(AppTypography.rowTitle).foregroundStyle(AppColors.primaryText)
                         .fixedSize(horizontal: false, vertical: true)
-                    Picker("查看方式", selection: $showsOutline) {
-                        Text("图形").tag(false)
-                        Text("依赖清单").tag(true)
+                    Picker(String(localized: "查看方式"), selection: $showsOutline) {
+                        Text(String(localized: "图形")).tag(false)
+                        Text(String(localized: "依赖清单")).tag(true)
                     }
                     .pickerStyle(.segmented)
                 }
@@ -109,18 +109,18 @@ struct RecipeDetailView: View {
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 if !showsOutline { zoomControls }
             }
-            .navigationTitle("完整配方树")
+            .navigationTitle(String(localized: "完整配方树"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("关闭") { dismiss() }
+                    Button(String(localized: "关闭")) { dismiss() }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {
-                        Button { saveAsImage() } label: { Label("保存配方树图片", systemImage: "square.and.arrow.down") }
-                        Button { shareImage() } label: { Label("分享配方树图片", systemImage: "square.and.arrow.up") }
+                        Button { saveAsImage() } label: { Label(String(localized: "保存配方树图片"), systemImage: "square.and.arrow.down") }
+                        Button { shareImage() } label: { Label(String(localized: "分享配方树图片"), systemImage: "square.and.arrow.up") }
                     } label: { Image(systemName: "ellipsis.circle") }
-                    .accessibilityLabel("保存与分享配方树")
+                    .accessibilityLabel(String(localized: "保存与分享配方树"))
                 }
             }
             .toolbarBackground(.visible, for: .navigationBar)
@@ -128,15 +128,15 @@ struct RecipeDetailView: View {
             .tint(AppColors.accent)
             .onAppear { if dynamicTypeSize.isAccessibilitySize { showsOutline = true } }
             .onChange(of: dynamicTypeSize) { _, size in if size.isAccessibilitySize { showsOutline = true } }
-            .alert("保存图片", isPresented: $showingSaveAlert) {
-                Button("确定", role: .cancel) { }
+            .alert(String(localized: "保存图片"), isPresented: $showingSaveAlert) {
+                Button(String(localized: "确定"), role: .cancel) { }
             } message: { Text(saveMessage) }
         }
     }
 
     private var zoomControls: some View {
         HStack(spacing: AppSpacing.xs) {
-            AppIconButton(title: "缩小配方树", systemImage: "minus.magnifyingglass") {
+            AppIconButton(title: String(localized: "缩小配方树"), systemImage: "minus.magnifyingglass") {
                 withAnimation(AppMotion.feedback(reduceMotion: reduceMotion)) {
                     scale = max(scale / 1.2, 0.3)
                     lastScale = scale
@@ -145,15 +145,15 @@ struct RecipeDetailView: View {
             Text("\(Int(scale * 100))%")
                 .font(AppTypography.numeric).foregroundStyle(AppColors.primaryText)
                 .frame(minWidth: 60)
-                .accessibilityLabel("缩放比例 \(Int(scale * 100))%")
-            AppIconButton(title: "放大配方树", systemImage: "plus.magnifyingglass") {
+                .accessibilityLabel(String(localized: "缩放比例 \(Int(scale * 100))%"))
+            AppIconButton(title: String(localized: "放大配方树"), systemImage: "plus.magnifyingglass") {
                 withAnimation(AppMotion.feedback(reduceMotion: reduceMotion)) {
                     scale = min(scale * 1.2, 3.0)
                     lastScale = scale
                 }
             }
             Spacer(minLength: 0)
-            AppIconButton(title: "重置视图", systemImage: "arrow.counterclockwise") {
+            AppIconButton(title: String(localized: "重置视图"), systemImage: "arrow.counterclockwise") {
                 withAnimation(AppMotion.feedback(reduceMotion: reduceMotion)) {
                     scale = 0.5
                     lastScale = 0.5
@@ -175,9 +175,9 @@ struct RecipeDetailView: View {
         renderer.scale = 3.0
         if let image = renderer.uiImage {
             UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)
-            saveMessage = "图片已保存到相册"
+            saveMessage = String(localized: "图片已保存到相册")
         } else {
-            saveMessage = "保存失败"
+            saveMessage = String(localized: "保存失败")
         }
         showingSaveAlert = true
     }

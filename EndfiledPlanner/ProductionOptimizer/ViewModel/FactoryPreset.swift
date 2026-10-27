@@ -17,8 +17,8 @@ enum FactoryPreset: String, CaseIterable, Identifiable {
 
     var menuTitle: String {
         switch self {
-        case .valley4Battery:  return "预设：高容谷地电池（四号谷地）"
-        case .wulingEquipment: return "预设：灼铜装备原件（武陵）"
+        case .valley4Battery:  return String(localized: "预设：高容谷地电池（四号谷地）")
+        case .wulingEquipment: return String(localized: "预设：灼铜装备原件（武陵）")
         }
     }
 

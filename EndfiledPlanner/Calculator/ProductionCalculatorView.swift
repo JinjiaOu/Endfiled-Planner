@@ -23,7 +23,7 @@ struct ProductionCalculatorView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: AppSpacing.xl) {
-                AppPageHeader(title: "产量计算", subtitle: "选产物和目标产量，反推每一级要几台机器、多少原料和电。")
+                AppPageHeader(title: String(localized: "产量计算"), subtitle: String(localized: "选产物和目标产量，反推每一级要几台机器、多少原料和电。"))
                 targetCard
                 if let result {
                     summary(result)
@@ -33,7 +33,7 @@ struct ProductionCalculatorView: View {
                     notes(result)
                 } else {
                     AppSurface {
-                        AppContentState(title: "先选一个产物", message: "点上面的“选择产物”，再填每分钟要多少个。",
+                        AppContentState(title: String(localized: "先选一个产物"), message: String(localized: "点上面的“选择产物”，再填每分钟要多少个。"),
                                         systemImage: "function")
                     }
                 }
@@ -44,18 +44,18 @@ struct ProductionCalculatorView: View {
             .frame(maxWidth: .infinity)
         }
         .scrollDismissesKeyboard(.interactively)
-        .navigationTitle("产量计算")
+        .navigationTitle(String(localized: "产量计算"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
-                Button("完成") { rateFocused = false }
+                Button(String(localized: "完成")) { rateFocused = false }
             }
         }
         .appPageStyle()
         .sheet(isPresented: $showTargetPicker) {
             SearchablePickerSheet(
-                title: "选择产物",
+                title: String(localized: "选择产物"),
                 items: productItems,
                 selectedID: target.isEmpty ? nil : target,
                 onSelect: { picked in
@@ -70,10 +70,11 @@ struct ProductionCalculatorView: View {
             let list = ProductionCalculator.candidates(for: entry.item, in: recipeVM.recipes)
             let current = result?.steps.first { $0.item == entry.item }?.recipe.id
             SearchablePickerSheet(
-                title: "\(entry.item) 用哪条配方",
+                title: String(localized: "\(DisplayName.item(entry.item)) 用哪条配方"),
                 items: list.map { recipe in
                     SearchablePickerItem(id: recipe.id, title: recipe.displayMachine,
-                                         subtitle: recipeSummary(recipe), iconName: entry.item)
+                                         subtitle: recipeSummary(recipe), iconName: entry.item,
+                                         searchTerms: recipe.machine + " " + (recipe.inputs + recipe.outputs).map(\.name).joined(separator: " "))
                 },
                 selectedID: current,
                 onSelect: { id in
@@ -105,7 +106,7 @@ struct ProductionCalculatorView: View {
                             ItemIcon(name: target, size: AppSize.itemIcon)
                         }
                         VStack(alignment: .leading, spacing: AppSpacing.xxs) {
-                            Text("目标产物").font(AppTypography.caption).foregroundStyle(AppColors.secondaryText)
+                            Text(String(localized: "目标产物")).font(AppTypography.caption).foregroundStyle(AppColors.secondaryText)
                             Text(verbatim: target.isEmpty ? String(localized: "选择产物") : DisplayName.item(target))
                                 .font(AppTypography.sectionTitle).foregroundStyle(AppColors.primaryText)
                         }
@@ -121,9 +122,9 @@ struct ProductionCalculatorView: View {
                 Divider().overlay(AppColors.border)
 
                 HStack(spacing: AppSpacing.sm) {
-                    Text("目标产量").font(AppTypography.rowTitle).foregroundStyle(AppColors.primaryText)
+                    Text(String(localized: "目标产量")).font(AppTypography.rowTitle).foregroundStyle(AppColors.primaryText)
                     Spacer()
-                    TextField("每分钟", value: $rate, format: .number)
+                    TextField(String(localized: "每分钟"), value: $rate, format: .number)
                         .keyboardType(.decimalPad)
                         .multilineTextAlignment(.trailing)
                         .font(AppTypography.numeric)
@@ -132,8 +133,8 @@ struct ProductionCalculatorView: View {
                         .padding(.horizontal, AppSpacing.xs)
                         .frame(minHeight: AppSize.touchTarget)
                         .background(AppColors.background, in: RoundedRectangle(cornerRadius: AppRadius.control))
-                        .accessibilityLabel("目标产量，每分钟个数")
-                    Text("个/分钟").font(AppTypography.supporting).foregroundStyle(AppColors.secondaryText)
+                        .accessibilityLabel(String(localized: "目标产量，每分钟个数"))
+                    Text(String(localized: "个/分钟")).font(AppTypography.supporting).foregroundStyle(AppColors.secondaryText)
                 }
                 HStack(spacing: AppSpacing.xs) {
                     ForEach([1.0, 6.0, 30.0, 60.0], id: \.self) { preset in
@@ -149,9 +150,9 @@ struct ProductionCalculatorView: View {
 
     private func summary(_ result: ProductionCalculator.Result) -> some View {
         AppMetricGrid {
-            AppMetricCell(title: "机器", value: "\(result.totalMachines)", unit: "台（按整台算）")
-            AppMetricCell(title: "耗电", value: Self.format(result.powerMW), unit: "MW（满台数估算）")
-            AppMetricCell(title: "生产步骤", value: "\(result.steps.count)", unit: "种物品")
+            AppMetricCell(title: String(localized: "机器"), value: "\(result.totalMachines)", unit: String(localized: "台（按整台算）"))
+            AppMetricCell(title: String(localized: "耗电"), value: Self.format(result.powerMW), unit: String(localized: "MW（满台数估算）"))
+            AppMetricCell(title: String(localized: "生产步骤"), value: "\(result.steps.count)", unit: String(localized: "种物品"))
         }
     }
 
@@ -159,7 +160,7 @@ struct ProductionCalculatorView: View {
     private func stepsSection(_ result: ProductionCalculator.Result) -> some View {
         if !result.steps.isEmpty {
             VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                AppSectionHeader(title: "生产步骤", subtitle: "从成品往上游排；点右边的按钮换配方或改成从仓库取")
+                AppSectionHeader(title: String(localized: "生产步骤"), subtitle: String(localized: "从成品往上游排；点右边的按钮换配方或改成从仓库取"))
                 VStack(spacing: 0) {
                     ForEach(result.steps) { step in
                         stepRow(step)
@@ -178,21 +179,21 @@ struct ProductionCalculatorView: View {
                 Text(verbatim: DisplayName.item(step.item)).font(AppTypography.rowTitle).foregroundStyle(AppColors.primaryText)
                 Text("\(step.recipe.displayMachine) × \(step.machineCount)")
                     .font(AppTypography.supporting).foregroundStyle(AppColors.accent)
-                Text(String(format: "精确 %.2f 台 · 每台 %@ 秒一次", step.machines, "\(step.recipe.time)"))
+                Text(String(localized: "精确 \(String(format: "%.2f", step.machines)) 台 · 每台 \(step.recipe.time) 秒一次"))
                     .font(AppTypography.caption).foregroundStyle(AppColors.secondaryText)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            Text("\(Self.format(step.ratePerMin))/分")
+            Text(String(localized: "\(Self.format(step.ratePerMin))/分"))
                 .font(AppTypography.numeric).foregroundStyle(AppColors.primaryText)
             Menu {
                 if step.recipeChoices > 1 {
                     Button { recipeSheetItem = CalculatorItem(item: step.item) } label: {
-                        Label("换配方（\(step.recipeChoices) 条可选）", systemImage: "arrow.triangle.2.circlepath")
+                        Label(String(localized: "换配方（\(step.recipeChoices) 条可选）"), systemImage: "arrow.triangle.2.circlepath")
                     }
                 }
                 if step.item != target {
                     Button { rawOverride[step.item] = true } label: {
-                        Label("改成从仓库取，不再展开", systemImage: "shippingbox")
+                        Label(String(localized: "改成从仓库取，不再展开"), systemImage: "shippingbox")
                     }
                 }
             } label: {
@@ -200,7 +201,7 @@ struct ProductionCalculatorView: View {
                     .frame(width: AppSize.touchTarget, height: AppSize.touchTarget)
                     .contentShape(Rectangle())
             }
-            .accessibilityLabel("\(DisplayName.item(step.item)) 的选项")
+            .accessibilityLabel(String(localized: "\(DisplayName.item(step.item)) 的选项"))
         }
         .padding(.leading, AppSpacing.sm)
         .padding(.vertical, AppSpacing.xs)
@@ -210,7 +211,7 @@ struct ProductionCalculatorView: View {
     private func rawsSection(_ result: ProductionCalculator.Result) -> some View {
         if !result.raws.isEmpty {
             VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                AppSectionHeader(title: "原料", subtitle: "从仓库取或外部供给，不再往上游展开")
+                AppSectionHeader(title: String(localized: "原料"), subtitle: String(localized: "从仓库取或外部供给，不再往上游展开"))
                 VStack(spacing: 0) {
                     ForEach(result.raws, id: \.item) { raw in
                         rawRow(raw.item, rate: raw.ratePerMin, isCycle: result.cycleBreaks.contains(raw.item))
@@ -228,23 +229,23 @@ struct ProductionCalculatorView: View {
             ItemIcon(name: item, size: AppSize.itemIcon)
             VStack(alignment: .leading, spacing: AppSpacing.xxs) {
                 Text(verbatim: DisplayName.item(item)).font(AppTypography.rowTitle).foregroundStyle(AppColors.primaryText)
-                Text(isCycle ? "循环依赖，这一截按原料算" : lineHint(item, rate: rate))
+                Text(isCycle ? String(localized: "循环依赖，这一截按原料算") : lineHint(item, rate: rate))
                     .font(AppTypography.caption)
                     .foregroundStyle(isCycle ? AppColors.warning : AppColors.secondaryText)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            Text("\(Self.format(rate))/分").font(AppTypography.numeric).foregroundStyle(AppColors.primaryText)
+            Text(String(localized: "\(Self.format(rate))/分")).font(AppTypography.numeric).foregroundStyle(AppColors.primaryText)
             if canExpand {
                 Menu {
                     Button { rawOverride[item] = false } label: {
-                        Label("展开生产", systemImage: "arrow.down.right.and.arrow.up.left")
+                        Label(String(localized: "展开生产"), systemImage: "arrow.down.right.and.arrow.up.left")
                     }
                 } label: {
                     Image(systemName: "ellipsis.circle").foregroundStyle(AppColors.secondaryText)
                         .frame(width: AppSize.touchTarget, height: AppSize.touchTarget)
                         .contentShape(Rectangle())
                 }
-                .accessibilityLabel("\(DisplayName.item(item)) 的选项")
+                .accessibilityLabel(String(localized: "\(DisplayName.item(item)) 的选项"))
             } else {
                 Color.clear.frame(width: AppSize.touchTarget, height: 1)
             }
@@ -257,14 +258,14 @@ struct ProductionCalculatorView: View {
     private func byproductsSection(_ result: ProductionCalculator.Result) -> some View {
         if !result.byproducts.isEmpty {
             VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                AppSectionHeader(title: "副产物", subtitle: "多产物配方顺带产出的，要另外处理（存仓库或接废水处理机）")
+                AppSectionHeader(title: String(localized: "副产物"), subtitle: String(localized: "多产物配方顺带产出的，要另外处理（存仓库或接废水处理机）"))
                 VStack(spacing: 0) {
                     ForEach(result.byproducts, id: \.item) { by in
                         HStack(spacing: AppSpacing.sm) {
                             ItemIcon(name: by.item, size: AppSize.itemIcon)
                             Text(verbatim: DisplayName.item(by.item)).font(AppTypography.rowTitle).foregroundStyle(AppColors.primaryText)
                                 .frame(maxWidth: .infinity, alignment: .leading)
-                            Text("\(Self.format(by.ratePerMin))/分").font(AppTypography.numeric)
+                            Text(String(localized: "\(Self.format(by.ratePerMin))/分")).font(AppTypography.numeric)
                                 .foregroundStyle(AppColors.primaryText)
                         }
                         .padding(AppSpacing.sm)
@@ -278,9 +279,9 @@ struct ProductionCalculatorView: View {
 
     private func notes(_ result: ProductionCalculator.Result) -> some View {
         AppInlineNotice(
-            title: "计算说明",
-            message: "按稳定满速算，同一物品在多条分支里的需求已合并；副产物不会自动抵扣需求；"
-                + "耗电按取整后的台数估算。矿石默认从仓库取，水和气默认算成水泵、气泵。",
+            title: String(localized: "计算说明"),
+            message: String(localized: "按稳定满速算，同一物品在多条分支里的需求已合并；副产物不会自动抵扣需求；")
+                + String(localized: "耗电按取整后的台数估算。矿石默认从仓库取，水和气默认算成水泵、气泵。"),
             tone: .neutral
         )
     }
@@ -292,13 +293,13 @@ struct ProductionCalculatorView: View {
         let solid = ItemCatalog.byName[item]?.phase == .solid
         let cap = (solid ? FlowSimulator.beltCapacity : FlowSimulator.pipeCapacity) * 60
         let lines = Int((rate / cap - 1e-9).rounded(.up))
-        return "约 \(max(lines, 1)) 条\(solid ? "传送带" : "管道")"
+        return String(localized: "约 \(max(lines, 1)) 条\(solid ? String(localized: "传送带") : String(localized: "管道"))")
     }
 
     private func recipeSummary(_ recipe: Recipe) -> String {
         let ins = recipe.inputs.map { "\(DisplayName.item($0.name))×\($0.count)" }.joined(separator: "、")
         let outs = recipe.outputs.map { "\(DisplayName.item($0.name))×\($0.count)" }.joined(separator: "、")
-        return "\(ins.isEmpty ? "无原料" : ins) → \(outs) · \(recipe.time) 秒"
+        return String(localized: "\(ins.isEmpty ? String(localized: "无原料") : ins) → \(outs) · \(recipe.time) 秒")
     }
 
     static func format(_ value: Double) -> String {

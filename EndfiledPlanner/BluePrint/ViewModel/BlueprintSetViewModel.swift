@@ -43,7 +43,7 @@ class BlueprintSetViewModel: ObservableObject {
                 
                 print(" 加载了 \(loadedSets.count) 个蓝图集（已随机排序）")
             } catch {
-                self.errorMessage = "加载失败: \(error.localizedDescription)"
+                self.errorMessage = String(localized: "加载失败: \(error.localizedDescription)")
                 print(" 加载蓝图集失败: \(error)")
             }
             
@@ -89,6 +89,6 @@ class BlueprintSetViewModel: ObservableObject {
     
     var availableRegions: [String] {
         let regions = Set(blueprintSets.map { $0.region })
-        return ["全部"] + regions.sorted()
+        return [String(localized: "全部")] + regions.sorted()
     }
 }

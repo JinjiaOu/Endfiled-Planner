@@ -1,0 +1,6600 @@
+{
+  "sourceLanguage": "zh-Hans",
+  "strings": {
+    "%@": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@"
+          }
+        }
+      }
+    },
+    "%@  %@ MW，每个烧 %@ 秒": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@  %2$@ MW, burns for %3$@ s each"
+          }
+        }
+      }
+    },
+    "%@ %@": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ %@"
+          }
+        }
+      }
+    },
+    "%@ /min（需要 ≥%@）": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ /min (needs ≥%2$@)"
+          }
+        }
+      }
+    },
+    "%@ · 配方/物品/图标": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · Recipes / Items / Icons"
+          }
+        }
+      }
+    },
+    "%@ × %lld": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ × %lld"
+          }
+        }
+      }
+    },
+    "%@ → %@": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ → %@"
+          }
+        }
+      }
+    },
+    "%@ → %@ · %lld 秒": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ → %2$@ · %3$lld s"
+          }
+        }
+      }
+    },
+    "%@ 出什么": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Output from %@"
+          }
+        }
+      }
+    },
+    "%@ 用哪条配方": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recipe for %@"
+          }
+        }
+      }
+    },
+    "%@ 的选项": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Options for %@"
+          }
+        }
+      }
+    },
+    "%@/分": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@/min"
+          }
+        }
+      }
+    },
+    "%@·%@ %@": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@·%@ %@"
+          }
+        }
+      }
+    },
+    "%@·无燃料 0": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · No fuel 0"
+          }
+        }
+      }
+    },
+    "%@。这台建筑不参与产能计算。": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@. This facility is excluded from production calculations."
+          }
+        }
+      }
+    },
+    "%@不能用%@配方": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ does not support %2$@ recipes"
+          }
+        }
+      }
+    },
+    "%@不能造（仅%@）": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ cannot build this (only %2$@)"
+          }
+        }
+      }
+    },
+    "%@注入不足（需要 ≥6/min）": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ supply too low (needs ≥6/min)"
+          }
+        }
+      }
+    },
+    "%@（%@不能造）": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ (unavailable in %2$@)"
+          }
+        }
+      }
+    },
+    "%@（%@配方%@不能用）": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ (%2$@ recipe unavailable in %3$@)"
+          }
+        }
+      }
+    },
+    "%@（两张地图接仓库的方式不同，要重新贴好）": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ (warehouse connection differs; reconnect it)"
+          }
+        }
+      }
+    },
+    "%@，%@": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, %2$@"
+          }
+        }
+      }
+    },
+    "%@：%@": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        }
+      }
+    },
+    "%lld": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld"
+          }
+        }
+      }
+    },
+    "%lld 个建筑 · %lld 条线 · %lld×%lld 格": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld facilities · %2$lld lines · %3$lld×%4$lld cells"
+          }
+        }
+      }
+    },
+    "%lld 个建筑不在供电桩范围内，不运行": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld facilities outside power coverage are stopped"
+          }
+        }
+      }
+    },
+    "%lld 个结果": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld result"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld results"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld 个蓝图": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld blueprint"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld blueprints"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld 秒": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld s"
+          }
+        }
+      }
+    },
+    "%lld%%": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld%%"
+          }
+        }
+      }
+    },
+    "%llds": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%llds"
+          }
+        }
+      }
+    },
+    "%lld×%lld": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld×%lld"
+          }
+        }
+      }
+    },
+    "1.0.0": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1.0.0"
+          }
+        }
+      }
+    },
+    "60%": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "60%"
+          }
+        }
+      }
+    },
+    "ABOUT": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ABOUT"
+          }
+        }
+      }
+    },
+    "App 内反馈不用注册账号，直接发送；GitHub Issues 需要 GitHub 账号。": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In-app feedback needs no separate account. GitHub Issues requires a GitHub account."
+          }
+        }
+      }
+    },
+    "App 版本": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App version"
+          }
+        }
+      }
+    },
+    "DEV": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DEV"
+          }
+        }
+      }
+    },
+    "GAME DATA": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GAME DATA"
+          }
+        }
+      }
+    },
+    "GitHub Issues": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub Issues"
+          }
+        }
+      }
+    },
+    "GitHub Repository": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub Repository"
+          }
+        }
+      }
+    },
+    "MW（满台数估算）": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MW (estimated at full capacity)"
+          }
+        }
+      }
+    },
+    "PRODUCTION OPTIMIZER": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PRODUCTION OPTIMIZER"
+          }
+        }
+      }
+    },
+    "Production Optimizer Module": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Production Optimizer Module"
+          }
+        }
+      }
+    },
+    "Report Issue": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Report Issue"
+          }
+        }
+      }
+    },
+    "SETTINGS": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SETTINGS"
+          }
+        }
+      }
+    },
+    "SYSTEM STATUS": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SYSTEM STATUS"
+          }
+        }
+      }
+    },
+    "UNDER DEVELOPMENT": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "UNDER DEVELOPMENT"
+          }
+        }
+      }
+    },
+    "VERSION": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VERSION"
+          }
+        }
+      }
+    },
+    "x%lld": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "x%lld"
+          }
+        }
+      }
+    },
+    "×%lld": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "×%lld"
+          }
+        }
+      }
+    },
+    "「%@」删除后不能恢复": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” will be permanently deleted"
+          }
+        }
+      }
+    },
+    "上": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Top"
+          }
+        }
+      }
+    },
+    "上边": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Top"
+          }
+        }
+      }
+    },
+    "下": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bottom"
+          }
+        }
+      }
+    },
+    "下载": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download"
+          }
+        }
+      }
+    },
+    "下载失败，当前数据没有改动，可以再试一次": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download failed. Your current data is unchanged. Try again."
+          }
+        }
+      }
+    },
+    "下载新数据": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download Data"
+          }
+        }
+      }
+    },
+    "下载的数据会被删除，重启 App 后生效。": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Downloaded data will be deleted. Restart the app to apply."
+          }
+        }
+      }
+    },
+    "下边": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bottom"
+          }
+        }
+      }
+    },
+    "不再提示": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Don't Show Again"
+          }
+        }
+      }
+    },
+    "不出货": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No output"
+          }
+        }
+      }
+    },
+    "不可用操作": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unavailable Action"
+          }
+        }
+      }
+    },
+    "不在任何供电桩范围内，不运行": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Outside all power coverage; stopped"
+          }
+        }
+      }
+    },
+    "不在供电桩范围内，不运行": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Outside power coverage; stopped"
+          }
+        }
+      }
+    },
+    "不耗电": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No power needed"
+          }
+        }
+      }
+    },
+    "不设置配方": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No recipe"
+          }
+        }
+      }
+    },
+    "不限速": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No limit"
+          }
+        }
+      }
+    },
+    "两张地图的仓库取线规则不一样，切换会清空当前所有建筑和传送带（可以撤销）。": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warehouse connection rules differ between maps. Switching clears all facilities and belts (can be undone)."
+          }
+        }
+      }
+    },
+    "个": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "items"
+          }
+        }
+      }
+    },
+    "个/分钟": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "items/min"
+          }
+        }
+      }
+    },
+    "串行耗时": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serial time"
+          }
+        }
+      }
+    },
+    "主要信息使用清晰的中性色，强调色仅提示操作与选择。": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Primary information uses clear neutral colors; accents indicate actions and selections."
+          }
+        }
+      }
+    },
+    "产出": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Output"
+          }
+        }
+      }
+    },
+    "产出产线": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Output Lines"
+          }
+        }
+      }
+    },
+    "产物": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Products"
+          }
+        }
+      }
+    },
+    "产线": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lines"
+          }
+        }
+      }
+    },
+    "产能统计": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Production Stats"
+          }
+        }
+      }
+    },
+    "产能统计，%lld 个建筑": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Production stats, %lld facilities"
+          }
+        }
+      }
+    },
+    "产量计算": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Production Calculator"
+          }
+        }
+      }
+    },
+    "仅%@": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only %@"
+          }
+        }
+      }
+    },
+    "今天已经发了 %lld 条，明天再来，或者改用 GitHub Issues 反馈。": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You have sent %lld reports today. Try tomorrow or use GitHub Issues."
+          }
+        }
+      }
+    },
+    "今天的反馈次数用完了": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daily feedback limit reached"
+          }
+        }
+      }
+    },
+    "仍然放置": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Place Anyway"
+          }
+        }
+      }
+    },
+    "从仓库取或外部供给，不再往上游展开": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supplied from storage or externally; no upstream expansion"
+          }
+        }
+      }
+    },
+    "从成品往上游排；点右边的按钮换配方或改成从仓库取": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "From product to upstream. Use the menu to change recipes or source from storage."
+          }
+        }
+      }
+    },
+    "从目标物品开始": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start with a product"
+          }
+        }
+      }
+    },
+    "仓库取线：%@": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warehouse supply: %@"
+          }
+        }
+      }
+    },
+    "仓库存取线": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Depot Bus"
+          }
+        }
+      }
+    },
+    "会一起发送": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Included with your report"
+          }
+        }
+      }
+    },
+    "传送带": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Belt"
+          }
+        }
+      }
+    },
+    "作者：%@": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Author: %@"
+          }
+        }
+      }
+    },
+    "使用指南": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "User Guide"
+          }
+        }
+      }
+    },
+    "使用风险": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usage Risks"
+          }
+        }
+      }
+    },
+    "供电范围": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Power Coverage"
+          }
+        }
+      }
+    },
+    "依赖层级 %lld": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dependency level %lld"
+          }
+        }
+      }
+    },
+    "依赖清单": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dependencies"
+          }
+        }
+      }
+    },
+    "依赖节点": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dependency nodes"
+          }
+        }
+      }
+    },
+    "保存": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save"
+          }
+        }
+      }
+    },
+    "保存与分享配方树": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save and Share Recipe Tree"
+          }
+        }
+      }
+    },
+    "保存图片": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save Image"
+          }
+        }
+      }
+    },
+    "保存失败": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save failed"
+          }
+        }
+      }
+    },
+    "保存画布": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save Canvas"
+          }
+        }
+      }
+    },
+    "保存配方树图片": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save Recipe Tree Image"
+          }
+        }
+      }
+    },
+    "先选一个产物": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a product first"
+          }
+        }
+      }
+    },
+    "免责声明": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disclaimer"
+          }
+        }
+      }
+    },
+    "入库": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To Storage"
+          }
+        }
+      }
+    },
+    "全部": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All"
+          }
+        }
+      }
+    },
+    "全部地图": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All Maps"
+          }
+        }
+      }
+    },
+    "全部通过": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow all"
+          }
+        }
+      }
+    },
+    "共 %lld 个 · 按原序号排列": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld blueprints · Original order"
+          }
+        }
+      }
+    },
+    "共 %lld 格，删除后可以撤销。": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld cells in total. Deletion can be undone."
+          }
+        }
+      }
+    },
+    "关闭": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close"
+          }
+        }
+      }
+    },
+    "关闭产能统计": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close Production Stats"
+          }
+        }
+      }
+    },
+    "关闭利用率视图": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hide Utilization"
+          }
+        }
+      }
+    },
+    "关闭建造面板": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close Build Panel"
+          }
+        }
+      }
+    },
+    "关闭详情": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close Details"
+          }
+        }
+      }
+    },
+    "其他": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Other"
+          }
+        }
+      }
+    },
+    "其它物品到这里会被挡住，上游跟着堵。": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Other items are blocked here, backing up the upstream line."
+          }
+        }
+      }
+    },
+    "内容审核": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Content Review"
+          }
+        }
+      }
+    },
+    "内容来源": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Content Sources"
+          }
+        }
+      }
+    },
+    "内置": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Built-in"
+          }
+        }
+      }
+    },
+    "内部循环：%@（不占外部口）": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Internal cycle: %@ (no external ports used)"
+          }
+        }
+      }
+    },
+    "出什么": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Output Material"
+          }
+        }
+      }
+    },
+    "出口没接好或下游吃不下": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Output disconnected or downstream cannot accept items"
+          }
+        }
+      }
+    },
+    "出口要朝向基地": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Outputs must face the base"
+          }
+        }
+      }
+    },
+    "出货口": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Output Port"
+          }
+        }
+      }
+    },
+    "出货口配置与运行详情": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Output Ports and Operation"
+          }
+        }
+      }
+    },
+    "分享码": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share Code"
+          }
+        }
+      }
+    },
+    "分享配方树图片": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share Recipe Tree Image"
+          }
+        }
+      }
+    },
+    "分析生产依赖": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Analyze Dependencies"
+          }
+        }
+      }
+    },
+    "分析结果 · 目标数量 %lld": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Analysis · Target quantity %lld"
+          }
+        }
+      }
+    },
+    "切换": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Switch"
+          }
+        }
+      }
+    },
+    "切换到%@？": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Switch to %@?"
+          }
+        }
+      }
+    },
+    "切换地图": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Switch Map"
+          }
+        }
+      }
+    },
+    "切换地图（当前：%@）": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Switch Map (Current: %@)"
+          }
+        }
+      }
+    },
+    "删除": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete"
+          }
+        }
+      }
+    },
+    "删除历史：%@": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete History: %@"
+          }
+        }
+      }
+    },
+    "删除布局": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete Layout"
+          }
+        }
+      }
+    },
+    "删除整条": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete Entire Line"
+          }
+        }
+      }
+    },
+    "删除整条%@？": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete entire %@?"
+          }
+        }
+      }
+    },
+    "删除模式 · 划过即可删除": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete mode · Swipe to erase"
+          }
+        }
+      }
+    },
+    "删除这一格": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete This Cell"
+          }
+        }
+      }
+    },
+    "到货 / 需求": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arrivals / Demand"
+          }
+        }
+      }
+    },
+    "到货 / 需求 · 原料不足": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arrivals / Demand · Insufficient supply"
+          }
+        }
+      }
+    },
+    "刷新蓝图集": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh Blueprints"
+          }
+        }
+      }
+    },
+    "前缀匹配": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prefix Matches"
+          }
+        }
+      }
+    },
+    "副产物": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Byproducts"
+          }
+        }
+      }
+    },
+    "功能开发中": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Under development"
+          }
+        }
+      }
+    },
+    "加载": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Load"
+          }
+        }
+      }
+    },
+    "加载失败: %@": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Load failed: %@"
+          }
+        }
+      }
+    },
+    "加载蓝图数据失败": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Failed to load blueprints"
+          }
+        }
+      }
+    },
+    "加载预设产线": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Load Preset"
+          }
+        }
+      }
+    },
+    "包含匹配": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Partial Matches"
+          }
+        }
+      }
+    },
+    "协议核心": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automation-Core"
+          }
+        }
+      }
+    },
+    "协议核心是地图必需的核心仓库，不能删除": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Automation-Core is required on this map and cannot be deleted"
+          }
+        }
+      }
+    },
+    "原料": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raw Materials"
+          }
+        }
+      }
+    },
+    "原料不足": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Insufficient supply"
+          }
+        }
+      }
+    },
+    "原料到货": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Material Arrivals"
+          }
+        }
+      }
+    },
+    "原料：%@": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inputs: %@"
+          }
+        }
+      }
+    },
+    "原材料": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raw material"
+          }
+        }
+      }
+    },
+    "双击选择建筑": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Double-tap to select facility"
+          }
+        }
+      }
+    },
+    "反馈问题": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send Feedback"
+          }
+        }
+      }
+    },
+    "发现可复用的产线": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discover Reusable Lines"
+          }
+        }
+      }
+    },
+    "发现新的游戏数据": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New game data available"
+          }
+        }
+      }
+    },
+    "发电": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Power Generation"
+          }
+        }
+      }
+    },
+    "发送": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send"
+          }
+        }
+      }
+    },
+    "发送失败（%@）。也可以改用 GitHub Issues 反馈。": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Failed to send (%@). You can also report via GitHub Issues."
+          }
+        }
+      }
+    },
+    "取消": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
+          }
+        }
+      }
+    },
+    "取消画布高亮": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear Canvas Highlight"
+          }
+        }
+      }
+    },
+    "取消移动": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel Move"
+          }
+        }
+      }
+    },
+    "取消选择": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deselect"
+          }
+        }
+      }
+    },
+    "取消高亮": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear Highlight"
+          }
+        }
+      }
+    },
+    "取货材料": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supply Material"
+          }
+        }
+      }
+    },
+    "口%lld": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Port %lld"
+          }
+        }
+      }
+    },
+    "只发送上面这些和你填写的内容，不包含账号或个人信息。需要手机登录 iCloud。": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only the information above and your report are sent. No account or personal information is included. iCloud sign-in is required."
+          }
+        }
+      }
+    },
+    "只放行": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Item Filter"
+          }
+        }
+      }
+    },
+    "只放行哪种物品": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allowed Item"
+          }
+        }
+      }
+    },
+    "可取消选择": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Can be deselected"
+          }
+        }
+      }
+    },
+    "可放置": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ready to place"
+          }
+        }
+      }
+    },
+    "可能有环路，数字仅供参考": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A loop may be present; numbers are estimates"
+          }
+        }
+      }
+    },
+    "可通过右上角刷新重新获取数据。": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use Refresh at the top right to fetch data again."
+          }
+        }
+      }
+    },
+    "台（按整台算）": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "machines (rounded up)"
+          }
+        }
+      }
+    },
+    "右": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Right"
+          }
+        }
+      }
+    },
+    "右边": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Right"
+          }
+        }
+      }
+    },
+    "四号谷地": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Valley IV"
+          }
+        }
+      }
+    },
+    "四号谷地小基地": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Valley IV Outpost"
+          }
+        }
+      }
+    },
+    "固定发电 %@ MW · 本身无供电范围": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Generates %@ MW · No power coverage of its own"
+          }
+        }
+      }
+    },
+    "固定发电 %@ MW，计入总发电；本身没有供电范围，周围建筑仍要靠供电桩。": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Generates %@ MW, included in total generation. It provides no power coverage; nearby facilities still need Electric Pylons."
+          }
+        }
+      }
+    },
+    "图形": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diagram"
+          }
+        }
+      }
+    },
+    "图片已保存到相册": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Image saved to Photos"
+          }
+        }
+      }
+    },
+    "在 App 内反馈": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In-App Feedback"
+          }
+        }
+      }
+    },
+    "在画布上用「框选」选中一组建筑，点「存为布局」": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use Box Select on the canvas, then tap Save Layout"
+          }
+        }
+      }
+    },
+    "在画布上高亮相关机器和线": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Highlight related facilities and lines on the canvas"
+          }
+        }
+      }
+    },
+    "地图不支持": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unavailable on this map"
+          }
+        }
+      }
+    },
+    "地图筛选": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Map Filter"
+          }
+        }
+      }
+    },
+    "基建规划": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Factory Planner"
+          }
+        }
+      }
+    },
+    "基建规划指南": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Factory Planner Guide"
+          }
+        }
+      }
+    },
+    "基本操作": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Basic Controls"
+          }
+        }
+      }
+    },
+    "处理": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Processing"
+          }
+        }
+      }
+    },
+    "复制分享码": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy Code"
+          }
+        }
+      }
+    },
+    "外部输入：%@": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "External inputs: %@"
+          }
+        }
+      }
+    },
+    "多产物配方顺带产出的，要另外处理（存仓库或接废水处理机）": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extra outputs from multi-product recipes need handling (store them or send them to a Water Treatment Unit)"
+          }
+        }
+      }
+    },
+    "好": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        }
+      }
+    },
+    "存为布局": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save Layout"
+          }
+        }
+      }
+    },
+    "完全退出并重新打开 App 后生效": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fully quit and reopen the app to apply"
+          }
+        }
+      }
+    },
+    "完成": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done"
+          }
+        }
+      }
+    },
+    "完整配方树": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Full Recipe Tree"
+          }
+        }
+      }
+    },
+    "对外输出超限：同时最多 2 种液体 + 1 种固体，多出来的必须靠另一条配方内部消化掉": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "External output limit: at most 2 liquids + 1 solid. Other outputs must be consumed internally by another recipe."
+          }
+        }
+      }
+    },
+    "导出布局图片": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Export Layout Image"
+          }
+        }
+      }
+    },
+    "将删除所有建筑和传送带（可以撤销）。": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All facilities and belts will be deleted (can be undone)."
+          }
+        }
+      }
+    },
+    "尝试调整作者关键词或地图筛选。": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try a different author keyword or map filter."
+          }
+        }
+      }
+    },
+    "展开": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expand"
+          }
+        }
+      }
+    },
+    "展开完整配方树": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Full Recipe Tree"
+          }
+        }
+      }
+    },
+    "展开查看完整依赖，支持缩放、保存与分享。": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Explore all dependencies. Zoom, save, and share."
+          }
+        }
+      }
+    },
+    "展开生产": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expand Production"
+          }
+        }
+      }
+    },
+    "展示数据仅供规划参考，实际生产效率以游戏内表现为准。": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For planning reference only. Actual production efficiency is determined in-game."
+          }
+        }
+      }
+    },
+    "属性检查器": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inspector"
+          }
+        }
+      }
+    },
+    "工作台": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Workspace"
+          }
+        }
+      }
+    },
+    "工厂布局优化": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Factory Layout Optimization"
+          }
+        }
+      }
+    },
+    "左": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Left"
+          }
+        }
+      }
+    },
+    "左边": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Left"
+          }
+        }
+      }
+    },
+    "已关闭": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turned off"
+          }
+        }
+      }
+    },
+    "已勾选 %lld 条配方": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld recipe selected"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld recipes selected"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "已发送，谢谢反馈！": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sent. Thank you for your feedback!"
+          }
+        }
+      }
+    },
+    "已复制": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copied"
+          }
+        }
+      }
+    },
+    "已存到我的布局：%@": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved to My Layouts: %@"
+          }
+        }
+      }
+    },
+    "已就绪，重启 App 后生效": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ready. Restart the app to apply."
+          }
+        }
+      }
+    },
+    "已展开": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expanded"
+          }
+        }
+      }
+    },
+    "已折叠": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Collapsed"
+          }
+        }
+      }
+    },
+    "已是最新": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Up to date"
+          }
+        }
+      }
+    },
+    "已选 %lld 个建筑": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld facility selected"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld facilities selected"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "已选 %lld 个建筑、%lld 条线": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld facilities and %2$lld lines selected"
+          }
+        }
+      }
+    },
+    "已选 %lld 条线": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld line selected"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld lines selected"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "已选择": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selected"
+          }
+        }
+      }
+    },
+    "布局名字": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Layout Name"
+          }
+        }
+      }
+    },
+    "建筑": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Facilities"
+          }
+        }
+      }
+    },
+    "建筑分类": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Facility Categories"
+          }
+        }
+      }
+    },
+    "建造": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Build"
+          }
+        }
+      }
+    },
+    "建造设施": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Build Facility"
+          }
+        }
+      }
+    },
+    "开启": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn On"
+          }
+        }
+      }
+    },
+    "开始规划": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start Planning"
+          }
+        }
+      }
+    },
+    "异常原因与当前模拟状态": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Issues and current simulation status"
+          }
+        }
+      }
+    },
+    "当前位置不可放置": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cannot place here"
+          }
+        }
+      }
+    },
+    "当前布局的稳定产能估算": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estimated steady-state production of this layout"
+          }
+        }
+      }
+    },
+    "循环依赖，这一截按原料算": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cycle detected; treated as an external material"
+          }
+        }
+      }
+    },
+    "总发电量": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total generation"
+          }
+        }
+      }
+    },
+    "总数": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total"
+          }
+        }
+      }
+    },
+    "恢复内置数据": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore Built-in Data"
+          }
+        }
+      }
+    },
+    "恢复成安装包自带的数据？": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore the data bundled with the app?"
+          }
+        }
+      }
+    },
+    "息壤": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Xiranite"
+          }
+        }
+      }
+    },
+    "息壤环境": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Xiranite environment"
+          }
+        }
+      }
+    },
+    "惰气→稳定、水蒸气→潮湿、酸气→酸性、息壤气→息壤，影响周围 %lld 格": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inergen → Stable, Aquagen → Humid, Acridgen → Acidic, Xiragen → Xiranite. Affects %lld surrounding cells."
+          }
+        }
+      }
+    },
+    "我已了解": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Got It"
+          }
+        }
+      }
+    },
+    "我已阅读并同意": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I Have Read and Agree"
+          }
+        }
+      }
+    },
+    "我的布局": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "My Layouts"
+          }
+        }
+      }
+    },
+    "我知道了": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Got It"
+          }
+        }
+      }
+    },
+    "或": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": " or "
+          }
+        }
+      }
+    },
+    "手机没有登录 iCloud，发不了。可以在系统设置里登录 iCloud，或者改用 GitHub Issues 反馈。": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You are not signed into iCloud. Sign in via system Settings or use GitHub Issues."
+          }
+        }
+      }
+    },
+    "打开利用率视图": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show Utilization"
+          }
+        }
+      }
+    },
+    "打开蓝图集，查看说明与复制分享码": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open blueprint set, read details, and copy codes"
+          }
+        }
+      }
+    },
+    "批": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "batches"
+          }
+        }
+      }
+    },
+    "把线头接到建筑出口（或分流器、汇流器等）才会有货在线上跑。": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect the line start to a facility output (or a splitter, converger, etc.) to begin transporting items."
+          }
+        }
+      }
+    },
+    "折叠 / 展开内容": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Collapse / Expand Content"
+          }
+        }
+      }
+    },
+    "按住任一选中的建筑或线拖动整组；继续拉框或点建筑/线可以加入/移出": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drag any selected facility or line to move the group. Draw another box or tap facilities/lines to add or remove them."
+          }
+        }
+      }
+    },
+    "按住虚影拖动，或点画布上的位置把虚影挪过去；拖到画面边缘会自动滚动": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drag the preview or tap a canvas position to move it. Drag near an edge to auto-scroll."
+          }
+        }
+      }
+    },
+    "按作者与地图查找蓝图集，查看说明并复制分享码。": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Find blueprint sets by author and map, read details, and copy share codes."
+          }
+        }
+      }
+    },
+    "按作者和地图查找，复制蓝图码": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Find by author or map and copy blueprint codes"
+          }
+        }
+      }
+    },
+    "按原料筛选": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filter by Input"
+          }
+        }
+      }
+    },
+    "按原料筛选（跟游戏一样先选吃什么）": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filter by input material"
+          }
+        }
+      }
+    },
+    "按原料筛选（跟游戏一样先选吃什么，能多选配方）": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filter by input material (multiple recipes allowed)"
+          }
+        }
+      }
+    },
+    "按稳定满速算，同一物品在多条分支里的需求已合并；副产物不会自动抵扣需求；": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Assumes steady full-speed production. Demand for the same item across branches is combined; byproducts are not deducted automatically. "
+          }
+        }
+      }
+    },
+    "换一张截图": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change Screenshot"
+          }
+        }
+      }
+    },
+    "换配方（%lld 条可选）": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change Recipe (%lld available)"
+          }
+        }
+      }
+    },
+    "描述": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Description"
+          }
+        }
+      }
+    },
+    "搜索": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search"
+          }
+        }
+      }
+    },
+    "搜索作者": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search Authors"
+          }
+        }
+      }
+    },
+    "搜索物品": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search Items"
+          }
+        }
+      }
+    },
+    "搜索物品，展开完整生产依赖": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Find items and explore production dependencies"
+          }
+        }
+      }
+    },
+    "搜索目标物品": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search Target Item"
+          }
+        }
+      }
+    },
+    "撤销": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo"
+          }
+        }
+      }
+    },
+    "收纳": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove"
+          }
+        }
+      }
+    },
+    "收起": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Collapse"
+          }
+        }
+      }
+    },
+    "改名": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rename"
+          }
+        }
+      }
+    },
+    "改成从仓库取，不再展开": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source from Storage"
+          }
+        }
+      }
+    },
+    "放大配方树": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zoom In Recipe Tree"
+          }
+        }
+      }
+    },
+    "放置前旋转，当前朝向 %@": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rotate before placement; current direction %@"
+          }
+        }
+      }
+    },
+    "放置受阻": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Placement Blocked"
+          }
+        }
+      }
+    },
+    "放置建筑": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Place Facility"
+          }
+        }
+      }
+    },
+    "放置我的布局": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Place Saved Layout"
+          }
+        }
+      }
+    },
+    "放置：%@": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Place: %@"
+          }
+        }
+      }
+    },
+    "数据概览": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Data Overview"
+          }
+        }
+      }
+    },
+    "数据版本": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Data version"
+          }
+        }
+      }
+    },
+    "数量 %lld": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quantity %lld"
+          }
+        }
+      }
+    },
+    "新数据需要更新 App 才能使用": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Update the app to use the new data"
+          }
+        }
+      }
+    },
+    "旋转": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rotate"
+          }
+        }
+      }
+    },
+    "旋转 90°": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rotate 90°"
+          }
+        }
+      }
+    },
+    "无原料": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No inputs"
+          }
+        }
+      }
+    },
+    "无效的 URL": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invalid URL"
+          }
+        }
+      }
+    },
+    "无法收纳": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cannot Remove"
+          }
+        }
+      }
+    },
+    "无消耗": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No consumption"
+          }
+        }
+      }
+    },
+    "时间数据说明": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Timing Notes"
+          }
+        }
+      }
+    },
+    "明天再来，或者改用 GitHub Issues 反馈。": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try tomorrow or use GitHub Issues."
+          }
+        }
+      }
+    },
+    "显示成功反馈": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show Success Feedback"
+          }
+        }
+      }
+    },
+    "显示检查面板示例": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show Inspector Example"
+          }
+        }
+      }
+    },
+    "显示错误示例": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show Error Example"
+          }
+        }
+      }
+    },
+    "暂无搜索历史": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No search history"
+          }
+        }
+      }
+    },
+    "暂无蓝图集": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No blueprint sets yet"
+          }
+        }
+      }
+    },
+    "暗管出口出什么": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sub-pipe Output Material"
+          }
+        }
+      }
+    },
+    "最近搜索": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recent Searches"
+          }
+        }
+      }
+    },
+    "有 %lld 条线在新位置走不通，已经断开，需要重新接": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld lines cannot reach their new positions and were disconnected. Reconnect them manually."
+          }
+        }
+      }
+    },
+    "服务器忙，稍后再试。": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server busy. Try again later."
+          }
+        }
+      }
+    },
+    "未勾选配方": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No recipes selected"
+          }
+        }
+      }
+    },
+    "未找到匹配物品": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No matching items"
+          }
+        }
+      }
+    },
+    "未找到配方数据": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recipe data not found"
+          }
+        }
+      }
+    },
+    "未激活": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inactive"
+          }
+        }
+      }
+    },
+    "未设置": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not set"
+          }
+        }
+      }
+    },
+    "未设置取货材料": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No supply material set"
+          }
+        }
+      }
+    },
+    "未选择": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not selected"
+          }
+        }
+      }
+    },
+    "未选择配方": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No recipe selected"
+          }
+        }
+      }
+    },
+    "未通电": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unpowered"
+          }
+        }
+      }
+    },
+    "未通电 ×%lld": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Unpowered ×%lld"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Unpowered ×%lld"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "未通电（不在供电桩范围内）": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unpowered (outside power coverage)"
+          }
+        }
+      }
+    },
+    "本体向四周各扩 %lld 格（网格上虚线框），范围内有 %lld 台需要供电的建筑": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extends %1$lld cells on each side (dashed outline). Covers %2$lld facilities that need power."
+          }
+        }
+      }
+    },
+    "本功能展示的生产时间基于单条串行链路计算，即从原材料到成品的最长路径耗时。": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Production time is calculated along one serial chain: the longest path from raw materials to the finished product."
+          }
+        }
+      }
+    },
+    "本应用中的所有蓝图分享码均来自社区玩家自发贡献，开发者仅提供展示平台。": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All blueprint share codes in this app are contributed by community players. The developer only provides a platform for displaying them."
+          }
+        }
+      }
+    },
+    "本模块为玩家自制的非官方工具，与《明日方舟：终末地》官方无关。\n\n建筑和配方数据来自游戏解包与社区资料，产能、电力等结果是按简化规则模拟的估算，可能与游戏内实际表现不一致，请以游戏内为准。规划结果仅供参考。": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This is an unofficial, player-made tool and is not affiliated with Arknights: Endfield.\n\nFacility and recipe data comes from unpacked game files and community sources. Production, power, and other results are estimates based on simplified simulation rules and may differ from the game. Always use in-game results as the reference. Plans are for reference only."
+          }
+        }
+      }
+    },
+    "机器": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Machines"
+          }
+        }
+      }
+    },
+    "机型": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Device model"
+          }
+        }
+      }
+    },
+    "条": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "lines"
+          }
+        }
+      }
+    },
+    "查找蓝图": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Find Blueprints"
+          }
+        }
+      }
+    },
+    "查看利用率图例": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View Utilization Legend"
+          }
+        }
+      }
+    },
+    "查看完整配方树": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View Full Recipe Tree"
+          }
+        }
+      }
+    },
+    "查看方式": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View Mode"
+          }
+        }
+      }
+    },
+    "查看配方": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View Recipe"
+          }
+        }
+      }
+    },
+    "查配方、找蓝图、规划产线。": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Find recipes, discover blueprints, and plan production."
+          }
+        }
+      }
+    },
+    "框选": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Box Select"
+          }
+        }
+      }
+    },
+    "框选与整组编辑": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Box select and group editing"
+          }
+        }
+      }
+    },
+    "检查数据更新": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check for Data Updates"
+          }
+        }
+      }
+    },
+    "正在下载 %lld/%lld": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Downloading %1$lld/%2$lld"
+          }
+        }
+      }
+    },
+    "正在下载游戏数据": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Downloading game data"
+          }
+        }
+      }
+    },
+    "正在加载蓝图集": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loading blueprint sets"
+          }
+        }
+      }
+    },
+    "正在检查…": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checking…"
+          }
+        }
+      }
+    },
+    "正在烧 %@": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Burning %@"
+          }
+        }
+      }
+    },
+    "武陵": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wuling"
+          }
+        }
+      }
+    },
+    "武陵小基地": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wuling Outpost"
+          }
+        }
+      }
+    },
+    "每分钟": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Per minute"
+          }
+        }
+      }
+    },
+    "每天最多发 %lld 条，今天还能发 %lld 条。": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Up to %#@limit@ per day; %#@remaining@ today."
+          },
+          "substitutions": {
+            "limit": {
+              "argNum": 1,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%lld report"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%lld reports"
+                    }
+                  }
+                }
+              }
+            },
+            "remaining": {
+              "argNum": 2,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%lld report remaining"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%lld reports remaining"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "气体不足（需要 ≥6/min）": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Insufficient gas (needs ≥6/min)"
+          }
+        }
+      }
+    },
+    "水泵区 · 默认通电": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pump zone · Powered by default"
+          }
+        }
+      }
+    },
+    "水泵区只能放水泵和气泵": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only water and gas pumps can be placed in the pump zone"
+          }
+        }
+      }
+    },
+    "没发出去": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not send"
+          }
+        }
+      }
+    },
+    "没有匹配的结果": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No matching results"
+          }
+        }
+      }
+    },
+    "没有匹配的蓝图集": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No matching blueprint sets"
+          }
+        }
+      }
+    },
+    "没有燃料，不发电。接一条传送带送燃料进来：": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No fuel, no power. Connect a belt to supply fuel:"
+          }
+        }
+      }
+    },
+    "没跑满（刻度与百分比）": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Below capacity (ticks and percentage)"
+          }
+        }
+      }
+    },
+    "没连着仓库存取线源桩": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not connected to a Depot Bus Port"
+          }
+        }
+      }
+    },
+    "流量 / 上限": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Flow / Capacity"
+          }
+        }
+      }
+    },
+    "流量模拟未收敛": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Flow simulation did not converge"
+          }
+        }
+      }
+    },
+    "浏览全部物品": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Browse All Items"
+          }
+        }
+      }
+    },
+    "消耗统计": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Consumption"
+          }
+        }
+      }
+    },
+    "涉及物品 %lld/%lld 种": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Distinct items %1$lld/%2$lld"
+          }
+        }
+      }
+    },
+    "添加截图（可选）": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add Screenshot (Optional)"
+          }
+        }
+      }
+    },
+    "清空": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear"
+          }
+        }
+      }
+    },
+    "清空布局": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear Layout"
+          }
+        }
+      }
+    },
+    "清除": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear"
+          }
+        }
+      }
+    },
+    "清除全部搜索历史": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear All Search History"
+          }
+        }
+      }
+    },
+    "清除搜索": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear Search"
+          }
+        }
+      }
+    },
+    "清除物品搜索": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear Item Search"
+          }
+        }
+      }
+    },
+    "游戏数据": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Game Data"
+          }
+        }
+      }
+    },
+    "游戏数据已就绪": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Game data ready"
+          }
+        }
+      }
+    },
+    "满载（上游想送的比上限多，被限流）": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At capacity (excess upstream supply is throttled)"
+          }
+        }
+      }
+    },
+    "潮湿": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Humid"
+          }
+        }
+      }
+    },
+    "潮湿环境": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Humid environment"
+          }
+        }
+      }
+    },
+    "激活": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activation"
+          }
+        }
+      }
+    },
+    "激活材料不足": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Insufficient activation material"
+          }
+        }
+      }
+    },
+    "点一个布局放到画布上": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap a layout to place it on the canvas"
+          }
+        }
+      }
+    },
+    "点上面的“选择产物”，再填每分钟要多少个。": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap Choose Product above, then enter the required output per minute."
+          }
+        }
+      }
+    },
+    "点产物在画布上高亮相关机器和线": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap a product to highlight related facilities and lines"
+          }
+        }
+      }
+    },
+    "点按画布中的设施查看配置与运行状态，也可以从建造面板添加设施。": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap a facility on the canvas to view settings and status, or add one from the build panel."
+          }
+        }
+      }
+    },
+    "燃料只送到满烧需要量的 %@%%，发电按比例打折": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fuel supply is %@%% of full demand; generation is reduced proportionally"
+          }
+        }
+      }
+    },
+    "瓶颈": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bottleneck"
+          }
+        }
+      }
+    },
+    "瓶颈检测": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bottleneck Detection"
+          }
+        }
+      }
+    },
+    "生产中": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Producing"
+          }
+        }
+      }
+    },
+    "生产优化模块": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Production Optimizer"
+          }
+        }
+      }
+    },
+    "生产批次": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Production batches"
+          }
+        }
+      }
+    },
+    "生产效率分析": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Production Efficiency Analysis"
+          }
+        }
+      }
+    },
+    "生产步骤": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Production Steps"
+          }
+        }
+      }
+    },
+    "用电量": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Power demand"
+          }
+        }
+      }
+    },
+    "电力不足": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Insufficient power"
+          }
+        }
+      }
+    },
+    "电力不足：缺 %.0f MW（耗电 %.0f / 发电 %.0f）": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Power shortage: %.0f MW (demand %.0f / generation %.0f)"
+          }
+        }
+      }
+    },
+    "电力与物流": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Power and Logistics"
+          }
+        }
+      }
+    },
+    "电力余量": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Power margin"
+          }
+        }
+      }
+    },
+    "电力余量 %@ MW": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Power margin %@ MW"
+          }
+        }
+      }
+    },
+    "电力设施": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Power Facility"
+          }
+        }
+      }
+    },
+    "画布上的规则是按游戏简化过的，下面列出了操作方式和不一样的地方。": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Canvas rules simplify the game. Controls and differences are listed below."
+          }
+        }
+      }
+    },
+    "画布已保存": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Canvas saved"
+          }
+        }
+      }
+    },
+    "画布是空的，没有可导出的内容": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The canvas is empty. Nothing to export."
+          }
+        }
+      }
+    },
+    "画布选项：保存、导出图片、使用指南、地图、预设与清空": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Canvas options: save, export image, guide, map, presets, and clear"
+          }
+        }
+      }
+    },
+    "目标与数量": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Target and Quantity"
+          }
+        }
+      }
+    },
+    "目标产物": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Target Product"
+          }
+        }
+      }
+    },
+    "目标产量": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Target Rate"
+          }
+        }
+      }
+    },
+    "目标产量，每分钟个数": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Target rate, items per minute"
+          }
+        }
+      }
+    },
+    "目标数量": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Target quantity"
+          }
+        }
+      }
+    },
+    "目标物品": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Target item"
+          }
+        }
+      }
+    },
+    "直通节点 ×%lld（分流器/汇流器等，不计入产线）": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pass-through nodes ×%lld (splitters, convergers, etc.; excluded from production lines)"
+          }
+        }
+      }
+    },
+    "看懂画布": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reading the Canvas"
+          }
+        }
+      }
+    },
+    "知识产权": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Intellectual Property"
+          }
+        }
+      }
+    },
+    "知道了": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Got It"
+          }
+        }
+      }
+    },
+    "确定": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        }
+      }
+    },
+    "确认放置": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm Placement"
+          }
+        }
+      }
+    },
+    "社区蓝图": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Community Blueprints"
+          }
+        }
+      }
+    },
+    "种物品": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "item types"
+          }
+        }
+      }
+    },
+    "秒": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "s"
+          }
+        }
+      }
+    },
+    "移动": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move"
+          }
+        }
+      }
+    },
+    "移动布局预览": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move Layout Preview"
+          }
+        }
+      }
+    },
+    "移除截图": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove Screenshot"
+          }
+        }
+      }
+    },
+    "稳定": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stable"
+          }
+        }
+      }
+    },
+    "稳定环境": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stable environment"
+          }
+        }
+      }
+    },
+    "空闲（变暗）": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Idle (dimmed)"
+          }
+        }
+      }
+    },
+    "空闲（没有货在跑）": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Idle (no items moving)"
+          }
+        }
+      }
+    },
+    "管道": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pipe"
+          }
+        }
+      }
+    },
+    "管道 ×%lld（%@不能用管道，不参与计算）": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pipes ×%1$lld (%2$@ does not support pipes; excluded from calculations)"
+          }
+        }
+      }
+    },
+    "精确 %@ 台 · 每台 %lld 秒一次": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exact %1$@ machines · One cycle per %2$lld s"
+          }
+        }
+      }
+    },
+    "系统": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System"
+          }
+        }
+      }
+    },
+    "约 %lld 条%@": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About %1$lld %2$@ lines"
+          }
+        }
+      }
+    },
+    "线不能走进水泵区": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lines cannot enter the pump zone"
+          }
+        }
+      }
+    },
+    "线头没接到任何出口，没有货": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Line start is not connected to an output; no items"
+          }
+        }
+      }
+    },
+    "线尾没接到任何入口，货送不出去": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Line end is not connected to an input; cannot deliver items"
+          }
+        }
+      }
+    },
+    "线的利用率": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Line Utilization"
+          }
+        }
+      }
+    },
+    "线路利用率": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Line Utilization"
+          }
+        }
+      }
+    },
+    "线路已断开": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lines Disconnected"
+          }
+        }
+      }
+    },
+    "终末地生产规划": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Endfield Planner"
+          }
+        }
+      }
+    },
+    "统计 · %lld": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stats · %lld"
+          }
+        }
+      }
+    },
+    "统计与分析": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stats and Analysis"
+          }
+        }
+      }
+    },
+    "编辑布局、连接产线、查看运行状态": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit layouts, connect lines, and inspect operation"
+          }
+        }
+      }
+    },
+    "缩小配方树": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zoom Out Recipe Tree"
+          }
+        }
+      }
+    },
+    "缩放比例 %lld%%": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zoom %lld%%"
+          }
+        }
+      }
+    },
+    "缺少 %@": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Missing %@"
+          }
+        }
+      }
+    },
+    "网络不太好，稍后再试。": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Network unavailable. Try again later."
+          }
+        }
+      }
+    },
+    "网络请求失败": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Network request failed"
+          }
+        }
+      }
+    },
+    "耗时为最长串行路径，不含采集、运输和实际产线调度。": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Time is the longest serial path; gathering, transport, and actual line scheduling are excluded."
+          }
+        }
+      }
+    },
+    "耗电": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Power"
+          }
+        }
+      }
+    },
+    "耗电 %@ MW，发电 %@ MW": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Demand %1$@ MW, generation %2$@ MW"
+          }
+        }
+      }
+    },
+    "耗电功率值 %@ MW": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Power demand %@ MW"
+          }
+        }
+      }
+    },
+    "耗电按取整后的台数估算。矿石默认从仓库取，水和气默认算成水泵、气泵。": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Power is estimated using rounded-up machine counts. Ores are sourced from storage by default; water and gases use pumps."
+          }
+        }
+      }
+    },
+    "自动化建议": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automation Suggestions"
+          }
+        }
+      }
+    },
+    "蓝图分享免责声明": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blueprint Sharing Disclaimer"
+          }
+        }
+      }
+    },
+    "蓝图分享码：%@": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blueprint share code: %@"
+          }
+        }
+      }
+    },
+    "蓝图清单": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blueprint List"
+          }
+        }
+      }
+    },
+    "蓝图集": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blueprint Sets"
+          }
+        }
+      }
+    },
+    "蓝图集加载失败": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Failed to load blueprint sets"
+          }
+        }
+      }
+    },
+    "蓝图集详情": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blueprint Set Details"
+          }
+        }
+      }
+    },
+    "被%@挡住（只放行%@）": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blocked by %1$@ (only allows %2$@)"
+          }
+        }
+      }
+    },
+    "被限流（瓶颈）": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Throttled (bottleneck)"
+          }
+        }
+      }
+    },
+    "要放在右侧水泵区": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Place in the pump zone on the right"
+          }
+        }
+      }
+    },
+    "要贴着仓库存取线源桩或基段放": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Place next to a Depot Bus Port or Depot Bus Section"
+          }
+        }
+      }
+    },
+    "要贴着地图%@放，口朝里": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Place along the %@ map edge, ports facing inward"
+          }
+        }
+      }
+    },
+    "计算说明": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Calculation Notes"
+          }
+        }
+      }
+    },
+    "设备": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Devices"
+          }
+        }
+      }
+    },
+    "设施": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Facilities"
+          }
+        }
+      }
+    },
+    "设置": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings"
+          }
+        }
+      }
+    },
+    "设置，有新数据可下载": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings, new data available"
+          }
+        }
+      }
+    },
+    "设计系统": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Design System"
+          }
+        }
+      }
+    },
+    "详细配置": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detailed Settings"
+          }
+        }
+      }
+    },
+    "请先搜索或选择一个配方": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search for or select a recipe first"
+          }
+        }
+      }
+    },
+    "请尝试其他关键词。": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try another keyword."
+          }
+        }
+      }
+    },
+    "请尝试其他关键词，或取消原料筛选。": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try another keyword or clear the input filter."
+          }
+        }
+      }
+    },
+    "请重新选择目标物品后分析。": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select the target item again and retry."
+          }
+        }
+      }
+    },
+    "货物": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cargo"
+          }
+        }
+      }
+    },
+    "超出基地范围（%lld×%lld）": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Outside base bounds (%1$lld×%2$lld)"
+          }
+        }
+      }
+    },
+    "超出画布了": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Outside the canvas"
+          }
+        }
+      }
+    },
+    "跑满": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Full capacity"
+          }
+        }
+      }
+    },
+    "跟游戏不一样的地方": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Differences from the Game"
+          }
+        }
+      }
+    },
+    "跨地图放置": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Place Across Maps"
+          }
+        }
+      }
+    },
+    "辅助说明保留完整内容，随系统字号换行。": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supporting text stays complete and wraps with the system font size."
+          }
+        }
+      }
+    },
+    "输入名称、选择搜索历史，或浏览全部物品；选择数量后查看生产依赖。": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter a name, choose from history, or browse items. Set a quantity to view production dependencies."
+          }
+        }
+      }
+    },
+    "输出：%@ %@/min": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Output: %1$@ %2$@/min"
+          }
+        }
+      }
+    },
+    "运行中": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Running"
+          }
+        }
+      }
+    },
+    "运行诊断": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diagnostics"
+          }
+        }
+      }
+    },
+    "返回工作台，保留当前编辑状态": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Return to Workspace, keeping the current edit state"
+          }
+        }
+      }
+    },
+    "还差 %@ MW": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Short by %@ MW"
+          }
+        }
+      }
+    },
+    "还没有保存的布局": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No saved layouts yet"
+          }
+        }
+      }
+    },
+    "这份布局来自%@，放到%@后下面这些会标红、不参与计算：\n": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This layout is from %1$@. When placed in %2$@, the following will be marked red and excluded from calculations:\n"
+          }
+        }
+      }
+    },
+    "这里放不下，换个位置（点的格子是建筑新的左上角）": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cannot place here. Try another position (the tapped cell becomes the top-left corner)."
+          }
+        }
+      }
+    },
+    "进气": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gas Intake"
+          }
+        }
+      }
+    },
+    "进货口送进来的东西全部入库。": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All items delivered to the input ports enter storage."
+          }
+        }
+      }
+    },
+    "连不上更新服务器，请稍后再试": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cannot reach the update server. Try again later."
+          }
+        }
+      }
+    },
+    "连接": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connection"
+          }
+        }
+      }
+    },
+    "连接、货物与流量": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connections, Cargo, and Flow"
+          }
+        }
+      }
+    },
+    "连接传送带": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect Belts"
+          }
+        }
+      }
+    },
+    "连接出口后开始输送": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect an output to begin transport"
+          }
+        }
+      }
+    },
+    "连接管道": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect Pipes"
+          }
+        }
+      }
+    },
+    "送入暗管": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To Sub-pipe"
+          }
+        }
+      }
+    },
+    "选中的建筑和它们的设置、选中的线，以及两头接在这些建筑上的线会一起存下来": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saves selected facilities and settings, selected lines, and lines connected to those facilities at both ends"
+          }
+        }
+      }
+    },
+    "选产物和目标产量，反推每一级要几台机器、多少原料和电。": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a product and target rate to calculate machines, materials, and power for every stage."
+          }
+        }
+      }
+    },
+    "选产物和目标产量，算出机器台数、原料和耗电": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set a product and rate to calculate machines, materials, and power"
+          }
+        }
+      }
+    },
+    "选择": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select"
+          }
+        }
+      }
+    },
+    "选择与查看": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select and inspect"
+          }
+        }
+      }
+    },
+    "选择产物": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose Product"
+          }
+        }
+      }
+    },
+    "选择取货材料": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose Supply Material"
+          }
+        }
+      }
+    },
+    "选择建筑或线路": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select a Facility or Line"
+          }
+        }
+      }
+    },
+    "选择材料": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose Material"
+          }
+        }
+      }
+    },
+    "选择目标物品与数量，查看生产步骤和串行耗时。": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a target item and quantity to view production steps and serial time."
+          }
+        }
+      }
+    },
+    "选择要建造的设施": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a facility to build"
+          }
+        }
+      }
+    },
+    "选择该出货口的材料": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose the material for this output port"
+          }
+        }
+      }
+    },
+    "遇到了什么问题？怎么操作会出现？也可以写建议。": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What happened, and how can it be reproduced? Suggestions are welcome too."
+          }
+        }
+      }
+    },
+    "配方": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recipe"
+          }
+        }
+      }
+    },
+    "配方、物品、建筑数据和物品图标可以在线更新，下载后重启 App 生效。": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recipes, items, facilities, and icons can be updated online. Restart the app after downloading to apply."
+          }
+        }
+      }
+    },
+    "配方一览": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recipe List"
+          }
+        }
+      }
+    },
+    "配方一览（可多选）": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recipe List (Multiple Selection)"
+          }
+        }
+      }
+    },
+    "配方分析": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recipe Analysis"
+          }
+        }
+      }
+    },
+    "配方按产物分组统计，多产物配方会分别计入。": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recipes are counted by output. Multi-product recipes are counted once for each product."
+          }
+        }
+      }
+    },
+    "配方查询": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recipe Search"
+          }
+        }
+      }
+    },
+    "配方树": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recipe Tree"
+          }
+        }
+      }
+    },
+    "配方（可多选，自我供给）": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recipes (Multiple, Self-supplying)"
+          }
+        }
+      }
+    },
+    "配置与运行详情": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings and Operation"
+          }
+        }
+      }
+    },
+    "酸性": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acidic"
+          }
+        }
+      }
+    },
+    "酸性环境": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acidic environment"
+          }
+        }
+      }
+    },
+    "重做": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Redo"
+          }
+        }
+      }
+    },
+    "重新加载": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reload"
+          }
+        }
+      }
+    },
+    "重置视图": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reset View"
+          }
+        }
+      }
+    },
+    "重置选择示例": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reset Selection Example"
+          }
+        }
+      }
+    },
+    "重试示例": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry Example"
+          }
+        }
+      }
+    },
+    "长 %lld 格 · 上限 %@/min": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld cells long · Capacity %2$@/min"
+          }
+        }
+      }
+    },
+    "长按并拖到画布放置": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Long-press and drag onto the canvas"
+          }
+        }
+      }
+    },
+    "长按拖入画布": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drag to Canvas"
+          }
+        }
+      }
+    },
+    "问题类型": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Issue Type"
+          }
+        }
+      }
+    },
+    "阻塞": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blocked"
+          }
+        }
+      }
+    },
+    "限速": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rate Limit"
+          }
+        }
+      }
+    },
+    "限速 %@/min": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rate limit %@/min"
+          }
+        }
+      }
+    },
+    "隐藏反馈": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hide Feedback"
+          }
+        }
+      }
+    },
+    "需要%@": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Requires %@"
+          }
+        }
+      }
+    },
+    "需要%@（附近 %lld 格内要有气体散布机供气）": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Requires %1$@ (a Gas Dispersing Unit must supply gas within %2$lld cells)"
+          }
+        }
+      }
+    },
+    "预设：灼铜装备原件（武陵）": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preset: Pyrrolite Component (Wuling)"
+          }
+        }
+      }
+    },
+    "预设：高容谷地电池（四号谷地）": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preset: HC Valley Battery (Valley IV)"
+          }
+        }
+      }
+    },
+    "高亮：%@": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Highlight: %@"
+          }
+        }
+      }
+    },
+    "（内置）": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "(Built-in)"
+          }
+        }
+      }
+    },
+    "（已更新）": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "(Updated)"
+          }
+        }
+      }
+    },
+    "（未接）": {
+      "extractionState": "manual",
+      "generatesSymbols": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "(Unconnected)"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

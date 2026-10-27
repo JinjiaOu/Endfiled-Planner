@@ -14,6 +14,16 @@ struct FeedbackView: View {
         case recipe = "配方查询", blueprint = "社区蓝图", factory = "基建规划", calculator = "产量计算",
              data = "游戏数据", other = "其他"
         var id: String { rawValue }
+        var displayName: String {
+            switch self {
+            case .recipe: return String(localized: "配方查询")
+            case .blueprint: return String(localized: "社区蓝图")
+            case .factory: return String(localized: "基建规划")
+            case .calculator: return String(localized: "产量计算")
+            case .data: return String(localized: "游戏数据")
+            case .other: return String(localized: "其他")
+            }
+        }
     }
 
     @State private var category: Category = .factory
@@ -33,8 +43,8 @@ struct FeedbackView: View {
     var body: some View {
         Form {
             Section {
-                Picker("问题类型", selection: $category) {
-                    ForEach(Category.allCases) { Text($0.rawValue).tag($0) }
+                Picker(String(localized: "问题类型"), selection: $category) {
+                    ForEach(Category.allCases) { Text(verbatim: $0.displayName).tag($0) }
                 }
             }
             .listRowBackground(AppColors.surface)
@@ -45,20 +55,20 @@ struct FeedbackView: View {
                     .focused($messageFocused)
                     .overlay(alignment: .topLeading) {
                         if message.isEmpty {
-                            Text("遇到了什么问题？怎么操作会出现？也可以写建议。")
+                            Text(String(localized: "遇到了什么问题？怎么操作会出现？也可以写建议。"))
                                 .foregroundStyle(AppColors.tertiaryText)
                                 .padding(.top, 8).padding(.leading, 5)
                                 .allowsHitTesting(false)
                         }
                     }
             } header: {
-                Text("描述")
+                Text(String(localized: "描述"))
             }
             .listRowBackground(AppColors.surface)
 
             Section {
                 PhotosPicker(selection: $photoItem, matching: .images) {
-                    Label(screenshot == nil ? "添加截图（可选）" : "换一张截图", systemImage: "photo")
+                    Label(screenshot == nil ? String(localized: "添加截图（可选）") : String(localized: "换一张截图"), systemImage: "photo")
                 }
                 if let screenshot {
                     HStack {
@@ -73,7 +83,7 @@ struct FeedbackView: View {
                             Image(systemName: "xmark.circle.fill").foregroundStyle(AppColors.secondaryText)
                         }
                         .buttonStyle(.plain)
-                        .accessibilityLabel("移除截图")
+                        .accessibilityLabel(String(localized: "移除截图"))
                     }
                 }
             }
@@ -84,54 +94,54 @@ struct FeedbackView: View {
                     LabeledContent(title, value: value)
                 }
             } header: {
-                Text("会一起发送")
+                Text(String(localized: "会一起发送"))
             } footer: {
-                Text("只发送上面这些和你填写的内容，不包含账号或个人信息。需要手机登录 iCloud。"
-                     + "每天最多发 \(FeedbackInfo.dailyLimit) 条，今天还能发 \(remainingToday) 条。")
+                Text(String(localized: "只发送上面这些和你填写的内容，不包含账号或个人信息。需要手机登录 iCloud。")
+                     + String(localized: "每天最多发 \(FeedbackInfo.dailyLimit) 条，今天还能发 \(remainingToday) 条。"))
             }
             .listRowBackground(AppColors.surface)
 
             if remainingToday == 0 {
                 Section {
-                    AppInlineNotice(title: "今天的反馈次数用完了",
-                                    message: "明天再来，或者改用 GitHub Issues 反馈。", tone: .warning)
+                    AppInlineNotice(title: String(localized: "今天的反馈次数用完了"),
+                                    message: String(localized: "明天再来，或者改用 GitHub Issues 反馈。"), tone: .warning)
                 }
                 .listRowBackground(AppColors.surface)
             }
 
             if let errorText {
                 Section {
-                    AppInlineNotice(title: "没发出去", message: errorText, tone: .error)
+                    AppInlineNotice(title: String(localized: "没发出去"), message: errorText, tone: .error)
                 }
                 .listRowBackground(AppColors.surface)
             }
         }
         .scrollContentBackground(.hidden)
         .background(AppColors.background)
-        .navigationTitle("反馈问题")
+        .navigationTitle(String(localized: "反馈问题"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                Button("取消") { dismiss() }
+                Button(String(localized: "取消")) { dismiss() }
             }
             ToolbarItem(placement: .confirmationAction) {
                 if isSending {
                     ProgressView()
                 } else {
-                    Button("发送") { Task { await send() } }
+                    Button(String(localized: "发送")) { Task { await send() } }
                         .disabled(!canSend)
                 }
             }
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
-                Button("完成") { messageFocused = false }
+                Button(String(localized: "完成")) { messageFocused = false }
             }
         }
         .onChange(of: photoItem) { _, item in
             Task { await loadScreenshot(item) }
         }
-        .alert("已发送，谢谢反馈！", isPresented: $sent) {
-            Button("好") { dismiss() }
+        .alert(String(localized: "已发送，谢谢反馈！"), isPresented: $sent) {
+            Button(String(localized: "好")) { dismiss() }
         }
         .interactiveDismissDisabled(isSending)
     }
@@ -200,6 +210,11 @@ enum FeedbackInfo {
         return manifest.builtDateText + (DataPackStore.isUsingDownloadedData ? "（已更新）" : "（内置）")
     }
 
+    static var displayDataVersion: String {
+        guard let manifest = DataPackStore.currentManifest else { return String(localized: "内置") }
+        return manifest.builtDateText + (DataPackStore.isUsingDownloadedData ? String(localized: "（已更新）") : String(localized: "（内置）"))
+    }
+
     static var systemVersion: String { "\(UIDevice.current.systemName) \(UIDevice.current.systemVersion)" }
 
     /// 机型标识（如 iPhone16,1），不含设备名等个人信息
@@ -212,7 +227,7 @@ enum FeedbackInfo {
     }
 
     static var lines: [(String, String)] {
-        [("App 版本", appVersion), ("数据版本", dataVersion), ("系统", systemVersion), ("机型", deviceModel)]
+        [(String(localized: "App 版本"), appVersion), (String(localized: "数据版本"), displayDataVersion), (String(localized: "系统"), systemVersion), (String(localized: "机型"), deviceModel)]
     }
 
     /// GitHub 新建 Issue 页面，正文预填版本信息
@@ -262,13 +277,13 @@ enum FeedbackInfo {
         if let ck = error as? CKError {
             switch ck.code {
             case .notAuthenticated: return FeedbackError.noICloud.message
-            case .networkUnavailable, .networkFailure: return "网络不太好，稍后再试。"
+            case .networkUnavailable, .networkFailure: return String(localized: "网络不太好，稍后再试。")
             case .quotaExceeded, .requestRateLimited, .serviceUnavailable, .zoneBusy:
-                return "服务器忙，稍后再试。"
+                return String(localized: "服务器忙，稍后再试。")
             default: break
             }
         }
-        return "发送失败（\(error.localizedDescription)）。也可以改用 GitHub Issues 反馈。"
+        return String(localized: "发送失败（\(error.localizedDescription)）。也可以改用 GitHub Issues 反馈。")
     }
 
     private static func resized(_ image: UIImage, maxSide: CGFloat) -> UIImage {
@@ -285,8 +300,8 @@ enum FeedbackError: Error {
     case dailyLimit
     var message: String {
         switch self {
-        case .noICloud: return "手机没有登录 iCloud，发不了。可以在系统设置里登录 iCloud，或者改用 GitHub Issues 反馈。"
-        case .dailyLimit: return "今天已经发了 \(FeedbackInfo.dailyLimit) 条，明天再来，或者改用 GitHub Issues 反馈。"
+        case .noICloud: return String(localized: "手机没有登录 iCloud，发不了。可以在系统设置里登录 iCloud，或者改用 GitHub Issues 反馈。")
+        case .dailyLimit: return String(localized: "今天已经发了 \(FeedbackInfo.dailyLimit) 条，明天再来，或者改用 GitHub Issues 反馈。")
         }
     }
 }

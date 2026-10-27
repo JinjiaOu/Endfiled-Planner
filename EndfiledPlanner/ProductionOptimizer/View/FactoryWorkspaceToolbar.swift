@@ -8,15 +8,15 @@ struct FactoryWorkspaceHeader: View {
     var buildingPaletteVisible: Bool
 
     private var modeTitle: String {
-        if buildingPaletteVisible { return "选择要建造的设施" }
-        if vm.pendingPlacement != nil { return "放置我的布局" }
+        if buildingPaletteVisible { return String(localized: "选择要建造的设施") }
+        if vm.pendingPlacement != nil { return String(localized: "放置我的布局") }
         switch vm.editMode {
-        case .select: return "选择与查看"
-        case .place: return "放置建筑"
-        case .belt: return "连接传送带"
-        case .pipe: return "连接管道"
-        case .erase: return "删除模式 · 划过即可删除"
-        case .boxSelect: return "框选与整组编辑"
+        case .select: return String(localized: "选择与查看")
+        case .place: return String(localized: "放置建筑")
+        case .belt: return String(localized: "连接传送带")
+        case .pipe: return String(localized: "连接管道")
+        case .erase: return String(localized: "删除模式 · 划过即可删除")
+        case .boxSelect: return String(localized: "框选与整组编辑")
         }
     }
 
@@ -56,11 +56,11 @@ struct FactoryWorkspaceHeader: View {
 
     private var historyActions: some View {
         HStack(spacing: 0) {
-            AppIconButton(title: "撤销", systemImage: "arrow.uturn.backward") { vm.undo() }
+            AppIconButton(title: String(localized: "撤销"), systemImage: "arrow.uturn.backward") { vm.undo() }
                 .disabled(!vm.canUndo)
-            AppIconButton(title: "重做", systemImage: "arrow.uturn.forward") { vm.redo() }
+            AppIconButton(title: String(localized: "重做"), systemImage: "arrow.uturn.forward") { vm.redo() }
                 .disabled(!vm.canRedo)
-            AppIconButton(title: "保存画布", systemImage: "square.and.arrow.down") { vm.saveLayout() }
+            AppIconButton(title: String(localized: "保存画布"), systemImage: "square.and.arrow.down") { vm.saveLayout() }
         }
     }
 }
@@ -92,34 +92,34 @@ struct FactoryWorkspaceToolbar: View {
 
     @ViewBuilder
     private var tools: some View {
-        tool("选择", icon: "cursorarrow", active: vm.editMode == .select && !showBuildingPalette) {
+        tool(String(localized: "选择"), icon: "cursorarrow", active: vm.editMode == .select && !showBuildingPalette) {
             vm.editMode = .select
             showBuildingPalette = false
         }
-        tool("建造", icon: "plus.square", active: buildingActive) {
+        tool(String(localized: "建造"), icon: "plus.square", active: buildingActive) {
             withAnimation(AppMotion.panel(reduceMotion: reduceMotion)) {
                 showBuildingPalette.toggle()
                 vm.editMode = .select
             }
         }
-        tool("传送带", icon: "arrow.left.and.right", active: vm.editMode == .belt) {
+        tool(String(localized: "传送带"), icon: "arrow.left.and.right", active: vm.editMode == .belt) {
             vm.editMode = .belt
             showBuildingPalette = false
             vm.beltStart = nil
         }
         if vm.layout.mapType.rules.allowsPipes {
-            tool("管道", icon: "water.waves", active: vm.editMode == .pipe) {
+            tool(String(localized: "管道"), icon: "water.waves", active: vm.editMode == .pipe) {
                 vm.editMode = .pipe
                 showBuildingPalette = false
                 vm.beltStart = nil
             }
         }
-        tool("框选", icon: "rectangle.dashed", active: vm.editMode == .boxSelect) {
+        tool(String(localized: "框选"), icon: "rectangle.dashed", active: vm.editMode == .boxSelect) {
             vm.editMode = .boxSelect
             showBuildingPalette = false
         }
-        tool("我的布局", icon: "square.stack.3d.up", active: showMyLayouts) { showMyLayouts = true }
-        tool("删除", icon: "trash", active: vm.editMode == .erase) {
+        tool(String(localized: "我的布局"), icon: "square.stack.3d.up", active: showMyLayouts) { showMyLayouts = true }
+        tool(String(localized: "删除"), icon: "trash", active: vm.editMode == .erase) {
             vm.editMode = .erase
             showBuildingPalette = false
         }

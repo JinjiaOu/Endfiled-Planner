@@ -46,23 +46,23 @@ struct RecipeDependencyOutline: View {
         VStack(alignment: .leading, spacing: AppSpacing.sm) {
             AppSurface {
                 VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                    Text(depth == 0 ? "目标物品" : "依赖层级 \(depth)")
+                    Text(depth == 0 ? String(localized: "目标物品") : String(localized: "依赖层级 \(depth)"))
                         .font(AppTypography.caption).foregroundStyle(AppColors.secondaryText)
                     HStack(alignment: .top, spacing: AppSpacing.sm) {
                         ItemIcon(name: node.name, size: AppSize.itemIcon)
                         VStack(alignment: .leading, spacing: AppSpacing.xxs) {
                             Text(verbatim: DisplayName.item(node.name)).font(AppTypography.rowTitle).foregroundStyle(AppColors.primaryText)
-                            Text("数量 \(node.amount)").font(AppTypography.numeric).foregroundStyle(AppColors.secondaryText)
+                            Text(String(localized: "数量 \(node.amount)")).font(AppTypography.numeric).foregroundStyle(AppColors.secondaryText)
                         }
                     }
                     if let recipe = node.recipe {
                         Text(verbatim: recipe.displayMachine).font(AppTypography.supporting).foregroundStyle(AppColors.secondaryText)
                         if recipe.time > 0 && !RecipeViewModel.isMiningMachine(recipe.machine) {
-                            Label("\(recipe.time) 秒", systemImage: "clock")
+                            Label(String(localized: "\(recipe.time) 秒"), systemImage: "clock")
                                 .font(AppTypography.supporting).foregroundStyle(AppColors.secondaryText)
                         }
                     } else {
-                        Text("原材料").font(AppTypography.caption).foregroundStyle(AppColors.warning)
+                        Text(String(localized: "原材料")).font(AppTypography.caption).foregroundStyle(AppColors.warning)
                     }
                 }
                 .fixedSize(horizontal: false, vertical: true)

@@ -35,7 +35,7 @@ struct SearchablePickerSheet: View {
     /// 顶部的筛选标签（比如"这台机器能吃的所有原料名"），点一下按标签筛列表，跟游戏里"先选原料再看配方"一个思路；
     /// 不传就不显示这一排
     var filterChips: [String] = []
-    var chipsLabel: String = "按原料筛选"
+    var chipsLabel: String = String(localized: "按原料筛选")
 
     @Environment(\.dismiss) private var dismiss
     @State private var searchText = ""
@@ -85,8 +85,8 @@ struct SearchablePickerSheet: View {
                     }
                 }
                 if filteredItems.isEmpty {
-                    AppContentState(title: "没有匹配的结果",
-                                    message: filterChips.isEmpty ? "请尝试其他关键词。" : "请尝试其他关键词，或取消原料筛选。",
+                    AppContentState(title: String(localized: "没有匹配的结果"),
+                                    message: filterChips.isEmpty ? String(localized: "请尝试其他关键词。") : String(localized: "请尝试其他关键词，或取消原料筛选。"),
                                     systemImage: "magnifyingglass")
                         .listRowBackground(Color.clear)
                         .listRowSeparator(.hidden)
@@ -95,7 +95,7 @@ struct SearchablePickerSheet: View {
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
             .background(AppColors.background)
-            .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: "搜索")
+            .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: String(localized: "搜索"))
             .navigationTitle(title)
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(.visible, for: .navigationBar)
@@ -103,12 +103,12 @@ struct SearchablePickerSheet: View {
             .toolbar {
                 if multiSelect {
                     ToolbarItem(placement: .confirmationAction) {
-                        Button("完成") { dismiss() }
+                        Button(String(localized: "完成")) { dismiss() }
                             .tint(AppColors.accent)
                     }
                 } else {
                     ToolbarItem(placement: .cancellationAction) {
-                        Button("关闭") { dismiss() }
+                        Button(String(localized: "关闭")) { dismiss() }
                             .tint(AppColors.accent)
                     }
                 }
@@ -146,7 +146,7 @@ struct SearchablePickerSheet: View {
         AppSelectionRow(title: title, subtitle: subtitle, isSelected: isSelected,
                         multiSelect: multiSelect, restriction: disabledTag,
                         isSelectable: disabledTag == nil || (multiSelect && isSelected),
-                        hint: disabledTag != nil && multiSelect && isSelected ? "可取消选择" : "",
+                        hint: disabledTag != nil && multiSelect && isSelected ? String(localized: "可取消选择") : "",
                         action: action) {
             if let iconName {
                 ItemIcon(name: iconName, size: AppSize.itemIcon)

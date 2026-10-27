@@ -166,7 +166,7 @@ extension FactoryViewModel {
             else { continue }
             broken += reattachLines(old: old, new: moved, def: def, excluding: moving)
         }
-        lineReattachMessage = broken > 0 ? "有 \(broken) 条线在新位置走不通，已经断开，需要重新接" : nil
+        lineReattachMessage = broken > 0 ? String(localized: "有 \(broken) 条线在新位置走不通，已经断开，需要重新接") : nil
         // 改接时断开的线不在了，选中里也去掉
         groupBeltSelection.formIntersection(Set(layout.beltNetwork.belts.map(\.id)))
         refreshStats()

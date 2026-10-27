@@ -64,7 +64,7 @@ class FactoryViewModel: ObservableObject {
     /// 利用率视图：线按 实际流量/上限 分档上色（空闲变暗、跑满绿线、被限流红线、其余标百分比）
     @Published var showUtilization = false
     /// 保存提示条上的文字（保存画布 / 存为我的布局共用一个提示条）
-    @Published var toastText = "画布已保存"
+    @Published var toastText = String(localized: "画布已保存")
     /// 详情面板点了"移动"后，下一次点网格就把这台建筑挪过去（点的格子是新的左上角）
     @Published var movingBuildingID: UUID? = nil
     @Published var moveFailedMessage: String? = nil
@@ -374,7 +374,7 @@ class FactoryViewModel: ObservableObject {
                 movingBuildingID = nil
                 moveFailedMessage = nil
             } else {
-                moveFailedMessage = "这里放不下，换个位置（点的格子是建筑新的左上角）"
+                moveFailedMessage = String(localized: "这里放不下，换个位置（点的格子是建筑新的左上角）")
             }
             return
         }
@@ -800,7 +800,7 @@ class FactoryViewModel: ObservableObject {
     func eraseAt(cell: GridPoint) {
         if let hit = building(at: cell) {
             if hit.def.isProtocolCore {
-                eraseBlockedMessage = "协议核心是地图必需的核心仓库，不能删除"
+                eraseBlockedMessage = String(localized: "协议核心是地图必需的核心仓库，不能删除")
                 return
             }
             removeBuilding(hit.placed, def: hit.def)
@@ -892,7 +892,7 @@ class FactoryViewModel: ObservableObject {
     func deleteSelected() {
         guard let placed = selectedPlaced, let def = selectedDefinition else { return }
         guard !def.isProtocolCore else {
-            eraseBlockedMessage = "协议核心是地图必需的核心仓库，不能删除"
+            eraseBlockedMessage = String(localized: "协议核心是地图必需的核心仓库，不能删除")
             return
         }
         removeBuilding(placed, def: def)
@@ -903,7 +903,7 @@ class FactoryViewModel: ObservableObject {
         var toSave = layout
         toSave.savedAt = .now
         FactoryGridModel.save(toSave)
-        toastText = "画布已保存"
+        toastText = String(localized: "画布已保存")
         showSaveConfirm = true
     }
 
@@ -1016,7 +1016,7 @@ class FactoryViewModel: ObservableObject {
             }
         }
         if broken > 0 {
-            lineReattachMessage = "有 \(broken) 条线在新位置走不通，已经断开，需要重新接"
+            lineReattachMessage = String(localized: "有 \(broken) 条线在新位置走不通，已经断开，需要重新接")
         }
         return broken
     }

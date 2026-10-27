@@ -142,11 +142,11 @@ enum BlueprintError: Error, LocalizedError {
     var errorDescription: String? {
         switch self {
         case .invalidURL:
-            return "无效的 URL"
+            return String(localized: "无效的 URL")
         case .networkError:
-            return "网络请求失败"
+            return String(localized: "网络请求失败")
         case .loadFailed:
-            return "加载蓝图数据失败"
+            return String(localized: "加载蓝图数据失败")
         }
     }
 }

@@ -40,7 +40,7 @@ struct BuildingDetailPanel: View {
                               maxContentHeight: style == .bottom ? maxContentHeight : nil,
                               maxPanelHeight: style == .bottom ? maxPanelHeight : nil,
                               summaryText: powerSummary,
-                              disclosureTitle: def.isProtocolCore ? "出货口配置与运行详情" : "配置与运行详情",
+                              disclosureTitle: def.isProtocolCore ? String(localized: "出货口配置与运行详情") : String(localized: "配置与运行详情"),
                               onClose: {
                                   vm.cancelMoving()
                                   vm.selectedBuildingID = nil
@@ -53,35 +53,35 @@ struct BuildingDetailPanel: View {
         } actions: {
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: AppSpacing.xxs),
                                       count: dynamicTypeSize.isAccessibilitySize ? 2 : 4), spacing: AppSpacing.xxs) {
-                actionButton(placed.isActive ? "关闭" : "开启", icon: "power",
+                actionButton(placed.isActive ? String(localized: "关闭") : String(localized: "开启"), icon: "power",
                              color: placed.isActive ? green : AppColors.secondaryText) { vm.toggleActive(placed.id) }
-                actionButton(isMoving ? "取消移动" : "移动", icon: "arrow.up.and.down.and.arrow.left.and.right",
+                actionButton(isMoving ? String(localized: "取消移动") : String(localized: "移动"), icon: "arrow.up.and.down.and.arrow.left.and.right",
                              color: AppColors.info) {
                     expanded = true
                     isMoving ? vm.cancelMoving() : vm.startMoving(placed.id)
                 }
-                actionButton("旋转", icon: "rotate.right", color: AppColors.accent) { vm.rotateSelected() }
-                actionButton("收纳", icon: "tray.and.arrow.down.fill", color: red) { vm.deleteSelected() }
+                actionButton(String(localized: "旋转"), icon: "rotate.right", color: AppColors.accent) { vm.rotateSelected() }
+                actionButton(String(localized: "收纳"), icon: "tray.and.arrow.down.fill", color: red) { vm.deleteSelected() }
             }
         }
     }
 
     private var headerStatus: String {
-        if vm.stats.mapConflicts[placed.id] != nil { return "地图不支持" }
-        if !placed.isActive { return "已关闭" }
-        if isUnpowered { return "未通电" }
-        return state?.status.label ?? def.category.displayName
+        if vm.stats.mapConflicts[placed.id] != nil { return String(localized: "地图不支持") }
+        if !placed.isActive { return String(localized: "已关闭") }
+        if isUnpowered { return String(localized: "未通电") }
+        return state?.status.displayLabel ?? def.category.displayName
     }
 
     private var powerSummary: String {
         if def.powerUsage > 0 {
-            return String(format: "耗电功率值 %.0f MW", def.powerUsage)
+            return String(localized: "耗电功率值 \(String(format: "%.0f", def.powerUsage)) MW")
         } else if def.isProtocolCore {
-            return String(format: "固定发电 %.0f MW · 本身无供电范围", def.powerGenerate)
+            return String(localized: "固定发电 \(String(format: "%.0f", def.powerGenerate)) MW · 本身无供电范围")
         } else if def.powerRange != nil || def.id == "power_station_1" {
-            return "电力设施"
+            return String(localized: "电力设施")
         } else {
-            return "不耗电"
+            return String(localized: "不耗电")
         }
     }
 
@@ -89,14 +89,14 @@ struct BuildingDetailPanel: View {
     @ViewBuilder
     private var statusBar: some View {
         let (label, ratio, color): (String, Double?, Color) = {
-            if !placed.isActive { return ("已关闭", nil, AppColors.secondaryText) }
-            if isUnpowered { return ("未通电", 0, red) }
+            if !placed.isActive { return (String(localized: "已关闭"), nil, AppColors.secondaryText) }
+            if isUnpowered { return (String(localized: "未通电"), 0, red) }
             guard let state else { return ("", nil, .clear) }
             switch state.status {
-            case .running:  return (state.status.label, state.throttle, green)
-            case .starved:  return (state.status.label, state.throttle, orange)
-            case .blocked:  return (state.status.label, state.throttle, red)
-            case .inactive, .noRecipe: return (state.status.label, state.throttle, AppColors.secondaryText)
+            case .running:  return (state.status.displayLabel, state.throttle, green)
+            case .starved:  return (state.status.displayLabel, state.throttle, orange)
+            case .blocked:  return (state.status.displayLabel, state.throttle, red)
+            case .inactive, .noRecipe: return (state.status.displayLabel, state.throttle, AppColors.secondaryText)
             }
         }()
         if !label.isEmpty {
@@ -118,8 +118,8 @@ struct BuildingDetailPanel: View {
                     }
                     .frame(height: 4)
                 }
-                if placed.isActive, let detail = isUnpowered ? "不在任何供电桩范围内，不运行" : state?.detail {
-                    Text(detail).font(AppTypography.supporting).foregroundColor(AppColors.secondaryText)
+                if placed.isActive, let detail = isUnpowered ? String(localized: "不在任何供电桩范围内，不运行") : state?.detail {
+                    Text(verbatim: DisplayName.diagnostic(detail)).font(AppTypography.supporting).foregroundColor(AppColors.secondaryText)
                 }
             }
         }
@@ -141,45 +141,45 @@ struct BuildingDetailPanel: View {
     @ViewBuilder
     private var content: some View {
         if let conflict = vm.stats.mapConflicts[placed.id] {
-            section("地图不支持") {
-                Text("\(conflict)。这台建筑不参与产能计算。")
+            section(String(localized: "地图不支持")) {
+                Text(String(localized: "\(conflict)。这台建筑不参与产能计算。"))
                     .font(AppTypography.supporting)
                     .foregroundColor(AppColors.error)
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
         if def.isMultiRecipeMachine {
-            section("配方（可多选，自我供给）") { multiRecipePicker(for: def) }
+            section(String(localized: "配方（可多选，自我供给）")) { multiRecipePicker(for: def) }
         } else if !vm.availableRecipes(for: def).isEmpty {
-            section("配方") { recipePicker(for: def) }
+            section(String(localized: "配方")) { recipePicker(for: def) }
         }
         if let state, !state.needs.isEmpty {
-            section("原料到货") { ingredientRows(state) }
+            section(String(localized: "原料到货")) { ingredientRows(state) }
         }
         if let state, let item = state.activatorItem ?? FlowSimulator.transmuterActivators[def.id] {
-            section(def.id == "vaporizer_1" ? "进气" : "激活") { activatorRow(item: item, state: state) }
+            section(def.id == "vaporizer_1" ? String(localized: "进气") : String(localized: "激活")) { activatorRow(item: item, state: state) }
         }
         if let state, state.outputs.values.contains(where: { $0 > 1e-9 }) {
-            section("产出") { rateRows(state.outputs, color: green) }
+            section(String(localized: "产出")) { rateRows(state.outputs, color: green) }
         }
         if def.choosesOutletMaterial {
-            section(def.isUndergroundOutlet ? "出什么" : "取货材料") { outletMaterialPicker(for: def) }
+            section(def.isUndergroundOutlet ? String(localized: "出什么") : String(localized: "取货材料")) { outletMaterialPicker(for: def) }
         }
         if def.id == "log_conditioner" || def.id == "log_pipe_conditioner" {
-            section("限速") { flowLimitControl(for: def) }
-            section("只放行") { filterItemPicker(for: def) }
+            section(String(localized: "限速")) { flowLimitControl(for: def) }
+            section(String(localized: "只放行")) { filterItemPicker(for: def) }
         }
         if def.isProtocolCore {
-            section("出货口") { corePortPicker(for: def) }
-            section("协议核心") {
-                infoText(String(format: "固定发电 %.0f MW，计入总发电；本身没有供电范围，周围建筑仍要靠供电桩。", def.powerGenerate))
-                infoText("进货口送进来的东西全部入库。")
+            section(String(localized: "出货口")) { corePortPicker(for: def) }
+            section(String(localized: "协议核心")) {
+                infoText(String(localized: "固定发电 \(String(format: "%.0f", def.powerGenerate)) MW，计入总发电；本身没有供电范围，周围建筑仍要靠供电桩。"))
+                infoText(String(localized: "进货口送进来的东西全部入库。"))
             }
         }
         if def.id == "power_station_1" { generatorSection }
         if let range = def.powerRange { diffuserSection(range: range) }
         if let sink = vm.stats.sinkStates.first(where: { $0.id == placed.id }) {
-            section(def.id == BuildingDefinition.warehouseInletID || def.isProtocolCore ? "入库" : def.isUndergroundInlet ? "送入暗管" : "处理") {
+            section(def.id == BuildingDefinition.warehouseInletID || def.isProtocolCore ? String(localized: "入库") : def.isUndergroundInlet ? String(localized: "送入暗管") : String(localized: "处理")) {
                 rateRows(sink.consumed, color: AppColors.info)
             }
         }
@@ -208,8 +208,8 @@ struct BuildingDetailPanel: View {
                 let enough = arrived + 1e-6 >= need
                 HStack(alignment: .top, spacing: AppSpacing.xs) {
                     ItemIcon(name: item, size: AppSize.icon)
-                    AppKeyValueRow(title: item, value: String(format: "%.1f / %.1f /min", arrived, need),
-                                   detail: enough ? "到货 / 需求" : "到货 / 需求 · 原料不足",
+                    AppKeyValueRow(title: DisplayName.item(item), value: String(format: "%.1f / %.1f /min", arrived, need),
+                                   detail: enough ? String(localized: "到货 / 需求") : String(localized: "到货 / 需求 · 原料不足"),
                                    valueColor: enough ? green : orange)
                 }
             }
@@ -221,7 +221,7 @@ struct BuildingDetailPanel: View {
             ForEach(rates.filter { $0.value > 1e-9 }.keys.sorted(), id: \.self) { item in
                 HStack(alignment: .top, spacing: AppSpacing.xs) {
                     ItemIcon(name: item, size: AppSize.icon)
-                    AppKeyValueRow(title: item, value: String(format: "%.1f /min", (rates[item] ?? 0) * 60),
+                    AppKeyValueRow(title: DisplayName.item(item), value: String(format: "%.1f /min", (rates[item] ?? 0) * 60),
                                    valueColor: color)
                 }
             }
@@ -236,11 +236,11 @@ struct BuildingDetailPanel: View {
         return VStack(alignment: .leading, spacing: 4) {
             HStack(alignment: .top, spacing: AppSpacing.xs) {
                 ItemIcon(name: item, size: AppSize.icon)
-                AppKeyValueRow(title: item, value: String(format: "%.1f /min（需要 ≥%.0f）", arrived, need),
-                               detail: ok ? nil : "激活材料不足", valueColor: ok ? green : red)
+                AppKeyValueRow(title: DisplayName.item(item), value: String(localized: "\(String(format: "%.1f", arrived)) /min（需要 ≥\(String(format: "%.0f", need))）"),
+                               detail: ok ? nil : String(localized: "激活材料不足"), valueColor: ok ? green : red)
             }
             if def.id == "vaporizer_1" {
-                infoText("惰气→稳定、水蒸气→潮湿、酸气→酸性、息壤气→息壤，影响周围 \(FlowSimulator.vaporizerRange) 格")
+                infoText(String(localized: "惰气→稳定、水蒸气→潮湿、酸气→酸性、息壤气→息壤，影响周围 \(FlowSimulator.vaporizerRange) 格"))
             }
         }
     }
@@ -248,24 +248,24 @@ struct BuildingDetailPanel: View {
     @ViewBuilder
     private var generatorSection: some View {
         let generator = vm.stats.generators.first { $0.id == placed.id }
-        section("发电") {
+        section(String(localized: "发电")) {
             VStack(alignment: .leading, spacing: 4) {
                 if let generator, let fuel = generator.fuel {
                     HStack(spacing: 6) {
                         ItemIcon(name: fuel, size: 20)
-                        Text("正在烧 \(DisplayName.item(fuel))").font(AppTypography.rowTitle).foregroundColor(AppColors.primaryText)
+                        Text(verbatim: String(localized: "正在烧 \(DisplayName.item(fuel))")).font(AppTypography.rowTitle).foregroundColor(AppColors.primaryText)
                         Spacer()
                         Text(String(format: "%.0f MW", generator.power))
                             .font(AppTypography.supporting).foregroundColor(yellow)
                     }
                     if generator.fuelRatio < 0.999 {
-                        infoText(String(format: "燃料只送到满烧需要量的 %.0f%%，发电按比例打折", generator.fuelRatio * 100))
+                        infoText(String(localized: "燃料只送到满烧需要量的 \(String(format: "%.0f", generator.fuelRatio * 100))%，发电按比例打折"))
                     }
                 } else {
-                    infoText("没有燃料，不发电。接一条传送带送燃料进来：")
+                    infoText(String(localized: "没有燃料，不发电。接一条传送带送燃料进来："))
                 }
                 ForEach(FuelCatalog.all, id: \.itemId) { fuel in
-                    Text(String(format: "%@  %.0f MW，每个烧 %.0f 秒", DisplayName.item(fuel.name), fuel.powerProvide, fuel.secondsPerItem))
+                    Text(verbatim: String(localized: "\(DisplayName.item(fuel.name))  \(String(format: "%.0f", fuel.powerProvide)) MW，每个烧 \(String(format: "%.0f", fuel.secondsPerItem)) 秒"))
                         .font(AppTypography.supporting).foregroundColor(AppColors.secondaryText)
                 }
             }
@@ -277,8 +277,8 @@ struct BuildingDetailPanel: View {
             guard other.id != placed.id, other.isActive, let d = BuildingDefinition.find(other.definitionID), d.needsPower else { return false }
             return Self.overlaps(placed, def, other, d, expandedBy: range)
         }.count
-        return section("供电范围") {
-            infoText("本体向四周各扩 \(range) 格（网格上虚线框），范围内有 \(covered) 台需要供电的建筑")
+        return section(String(localized: "供电范围")) {
+            infoText(String(localized: "本体向四周各扩 \(range) 格（网格上虚线框），范围内有 \(covered) 台需要供电的建筑"))
         }
     }
 
@@ -336,7 +336,7 @@ struct BuildingDetailPanel: View {
             .buttonStyle(.plain)
             .sheet(isPresented: $showRecipeSheet) {
                 SearchablePickerSheet(
-                    title: "配方一览",
+                    title: String(localized: "配方一览"),
                     items: recipes.map { recipe in
                         let outputText = recipe.outputs.map { "\(DisplayName.item($0.name))×\($0.count)" }.joined(separator: " + ")
                         let inputText = recipe.inputs.map { "\(DisplayName.item($0.name))×\($0.count)" }.joined(separator: " + ")
@@ -345,16 +345,17 @@ struct BuildingDetailPanel: View {
                             title: "\(outputText)（\(recipe.time)s）",
                             subtitle: recipeSubtitle(inputText: inputText, env: recipe.requiredEnv),
                             iconName: recipe.outputs.first?.name,
-                            disabledTag: recipeMapTag(recipe, def: def)
+                            disabledTag: recipeMapTag(recipe, def: def),
+                            searchTerms: (recipe.inputs + recipe.outputs).map(\.name).joined(separator: " ")
                         )
                     },
                     selectedID: currentID,
-                    clearTitle: "不设置配方",
+                    clearTitle: String(localized: "不设置配方"),
                     onSelect: { id in
                         vm.selectRecipe(id, for: placedID)
                     },
                     filterChips: ingredientChips(for: recipes),
-                    chipsLabel: "按原料筛选（跟游戏一样先选吃什么）"
+                    chipsLabel: String(localized: "按原料筛选（跟游戏一样先选吃什么）")
                 )
             }
         }
@@ -364,7 +365,7 @@ struct BuildingDetailPanel: View {
     private func recipeMapTag(_ recipe: Recipe, def: BuildingDefinition) -> String? {
         guard vm.layout.mapType.rules.blockedMode(of: recipe, on: def) != nil else { return nil }
         let maps = MapRules.maps(allowing: recipe, on: def).map(\.displayName).joined(separator: "、")
-        return "仅\(maps)"
+        return String(localized: "仅\(maps)")
     }
 
     /// 反应池/扩容反应池：多选配方 + 自我供给分析 + 净产出的输出口手动指定
@@ -377,7 +378,7 @@ struct BuildingDetailPanel: View {
                 Button {
                     showRecipeSheet = true
                 } label: {
-                    Label(selectedIDs.isEmpty ? "配方一览（可多选）" : "已勾选 \(selectedIDs.count) 条配方",
+                    Label(selectedIDs.isEmpty ? String(localized: "配方一览（可多选）") : String(localized: "已勾选 \(selectedIDs.count) 条配方"),
                           systemImage: "list.bullet.rectangle.fill")
                         .font(AppTypography.supporting)
                         .foregroundColor(AppColors.success)
@@ -385,16 +386,17 @@ struct BuildingDetailPanel: View {
                 .buttonStyle(.plain)
                 .sheet(isPresented: $showRecipeSheet) {
                     SearchablePickerSheet(
-                        title: "配方一览",
+                        title: String(localized: "配方一览"),
                         items: recipes.map { recipe in
                             let outputText = recipe.outputs.map { "\(DisplayName.item($0.name))×\($0.count)" }.joined(separator: " + ")
                             let inputText = recipe.inputs.map { "\(DisplayName.item($0.name))×\($0.count)" }.joined(separator: " + ")
                             return SearchablePickerItem(
                                 id: recipe.id,
                                 title: "\(outputText)（\(recipe.time)s）",
-                                subtitle: inputText.isEmpty ? nil : "原料：\(inputText)",
+                                subtitle: inputText.isEmpty ? nil : String(localized: "原料：\(inputText)"),
                                 iconName: recipe.outputs.first?.name,
-                                disabledTag: recipeMapTag(recipe, def: def)
+                                disabledTag: recipeMapTag(recipe, def: def),
+                            searchTerms: (recipe.inputs + recipe.outputs).map(\.name).joined(separator: " ")
                             )
                         },
                         multiSelect: true,
@@ -403,7 +405,7 @@ struct BuildingDetailPanel: View {
                             vm.toggleRecipe(id, for: placedID)
                         },
                         filterChips: ingredientChips(for: recipes),
-                        chipsLabel: "按原料筛选（跟游戏一样先选吃什么，能多选配方）"
+                        chipsLabel: String(localized: "按原料筛选（跟游戏一样先选吃什么，能多选配方）")
                     )
                 }
 
@@ -418,7 +420,7 @@ struct BuildingDetailPanel: View {
     private func selfSupplySummary(_ analysis: FlowSimulator.SelfSupplyAnalysis, def: BuildingDefinition, placedID: UUID) -> some View {
         VStack(alignment: .leading, spacing: 3) {
             if let cap = def.multiRecipeItemCapacity {
-                Text("涉及物品 \(analysis.totalDistinctItems)/\(cap) 种")
+                Text(String(localized: "涉及物品 \(analysis.totalDistinctItems)/\(cap) 种"))
                     .font(AppTypography.supporting)
                     .foregroundColor(analysis.exceedsCapacity ? .red : AppColors.secondaryText)
             }
@@ -428,7 +430,7 @@ struct BuildingDetailPanel: View {
                     ForEach(internalItems, id: \.name) { item in
                         ItemIcon(name: item.name, size: 18)
                     }
-                    Text("内部循环：\(internalItems.map { DisplayName.item($0.name) }.joined(separator: "、"))（不占外部口）")
+                    Text(verbatim: String(localized: "内部循环：\(internalItems.map { DisplayName.item($0.name) }.joined(separator: "、"))（不占外部口）"))
                 }
                     .font(AppTypography.supporting)
                     .foregroundColor(AppColors.info)
@@ -441,7 +443,7 @@ struct BuildingDetailPanel: View {
                     ForEach(analysis.externalInputs, id: \.name) { item in
                         ItemIcon(name: item.name, size: 18)
                     }
-                    Text("外部输入：\(text)")
+                    Text(String(localized: "外部输入：\(text)"))
                 }
                     .font(AppTypography.supporting)
                     .foregroundColor(AppColors.secondaryText)
@@ -450,7 +452,7 @@ struct BuildingDetailPanel: View {
                 outputAssignmentRow(item: output.name, rate: output.net, def: def, placedID: placedID)
             }
             if analysis.exceedsOutputCap {
-                Text("对外输出超限：同时最多 2 种液体 + 1 种固体，多出来的必须靠另一条配方内部消化掉")
+                Text(String(localized: "对外输出超限：同时最多 2 种液体 + 1 种固体，多出来的必须靠另一条配方内部消化掉"))
                     .font(AppTypography.supporting)
                     .foregroundColor(.red)
             }
@@ -471,7 +473,7 @@ struct BuildingDetailPanel: View {
         let ports = outputPortsOfKind(def, isSolid: isSolid)
         HStack(spacing: 6) {
             ItemIcon(name: item, size: 18)
-            Text("输出：\(DisplayName.item(item)) \(String(format: "%.0f", rate * 60))/min")
+            Text(verbatim: String(localized: "输出：\(DisplayName.item(item)) \(String(format: "%.0f", rate * 60))/min"))
                 .font(AppTypography.supporting)
                 .foregroundColor(AppColors.primaryText)
             if ports.count > 1 {
@@ -480,7 +482,7 @@ struct BuildingDetailPanel: View {
                     Button {
                         vm.setOutputPortAssignment(item: item, portIndex: portIdx, for: placedID)
                     } label: {
-                        Text("口\(seq + 1)")
+                        Text(String(localized: "口\(seq + 1)"))
                             .font(AppTypography.supporting)
                             .padding(.horizontal, 6).padding(.vertical, 2)
                             .background(current == portIdx ? AppColors.success : Color.white.opacity(0.12))
@@ -507,8 +509,8 @@ struct BuildingDetailPanel: View {
 
     private func recipeSubtitle(inputText: String, env: String?) -> String? {
         var parts: [String] = []
-        if !inputText.isEmpty { parts.append("原料：\(inputText)") }
-        if let env { parts.append("需要\(DisplayName.environment(env + "环境"))") }
+        if !inputText.isEmpty { parts.append(String(localized: "原料：\(inputText)")) }
+        if let env { parts.append(String(localized: "需要\(DisplayName.environment(env + "环境"))")) }
         return parts.isEmpty ? nil : parts.joined(separator: " · ")
     }
 
@@ -522,7 +524,7 @@ struct BuildingDetailPanel: View {
             HStack(spacing: 8) {
                 Image(systemName: "speedometer")
                     .font(AppTypography.supporting)
-                Text(current.map { String(format: "限速 %.0f/min", $0) } ?? "不限速")
+                Text(current.map { String(localized: "限速 \(String(format: "%.0f", $0))/min") } ?? String(localized: "不限速"))
                     .font(AppTypography.supporting)
                 Button {
                     vm.setFlowLimit(max((current ?? maxPerMin) - 6, 0), for: placedID)
@@ -556,17 +558,17 @@ struct BuildingDetailPanel: View {
             .buttonStyle(.plain)
             .sheet(isPresented: $showFilterSheet) {
                 SearchablePickerSheet(
-                    title: "只放行哪种物品",
+                    title: String(localized: "只放行哪种物品"),
                     items: candidates.map { SearchablePickerItem(id: $0.itemId, title: DisplayName.item($0.name), iconName: $0.name) },
                     selectedID: vm.selectedPlaced?.filterItemID,
-                    clearTitle: "全部通过",
+                    clearTitle: String(localized: "全部通过"),
                     onSelect: { item in
                         vm.setFilterItem(item, for: placedID)
                     }
                 )
             }
             if current != nil {
-                infoText("其它物品到这里会被挡住，上游跟着堵。")
+                infoText(String(localized: "其它物品到这里会被挡住，上游跟着堵。"))
             }
         }
     }
@@ -604,8 +606,8 @@ struct BuildingDetailPanel: View {
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel("\(port.label)，\(material.map(DisplayName.item) ?? String(localized: "不出货"))")
-                    .accessibilityHint("选择该出货口的材料")
+                    .accessibilityLabel(String(localized: "\(port.label)，\(material.map(DisplayName.item) ?? String(localized: "不出货"))"))
+                    .accessibilityHint(String(localized: "选择该出货口的材料"))
                     Divider().overlay(AppColors.border)
                 }
             }
@@ -613,10 +615,10 @@ struct BuildingDetailPanel: View {
                                         set: { if !$0 { corePortSheetIndex = nil } })) {
                 if let portIndex = corePortSheetIndex {
                     SearchablePickerSheet(
-                        title: "\(ports.first { $0.index == portIndex }?.label ?? "出货口") 出什么",
+                        title: String(localized: "\(ports.first { $0.index == portIndex }?.label ?? String(localized: "出货口")) 出什么"),
                         items: vm.solidMaterials.map { SearchablePickerItem(id: $0.itemId, title: DisplayName.item($0.name), iconName: $0.name) },
                         selectedID: current.portMaterialIDs[portIndex],
-                        clearTitle: "不出货",
+                        clearTitle: String(localized: "不出货"),
                         onSelect: { material in
                             vm.setPortMaterial(material, portIndex: portIndex, for: placedID)
                         }
@@ -628,7 +630,7 @@ struct BuildingDetailPanel: View {
 
     /// 协议核心出货口的显示名：按朝向分组（上/右/下/左），组内左右边从上往下、上下边从左往右编号
     private func corePortLabels(def: BuildingDefinition, placed: PlacedBuilding) -> [(index: Int, label: String)] {
-        let sideNames: [BuildingRotation: String] = [.up: "上", .right: "右", .down: "下", .left: "左"]
+        let sideNames: [BuildingRotation: String] = [.up: String(localized: "上"), .right: String(localized: "右"), .down: String(localized: "下"), .left: String(localized: "左")]
         let outputs = def.ports.enumerated().filter { $0.element.ioDirection == .output }.map { item in
             (index: item.offset, resolved: item.element.resolvedPosition(placed: placed, definition: def))
         }
@@ -665,10 +667,10 @@ struct BuildingDetailPanel: View {
             .buttonStyle(.plain)
             .sheet(isPresented: $showMaterialSheet) {
                 SearchablePickerSheet(
-                    title: def.isUndergroundOutlet ? "暗管出口出什么" : "选择取货材料",
+                    title: def.isUndergroundOutlet ? String(localized: "暗管出口出什么") : String(localized: "选择取货材料"),
                     items: candidates.map { SearchablePickerItem(id: $0.itemId, title: DisplayName.item($0.name), iconName: $0.name) },
                     selectedID: vm.selectedPlaced?.outletMaterialID,
-                    clearTitle: "未设置",
+                    clearTitle: String(localized: "未设置"),
                     onSelect: { material in
                         vm.setOutletMaterial(material, for: placedID)
                     }

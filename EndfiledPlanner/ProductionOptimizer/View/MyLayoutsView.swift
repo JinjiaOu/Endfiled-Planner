@@ -29,10 +29,10 @@ struct MyLayoutsView: View {
                         Image(systemName: "square.stack.3d.up")
                             .font(.system(size: 34))
                             .foregroundColor(.white.opacity(0.3))
-                        Text("还没有保存的布局")
+                        Text(String(localized: "还没有保存的布局"))
                             .font(.system(size: 15, weight: .bold))
                             .foregroundColor(.white.opacity(0.7))
-                        Text("在画布上用「框选」选中一组建筑，点「存为布局」")
+                        Text(String(localized: "在画布上用「框选」选中一组建筑，点「存为布局」"))
                             .font(.system(size: 12))
                             .foregroundColor(.white.opacity(0.45))
                     }
@@ -50,21 +50,21 @@ struct MyLayoutsView: View {
                                 .listRowBackground(Color.clear)
                                 .swipeActions(edge: .trailing) {
                                     Button(role: .destructive) { deleting = saved } label: {
-                                        Label("删除", systemImage: "trash")
+                                        Label(String(localized: "删除"), systemImage: "trash")
                                     }
                                     Button { startRename(saved) } label: {
-                                        Label("改名", systemImage: "pencil")
+                                        Label(String(localized: "改名"), systemImage: "pencil")
                                     }
                                     .tint(.blue)
                                 }
                                 .contextMenu {
-                                    Button { startRename(saved) } label: { Label("改名", systemImage: "pencil") }
+                                    Button { startRename(saved) } label: { Label(String(localized: "改名"), systemImage: "pencil") }
                                     Button(role: .destructive) { deleting = saved } label: {
-                                        Label("删除", systemImage: "trash")
+                                        Label(String(localized: "删除"), systemImage: "trash")
                                     }
                                 }
                         }
-                        Text("点一个布局放到画布上")
+                        Text(String(localized: "点一个布局放到画布上"))
                             .font(.system(size: 11))
                             .foregroundColor(.white.opacity(0.35))
                             .frame(maxWidth: .infinity)
@@ -75,32 +75,32 @@ struct MyLayoutsView: View {
                 }
             }
             .background(background)
-            .navigationTitle("我的布局")
+            .navigationTitle(String(localized: "我的布局"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbarBackground(background, for: .navigationBar)
             .toolbarColorScheme(.dark, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("关闭") { dismiss() }.foregroundColor(accent)
+                    Button(String(localized: "关闭")) { dismiss() }.foregroundColor(accent)
                 }
             }
-            .alert("改名", isPresented: Binding(get: { renaming != nil }, set: { if !$0 { renaming = nil } })) {
-                TextField("布局名字", text: $renameText)
-                Button("取消", role: .cancel) { renaming = nil }
-                Button("保存") {
+            .alert(String(localized: "改名"), isPresented: Binding(get: { renaming != nil }, set: { if !$0 { renaming = nil } })) {
+                TextField(String(localized: "布局名字"), text: $renameText)
+                Button(String(localized: "取消"), role: .cancel) { renaming = nil }
+                Button(String(localized: "保存")) {
                     if let renaming { store.rename(renaming.id, to: renameText) }
                     renaming = nil
                 }
             }
-            .alert("删除布局", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } })) {
-                Button("取消", role: .cancel) { deleting = nil }
-                Button("删除", role: .destructive) {
+            .alert(String(localized: "删除布局"), isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } })) {
+                Button(String(localized: "取消"), role: .cancel) { deleting = nil }
+                Button(String(localized: "删除"), role: .destructive) {
                     if let deleting { store.delete(deleting.id) }
                     deleting = nil
                 }
             } message: {
-                Text("「\(deleting?.name ?? "")」删除后不能恢复")
+                Text(String(localized: "「\(deleting?.name ?? "")」删除后不能恢复"))
             }
         }
         .preferredColorScheme(.dark)
@@ -128,7 +128,7 @@ struct MyLayoutsView: View {
                         .padding(.horizontal, 5).padding(.vertical, 1)
                         .background(saved.mapType == currentMap ? Color.white.opacity(0.12) : accent.opacity(0.25))
                         .foregroundColor(saved.mapType == currentMap ? .white.opacity(0.7) : accent)
-                    Text("\(saved.buildingCount) 个建筑 · \(saved.belts.count) 条线 · \(saved.width)×\(saved.height) 格")
+                    Text(String(localized: "\(saved.buildingCount) 个建筑 · \(saved.belts.count) 条线 · \(saved.width)×\(saved.height) 格"))
                         .font(.system(size: 11, design: .monospaced))
                         .foregroundColor(.white.opacity(0.55))
                 }

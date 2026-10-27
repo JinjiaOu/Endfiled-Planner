@@ -62,7 +62,7 @@ struct ProductionOptimizerView: View {
                                         .font(.system(size: 12, weight: .medium, design: .monospaced))
                                         .foregroundColor(Color(red: 0.9, green: 0.5, blue: 0.2))
                                     
-                                    Text("生产优化模块")
+                                    Text(String(localized: "生产优化模块"))
                                         .font(.system(size: 24, weight: .bold))
                                         .foregroundColor(.white)
                                     
@@ -123,12 +123,12 @@ struct ProductionOptimizerView: View {
                                 .font(.system(size: 16, weight: .bold, design: .monospaced))
                                 .foregroundColor(Color(red: 0.9, green: 0.5, blue: 0.2))
                             
-                            Text("功能开发中")
+                            Text(String(localized: "功能开发中"))
                                 .font(.system(size: 20, weight: .bold))
                                 .foregroundColor(.white)
                             
                             VStack(alignment: .leading, spacing: 8) {
-                                ForEach(["工厂布局优化", "生产效率分析", "瓶颈检测", "自动化建议"], id: \.self) { text in
+                                ForEach([String(localized: "工厂布局优化"), String(localized: "生产效率分析"), String(localized: "瓶颈检测"), String(localized: "自动化建议")], id: \.self) { text in
                                     HStack(spacing: 8) {
                                         Image(systemName: "checkmark.circle")
                                             .foregroundColor(Color(red: 0.9, green: 0.5, blue: 0.2).opacity(0.6))

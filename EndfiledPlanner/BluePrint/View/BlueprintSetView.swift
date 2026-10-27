@@ -35,9 +35,9 @@ struct BlueprintSetView: View {
                         BlueprintSetEmptyView(hasSets: !viewModel.blueprintSets.isEmpty)
                     } else {
                         HStack {
-                            Text("蓝图集").font(AppTypography.sectionTitle)
+                            Text(String(localized: "蓝图集")).font(AppTypography.sectionTitle)
                             Spacer()
-                            Text("\(viewModel.filteredSets.count) 个结果")
+                            Text(String(localized: "\(viewModel.filteredSets.count) 个结果"))
                                 .font(AppTypography.numeric).foregroundStyle(AppColors.secondaryText)
                         }
                         LazyVGrid(columns: listColumns, alignment: .leading, spacing: AppSpacing.md) {
@@ -46,7 +46,7 @@ struct BlueprintSetView: View {
                                     BlueprintSetCard(blueprintSet: set)
                                 }
                                 .buttonStyle(.plain)
-                                .accessibilityHint("打开蓝图集，查看说明与复制分享码")
+                                .accessibilityHint(String(localized: "打开蓝图集，查看说明与复制分享码"))
                             }
                         }
                     }
@@ -62,14 +62,14 @@ struct BlueprintSetView: View {
             }
         }
         .foregroundStyle(AppColors.primaryText)
-        .navigationTitle("社区蓝图")
+        .navigationTitle(String(localized: "社区蓝图"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button { viewModel.refreshBlueprintSets() } label: {
                     Image(systemName: "arrow.clockwise")
                 }
-                .accessibilityLabel("刷新蓝图集")
+                .accessibilityLabel(String(localized: "刷新蓝图集"))
             }
         }
         .toolbarBackground(.visible, for: .navigationBar)
@@ -98,7 +98,7 @@ struct BlueprintSetView: View {
 
 struct BlueprintSetBanner: View {
     var body: some View {
-        AppPageHeader(title: "发现可复用的产线", subtitle: "按作者与地图查找蓝图集，查看说明并复制分享码。")
+        AppPageHeader(title: String(localized: "发现可复用的产线"), subtitle: String(localized: "按作者与地图查找蓝图集，查看说明并复制分享码。"))
     }
 }
 
@@ -112,15 +112,15 @@ struct BlueprintSetFilterBar: View {
     var body: some View {
         AppSurface {
             VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                AppSectionHeader(title: "查找蓝图")
+                AppSectionHeader(title: String(localized: "查找蓝图"))
                 if horizontalSizeClass == .regular && !dynamicTypeSize.isAccessibilitySize {
                     HStack(spacing: AppSpacing.sm) {
-                        AppSearchField(text: $authorSearch, prompt: "搜索作者")
+                        AppSearchField(text: $authorSearch, prompt: String(localized: "搜索作者"))
                         BlueprintSetRegionMenu(selection: $selectedRegion, options: availableRegions)
                             .frame(width: 220)
                     }
                 } else {
-                    AppSearchField(text: $authorSearch, prompt: "搜索作者")
+                    AppSearchField(text: $authorSearch, prompt: String(localized: "搜索作者"))
                     BlueprintSetRegionMenu(selection: $selectedRegion, options: availableRegions)
                 }
             }
@@ -136,14 +136,14 @@ struct BlueprintSetRegionMenu: View {
         Menu {
             ForEach(options, id: \.self) { option in
                 Button { selection = option == "全部" ? nil : option } label: {
-                    if option == (selection ?? "全部") { Label(option, systemImage: "checkmark") }
-                    else { Text(option) }
+                    if option == (selection ?? String(localized: "全部")) { Label(DisplayName.region(option), systemImage: "checkmark") }
+                    else { Text(verbatim: DisplayName.region(option)) }
                 }
             }
         } label: {
             HStack(spacing: AppSpacing.xs) {
                 Image(systemName: "map").foregroundStyle(AppColors.accent)
-                Text(selection ?? "全部地图").font(AppTypography.rowTitle)
+                Text(selection.map(DisplayName.region) ?? String(localized: "全部地图")).font(AppTypography.rowTitle)
                     .fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: AppSpacing.xs)
                 Image(systemName: "chevron.down").font(AppTypography.caption)
@@ -158,14 +158,14 @@ struct BlueprintSetRegionMenu: View {
                     .allowsHitTesting(false)
             }
         }
-        .accessibilityLabel("地图筛选")
-        .accessibilityValue(selection ?? "全部地图")
+        .accessibilityLabel(String(localized: "地图筛选"))
+        .accessibilityValue(selection.map(DisplayName.region) ?? String(localized: "全部地图"))
     }
 }
 
 struct BlueprintSetLoadingView: View {
     var body: some View {
-        AppSurface { AppLoadingState(title: "正在加载蓝图集") }
+        AppSurface { AppLoadingState(title: String(localized: "正在加载蓝图集")) }
     }
 }
 
@@ -174,9 +174,9 @@ struct BlueprintSetErrorView: View {
     let retry: () -> Void
     var body: some View {
         AppSurface {
-            AppContentState(title: "蓝图集加载失败", message: message,
+            AppContentState(title: String(localized: "蓝图集加载失败"), message: message,
                             systemImage: "exclamationmark.triangle", tone: .error) {
-                Button("重新加载", action: retry).buttonStyle(AppActionStyle())
+                Button(String(localized: "重新加载"), action: retry).buttonStyle(AppActionStyle())
             }
         }
     }
@@ -186,8 +186,8 @@ struct BlueprintSetEmptyView: View {
     let hasSets: Bool
     var body: some View {
         AppSurface {
-            AppContentState(title: hasSets ? "没有匹配的蓝图集" : "暂无蓝图集",
-                            message: hasSets ? "尝试调整作者关键词或地图筛选。" : "可通过右上角刷新重新获取数据。",
+            AppContentState(title: hasSets ? String(localized: "没有匹配的蓝图集") : String(localized: "暂无蓝图集"),
+                            message: hasSets ? String(localized: "尝试调整作者关键词或地图筛选。") : String(localized: "可通过右上角刷新重新获取数据。"),
                             systemImage: hasSets ? "magnifyingglass" : "square.stack")
         }
     }

@@ -69,7 +69,7 @@ struct SettingsView: View {
                     // 游戏数据（配方/物品/建筑/图标）在线更新
                     Section {
                         HStack {
-                            Text("数据版本")
+                            Text(String(localized: "数据版本"))
                                 .foregroundColor(AppColors.primaryText.opacity(0.6))
                             Spacer()
                             Text(currentDataText)
@@ -86,7 +86,7 @@ struct SettingsView: View {
                                 HStack {
                                     Image(systemName: "arrow.uturn.backward")
                                         .foregroundColor(Color(red: 0.9, green: 0.5, blue: 0.2))
-                                    Text("恢复内置数据")
+                                    Text(String(localized: "恢复内置数据"))
                                         .foregroundColor(AppColors.primaryText)
                                 }
                             }
@@ -96,7 +96,7 @@ struct SettingsView: View {
                             .font(.system(size: 11, weight: .bold, design: .monospaced))
                             .foregroundColor(Color(red: 0.4, green: 0.7, blue: 0.9))
                     } footer: {
-                        Text("配方、物品、建筑数据和物品图标可以在线更新，下载后重启 App 生效。")
+                        Text(String(localized: "配方、物品、建筑数据和物品图标可以在线更新，下载后重启 App 生效。"))
                             .font(.system(size: 11))
                             .foregroundColor(AppColors.primaryText.opacity(0.4))
                     }
@@ -109,34 +109,34 @@ struct SettingsView: View {
             .toolbar {
                 if isPresentedModally {
                     ToolbarItem(placement: .cancellationAction) {
-                        Button("完成") { dismiss() }
+                        Button(String(localized: "完成")) { dismiss() }
                     }
                 }
             }
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbarBackground(AppColors.background, for: .navigationBar)
             // 反馈：普通玩家用 App 内反馈（存 CloudKit，不用邮箱和账号），会用 GitHub 的走 Issues（正文预填版本信息）
-            .confirmationDialog("反馈问题", isPresented: $showReportOptions, titleVisibility: .visible) {
-                Button("在 App 内反馈") { showFeedback = true }
+            .confirmationDialog(String(localized: "反馈问题"), isPresented: $showReportOptions, titleVisibility: .visible) {
+                Button(String(localized: "在 App 内反馈")) { showFeedback = true }
                 Button("GitHub Issues") { openURL(FeedbackInfo.githubIssueURL) }
-                Button("取消", role: .cancel) {}
+                Button(String(localized: "取消"), role: .cancel) {}
             } message: {
-                Text("App 内反馈不用注册账号，直接发送；GitHub Issues 需要 GitHub 账号。")
+                Text(String(localized: "App 内反馈不用注册账号，直接发送；GitHub Issues 需要 GitHub 账号。"))
             }
             .sheet(isPresented: $showFeedback) {
                 NavigationStack { FeedbackView() }
             }
-            .confirmationDialog("恢复成安装包自带的数据？", isPresented: $confirmRestore, titleVisibility: .visible) {
-                Button("恢复内置数据", role: .destructive) { dataUpdater.restoreBuiltIn() }
+            .confirmationDialog(String(localized: "恢复成安装包自带的数据？"), isPresented: $confirmRestore, titleVisibility: .visible) {
+                Button(String(localized: "恢复内置数据"), role: .destructive) { dataUpdater.restoreBuiltIn() }
             } message: {
-                Text("下载的数据会被删除，重启 App 后生效。")
+                Text(String(localized: "下载的数据会被删除，重启 App 后生效。"))
             }
         }
     }
 
     private var currentDataText: String {
-        guard let manifest = DataPackStore.currentManifest else { return "内置" }
-        return manifest.builtDateText + (DataPackStore.isUsingDownloadedData ? "（已更新）" : "（内置）")
+        guard let manifest = DataPackStore.currentManifest else { return String(localized: "内置") }
+        return manifest.builtDateText + (DataPackStore.isUsingDownloadedData ? String(localized: "（已更新）") : String(localized: "（内置）"))
     }
 
     /// 检查更新这一行：按状态显示按钮或进度
@@ -147,11 +147,11 @@ struct SettingsView: View {
         case .checking:
             HStack {
                 ProgressView().tint(yellow)
-                Text("正在检查…").foregroundColor(AppColors.primaryText.opacity(0.6))
+                Text(String(localized: "正在检查…")).foregroundColor(AppColors.primaryText.opacity(0.6))
             }
         case .downloading(let done, let total):
             VStack(alignment: .leading, spacing: 6) {
-                Text("正在下载 \(done)/\(total)").foregroundColor(AppColors.primaryText.opacity(0.6))
+                Text(String(localized: "正在下载 \(done)/\(total)")).foregroundColor(AppColors.primaryText.opacity(0.6))
                 ProgressView(value: Double(done), total: Double(max(total, 1))).tint(yellow)
             }
         case .available(let remote):
@@ -160,7 +160,7 @@ struct SettingsView: View {
             } label: {
                 HStack {
                     Image(systemName: "arrow.down.circle.fill").foregroundColor(yellow)
-                    Text("下载新数据").foregroundColor(AppColors.primaryText)
+                    Text(String(localized: "下载新数据")).foregroundColor(AppColors.primaryText)
                     Spacer()
                     Text(remote.builtDateText)
                         .font(.system(size: 12, design: .monospaced))
@@ -171,12 +171,12 @@ struct SettingsView: View {
         case .readyToRestart:
             HStack {
                 Image(systemName: "checkmark.circle.fill").foregroundColor(Color(red: 0.4, green: 0.8, blue: 0.2))
-                Text("已就绪，重启 App 后生效").foregroundColor(AppColors.primaryText)
+                Text(String(localized: "已就绪，重启 App 后生效")).foregroundColor(AppColors.primaryText)
             }
         case .needsAppUpdate:
             HStack {
                 Image(systemName: "exclamationmark.triangle.fill").foregroundColor(.orange)
-                Text("新数据需要更新 App 才能使用").foregroundColor(AppColors.primaryText)
+                Text(String(localized: "新数据需要更新 App 才能使用")).foregroundColor(AppColors.primaryText)
             }
         case .idle, .upToDate, .failed:
             Button {
@@ -185,10 +185,10 @@ struct SettingsView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     HStack {
                         Image(systemName: "arrow.triangle.2.circlepath").foregroundColor(yellow)
-                        Text("检查数据更新").foregroundColor(AppColors.primaryText)
+                        Text(String(localized: "检查数据更新")).foregroundColor(AppColors.primaryText)
                         Spacer()
                         if dataUpdater.state == .upToDate {
-                            Text("已是最新").font(.system(size: 12)).foregroundColor(AppColors.primaryText.opacity(0.5))
+                            Text(String(localized: "已是最新")).font(.system(size: 12)).foregroundColor(AppColors.primaryText.opacity(0.5))
                         }
                     }
                     if case .failed(let message) = dataUpdater.state {

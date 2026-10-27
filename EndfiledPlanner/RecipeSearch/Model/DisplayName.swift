@@ -90,3 +90,66 @@ extension BuildingCategory {
         return DisplayName.category(id: id, fallback: rawValue)
     }
 }
+
+extension FlowSimulator.MachineStatus {
+    /// Keep the simulator's original status text separate from the display layer.
+    var displayLabel: String {
+        switch self {
+        case .running: return String(localized: "生产中")
+        case .starved: return String(localized: "原料不足")
+        case .blocked: return String(localized: "阻塞")
+        case .inactive: return String(localized: "未激活")
+        case .noRecipe: return String(localized: "未设置")
+        }
+    }
+}
+
+extension DisplayName {
+    static func region(_ original: String) -> String {
+        switch original {
+        case "四号谷地": return String(localized: "四号谷地")
+        case "武陵": return String(localized: "武陵")
+        case "全部": return String(localized: "全部")
+        default: return original
+        }
+    }
+
+    /// Adapt the simulator's existing diagnostic messages at the presentation boundary.
+    /// These messages never feed back into the simulation, dictionaries or saves.
+    static func diagnostic(_ original: String) -> String {
+        guard isEnglish else { return original }
+        switch original {
+        case "生产中": return String(localized: "生产中")
+        case "原料不足": return String(localized: "原料不足")
+        case "阻塞": return String(localized: "阻塞")
+        case "未激活": return String(localized: "未激活")
+        case "未设置": return String(localized: "未设置")
+        case "气体不足（需要 ≥6/min）": return String(localized: "气体不足（需要 ≥6/min）")
+        case "未通电（不在供电桩范围内）": return String(localized: "未通电（不在供电桩范围内）")
+        case "未设置取货材料": return String(localized: "未设置取货材料")
+        case "未勾选配方": return String(localized: "未勾选配方")
+        case "未选择配方": return String(localized: "未选择配方")
+        case "出口没接好或下游吃不下": return String(localized: "出口没接好或下游吃不下")
+        default: break
+        }
+        if original.hasPrefix("缺少 ") {
+            let item = item(String(original.dropFirst(3)))
+            return String(localized: "缺少 \(item)")
+        }
+        let suffix = "注入不足（需要 ≥6/min）"
+        if original.hasSuffix(suffix) {
+            let item = item(String(original.dropLast(suffix.count)))
+            return String(localized: "\(item)注入不足（需要 ≥6/min）")
+        }
+        if original.hasPrefix("需要"), let range = original.range(of: "环境（附近 ") {
+            let env = environment(String(original[original.index(original.startIndex, offsetBy: 2)..<range.lowerBound]) + "环境")
+            return String(localized: "需要\(env)（附近 \(FlowSimulator.vaporizerRange) 格内要有气体散布机供气）")
+        }
+        if original.hasPrefix("被"), let separator = original.range(of: "挡住（只放行"), original.hasSuffix("）") {
+            let device = device(String(original[original.index(after: original.startIndex)..<separator.lowerBound]))
+            let filter = item(String(original[separator.upperBound..<original.index(before: original.endIndex)]))
+            return String(localized: "被\(device)挡住（只放行\(filter)）")
+        }
+        return environment(original)
+    }
+}

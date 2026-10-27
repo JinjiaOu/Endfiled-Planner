@@ -25,13 +25,13 @@ struct DataUpdateBanner: View {
             }
         case .downloading(let done, let total):
             AppSurface {
-                AppLoadingState(title: "正在下载游戏数据",
+                AppLoadingState(title: String(localized: "正在下载游戏数据"),
                                 progress: Double(done) / Double(max(total, 1)),
                                 detail: "\(done)/\(total)")
             }
         case .readyToRestart:
             AppSurface {
-                AppInlineNotice(title: "游戏数据已就绪", message: "完全退出并重新打开 App 后生效", tone: .success)
+                AppInlineNotice(title: String(localized: "游戏数据已就绪"), message: String(localized: "完全退出并重新打开 App 后生效"), tone: .success)
             }
         default:
             EmptyView()
@@ -39,14 +39,14 @@ struct DataUpdateBanner: View {
     }
 
     private func availableMessage(date: String) -> some View {
-        AppInlineNotice(title: "发现新的游戏数据", message: "\(date) · 配方/物品/图标", tone: .info)
+        AppInlineNotice(title: String(localized: "发现新的游戏数据"), message: String(localized: "\(date) · 配方/物品/图标"), tone: .info)
     }
 
     private var downloadButton: some View {
         Button {
             Task { await updater.download() }
         } label: {
-            Label("下载", systemImage: "arrow.down")
+            Label(String(localized: "下载"), systemImage: "arrow.down")
         }
         .buttonStyle(AppActionStyle())
     }

@@ -97,7 +97,7 @@ struct SearchView: View {
             AppTopographicBackground()
             ScrollView {
                 VStack(alignment: .leading, spacing: AppSpacing.lg) {
-                    AppPageHeader(title: "分析生产依赖", subtitle: "选择目标物品与数量，查看生产步骤和串行耗时。")
+                    AppPageHeader(title: String(localized: "分析生产依赖"), subtitle: String(localized: "选择目标物品与数量，查看生产步骤和串行耗时。"))
                     if pageWidth >= 820 && !dynamicTypeSize.isAccessibilitySize {
                         HStack(alignment: .top, spacing: AppSpacing.lg) {
                             configuration.frame(width: 320)
@@ -125,7 +125,7 @@ struct SearchView: View {
             }
         }
         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { pageWidth = $0 }
-        .navigationTitle("配方分析")
+        .navigationTitle(String(localized: "配方分析"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.visible, for: .navigationBar)
         .toolbarBackground(AppColors.background, for: .navigationBar)
@@ -133,7 +133,7 @@ struct SearchView: View {
         .toolbar {
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
-                Button("完成") { dismissDropdown() }
+                Button(String(localized: "完成")) { dismissDropdown() }
             }
         }
         .sheet(isPresented: $showDetailView) {
@@ -149,7 +149,7 @@ struct SearchView: View {
     private var configuration: some View {
         AppSurface {
             VStack(alignment: .leading, spacing: AppSpacing.md) {
-                AppSectionHeader(title: "目标与数量")
+                AppSectionHeader(title: String(localized: "目标与数量"))
                 searchInput
                 if showDropdown {
                     SuggestionDropdown(suggestions: suggestions, searchText: searchText,
@@ -166,19 +166,19 @@ struct SearchView: View {
                 Divider().overlay(AppColors.border)
                 Stepper(value: $amount, in: 1...100) {
                     VStack(alignment: .leading, spacing: AppSpacing.xxs) {
-                        Text("目标数量").font(AppTypography.supporting).foregroundStyle(AppColors.secondaryText)
+                        Text(String(localized: "目标数量")).font(AppTypography.supporting).foregroundStyle(AppColors.secondaryText)
                         Text("\(amount)").font(AppTypography.metric).foregroundStyle(AppColors.primaryText)
                     }
                 }
-                .accessibilityLabel("目标数量")
+                .accessibilityLabel(String(localized: "目标数量"))
                 .accessibilityValue("\(amount)")
                 Button(action: buildRecipe) {
-                    Label("查看配方", systemImage: "arrow.triangle.branch")
+                    Label(String(localized: "查看配方"), systemImage: "arrow.triangle.branch")
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(AppActionStyle())
                 if showEmptyHint {
-                    AppInlineNotice(title: "请先搜索或选择一个配方", tone: .warning)
+                    AppInlineNotice(title: String(localized: "请先搜索或选择一个配方"), tone: .warning)
                 }
             }
         }
@@ -194,7 +194,7 @@ struct SearchView: View {
                         Text(verbatim: DisplayName.item(first.name)).foregroundStyle(AppColors.tertiaryText.opacity(0.45))
                             .allowsHitTesting(false).accessibilityHidden(true)
                     }
-                    TextField("搜索物品", text: $searchText)
+                    TextField(String(localized: "搜索物品"), text: $searchText)
                         .focused($searchFocused)
                         .autocorrectionDisabled()
                         .textInputAutocapitalization(.never)
@@ -206,11 +206,11 @@ struct SearchView: View {
                             if !showDropdown { showDropdown = true }
                         }
                         .onSubmit { if let first = suggestions.first { selectItem(first.name) } }
-                        .accessibilityLabel("搜索目标物品")
+                        .accessibilityLabel(String(localized: "搜索目标物品"))
                 }
                 .font(AppTypography.body).foregroundStyle(AppColors.primaryText)
                 if !searchText.isEmpty {
-                    AppIconButton(title: "清除物品搜索", systemImage: "xmark.circle.fill") {
+                    AppIconButton(title: String(localized: "清除物品搜索"), systemImage: "xmark.circle.fill") {
                         searchText = ""
                         selectedItem = nil
                     }
@@ -234,7 +234,7 @@ struct SearchView: View {
                     .frame(minWidth: AppSize.touchTarget, minHeight: AppSize.rowMinimum)
                     .background(AppColors.background, in: RoundedRectangle(cornerRadius: AppRadius.control))
             }
-            .accessibilityLabel("浏览全部物品")
+            .accessibilityLabel(String(localized: "浏览全部物品"))
         }
     }
 
@@ -244,21 +244,21 @@ struct SearchView: View {
             VStack(alignment: .leading, spacing: AppSpacing.md) {
                 AppSurface {
                     VStack(alignment: .leading, spacing: AppSpacing.md) {
-                        AppSectionHeader(title: DisplayName.item(root.name), subtitle: "分析结果 · 目标数量 \(root.amount)")
+                        AppSectionHeader(title: DisplayName.item(root.name), subtitle: String(localized: "分析结果 · 目标数量 \(root.amount)"))
                         LazyVGrid(columns: Array(repeating: GridItem(.flexible(), alignment: .leading),
                                                  count: dynamicTypeSize.isAccessibilitySize ? 1 : 3),
                                   alignment: .leading, spacing: AppSpacing.md) {
-                            EndFieldStatCard(icon: "clock", title: "串行耗时", value: "\(root.totalTime)", unit: "秒", color: AppColors.primaryText)
-                            EndFieldStatCard(icon: "gearshape.2", title: "生产批次", value: "\(root.batches)", unit: "批", color: AppColors.primaryText)
-                            EndFieldStatCard(icon: "arrow.triangle.branch", title: "依赖节点", value: "\(countNodes(root))", unit: "个", color: AppColors.primaryText)
+                            EndFieldStatCard(icon: "clock", title: String(localized: "串行耗时"), value: "\(root.totalTime)", unit: String(localized: "秒"), color: AppColors.primaryText)
+                            EndFieldStatCard(icon: "gearshape.2", title: String(localized: "生产批次"), value: "\(root.batches)", unit: String(localized: "批"), color: AppColors.primaryText)
+                            EndFieldStatCard(icon: "arrow.triangle.branch", title: String(localized: "依赖节点"), value: "\(countNodes(root))", unit: String(localized: "个"), color: AppColors.primaryText)
                         }
-                        Text("耗时为最长串行路径，不含采集、运输和实际产线调度。")
+                        Text(String(localized: "耗时为最长串行路径，不含采集、运输和实际产线调度。"))
                             .font(AppTypography.caption).foregroundStyle(AppColors.secondaryText)
                     }
                 }
                 AppSurface(padding: 0) {
                     VStack(alignment: .leading, spacing: 0) {
-                        AppSectionHeader(title: "配方树", subtitle: "展开查看完整依赖，支持缩放、保存与分享。")
+                        AppSectionHeader(title: String(localized: "配方树"), subtitle: String(localized: "展开查看完整依赖，支持缩放、保存与分享。"))
                             .padding(AppSpacing.md)
                         Divider().overlay(AppColors.border)
                         Button { dismissDropdown(); showDetailView = true } label: {
@@ -266,9 +266,9 @@ struct SearchView: View {
                                 .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
-                        .accessibilityLabel("查看完整配方树")
+                        .accessibilityLabel(String(localized: "查看完整配方树"))
                         Button { dismissDropdown(); showDetailView = true } label: {
-                            Label("展开完整配方树", systemImage: "arrow.up.left.and.arrow.down.right")
+                            Label(String(localized: "展开完整配方树"), systemImage: "arrow.up.left.and.arrow.down.right")
                                 .frame(maxWidth: .infinity)
                         }
                         .buttonStyle(AppActionStyle(emphasis: .secondary))
@@ -278,12 +278,12 @@ struct SearchView: View {
             }
         } else if showTree {
             AppSurface {
-                AppContentState(title: "未找到配方数据", message: "请重新选择目标物品后分析。",
+                AppContentState(title: String(localized: "未找到配方数据"), message: String(localized: "请重新选择目标物品后分析。"),
                                 systemImage: "exclamationmark.triangle", tone: .error)
             }
         } else {
             AppSurface {
-                AppContentState(title: "从目标物品开始", message: "输入名称、选择搜索历史，或浏览全部物品；选择数量后查看生产依赖。",
+                AppContentState(title: String(localized: "从目标物品开始"), message: String(localized: "输入名称、选择搜索历史，或浏览全部物品；选择数量后查看生产依赖。"),
                                 systemImage: "arrow.triangle.branch")
             }
         }
@@ -333,18 +333,18 @@ struct RecipeDisclaimerOverlay: View {
     let onConfirm: () -> Void
 
     var body: some View {
-        AppNoticeDialog(title: "时间数据说明") {
+        AppNoticeDialog(title: String(localized: "时间数据说明")) {
             VStack(alignment: .leading, spacing: AppSpacing.md) {
                 DisclaimerRow(icon: "arrow.triangle.branch",
-                              text: "本功能展示的生产时间基于单条串行链路计算，即从原材料到成品的最长路径耗时。")
+                              text: String(localized: "本功能展示的生产时间基于单条串行链路计算，即从原材料到成品的最长路径耗时。"))
                 DisclaimerRow(icon: "minus.circle",
                               text: "计算结果不包含采矿、种植等原材料采集环节的时间，亦未考虑传送带运输延迟、建筑数量限制、产线调度等实际因素。")
                 DisclaimerRow(icon: "info.circle",
-                              text: "展示数据仅供规划参考，实际生产效率以游戏内表现为准。")
+                              text: String(localized: "展示数据仅供规划参考，实际生产效率以游戏内表现为准。"))
             }
         } actions: {
             Button(action: onConfirm) {
-                Label("我已了解", systemImage: "checkmark").frame(maxWidth: .infinity)
+                Label(String(localized: "我已了解"), systemImage: "checkmark").frame(maxWidth: .infinity)
             }
             .buttonStyle(AppActionStyle())
         }
@@ -381,16 +381,16 @@ struct SuggestionDropdown: View {
         let prefix   = suggestions.filter { $0.matchType == .prefixMatch }
         let contains = suggestions.filter { $0.matchType == .containsMatch }
         var g: [(String, String, [SuggestionItem])] = []
-        if !history.isEmpty  { g.append(("最近搜索",    "clock.arrow.circlepath", history))  }
-        if !prefix.isEmpty   { g.append(("前缀匹配", "target",                 prefix))   }
-        if !contains.isEmpty { g.append(("包含匹配",   "text.magnifyingglass",   contains)) }
+        if !history.isEmpty  { g.append((String(localized: "最近搜索"),    "clock.arrow.circlepath", history))  }
+        if !prefix.isEmpty   { g.append((String(localized: "前缀匹配"), "target",                 prefix))   }
+        if !contains.isEmpty { g.append((String(localized: "包含匹配"),   "text.magnifyingglass",   contains)) }
         return g
     }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             if suggestions.isEmpty {
-                Text(searchText.isEmpty ? "暂无搜索历史" : "未找到匹配物品")
+                Text(searchText.isEmpty ? String(localized: "暂无搜索历史") : String(localized: "未找到匹配物品"))
                     .font(AppTypography.supporting).foregroundStyle(AppColors.secondaryText)
                     .padding(AppSpacing.sm)
             } else {
@@ -401,11 +401,11 @@ struct SuggestionDropdown: View {
                                 Label(group.label, systemImage: group.icon)
                                     .font(AppTypography.caption).foregroundStyle(AppColors.secondaryText)
                                 Spacer()
-                                if group.label == "最近搜索" {
-                                    Button("清除") { onClearHistory() }
+                                if group.items.first?.matchType == .history {
+                                    Button(String(localized: "清除")) { onClearHistory() }
                                         .font(AppTypography.caption)
                                         .frame(minWidth: AppSize.touchTarget, minHeight: AppSize.touchTarget)
-                                        .accessibilityLabel("清除全部搜索历史")
+                                        .accessibilityLabel(String(localized: "清除全部搜索历史"))
                                 }
                             }
                             ForEach(group.items) { item in
@@ -428,7 +428,7 @@ struct SuggestionDropdown: View {
                                     .buttonStyle(.plain)
                                     .accessibilityAddTraits(item.name == selectedItem ? .isSelected : [])
                                     if item.matchType == .history {
-                                        AppIconButton(title: "删除历史：\(item.name)", systemImage: "xmark") {
+                                        AppIconButton(title: String(localized: "删除历史：\(DisplayName.item(item.name))"), systemImage: "xmark") {
                                             onDeleteHistory(item.name)
                                         }
                                     }

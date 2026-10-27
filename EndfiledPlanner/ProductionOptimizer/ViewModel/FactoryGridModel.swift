@@ -191,13 +191,13 @@ class FactoryGridModel {
         guard rules.pumpZoneWidth > 0 else { return nil }
         let cells = placed.occupiedCells(definition: definition)
         if MapRules.pumpZoneBuildingIDs.contains(definition.id) {
-            guard cells.allSatisfy(rules.isInPumpZone) else { return "要放在右侧水泵区" }
+            guard cells.allSatisfy(rules.isInPumpZone) else { return String(localized: "要放在右侧水泵区") }
             let outputsFaceBase = definition.ports
                 .filter { $0.ioDirection == .output }
                 .allSatisfy { $0.resolvedPosition(placed: placed, definition: definition).facing == .left }
-            return outputsFaceBase ? nil : "出口要朝向基地"
+            return outputsFaceBase ? nil : String(localized: "出口要朝向基地")
         }
-        return cells.contains(where: rules.isInPumpZone) ? "水泵区只能放水泵和气泵" : nil
+        return cells.contains(where: rules.isInPumpZone) ? String(localized: "水泵区只能放水泵和气泵") : nil
     }
 
     // MARK: - 仓库取线的地图专属规则
@@ -372,8 +372,8 @@ class FactoryGridModel {
             .min { $0.throttle < $1.throttle }
         var bottleneck: String? = nil
         if let worst {
-            let detail = worst.detail.map { "：" + $0 } ?? ""
-            bottleneck = "\(worst.name)（\(worst.status.label)\(detail)）"
+            let detail = worst.detail.map { "：" + DisplayName.diagnostic($0) } ?? ""
+            bottleneck = "\(DisplayName.device(worst.name))（\(worst.status.displayLabel)\(detail)）"
         }
 
         return ProductionStats(
@@ -410,12 +410,12 @@ class FactoryGridModel {
             if placed.occupiedCells(definition: def).contains(where: {
                 $0.col < 0 || $0.row < 0 || $0.col >= rules.gridCols || $0.row >= rules.gridRows
             }) {
-                conflicts[placed.id] = "超出基地范围（\(rules.baseCols)×\(rules.gridRows)）"
+                conflicts[placed.id] = String(localized: "超出基地范围（\(rules.baseCols)×\(rules.gridRows)）")
                 continue
             }
             if !rules.allows(def) {
                 let maps = MapRules.maps(allowing: def).map(\.displayName).joined(separator: "、")
-                conflicts[placed.id] = "\(layout.mapType.displayName)不能造（仅\(maps)）"
+                conflicts[placed.id] = String(localized: "\(layout.mapType.displayName)不能造（仅\(maps)）")
                 continue
             }
             let recipeIDs = placed.selectedRecipeIDs.union(placed.selectedRecipeID.map { [$0] } ?? [])
@@ -423,7 +423,7 @@ class FactoryGridModel {
                 .filter { recipeIDs.contains($0.id) }
                 .compactMap { rules.blockedMode(of: $0, on: def) }
             if let mode = blocked.first {
-                conflicts[placed.id] = "\(layout.mapType.displayName)不能用\(mode.displayName)配方"
+                conflicts[placed.id] = String(localized: "\(layout.mapType.displayName)不能用\(mode.displayName)配方")
                 continue
             }
             if let hint = pumpZoneViolation(definition: def, placed: placed, rules: rules) {
@@ -442,13 +442,13 @@ class FactoryGridModel {
     }
 
     private static func dockHint(for def: BuildingDefinition, rules: MapRules) -> String {
-        if def.id == BuildingDefinition.warehouseBaseSegmentID { return "没连着仓库存取线源桩" }
+        if def.id == BuildingDefinition.warehouseBaseSegmentID { return String(localized: "没连着仓库存取线源桩") }
         switch rules.warehouseLine {
         case .perimeter(let edges):
-            let names: [BuildingRotation: String] = [.up: "上边", .right: "右边", .down: "下边", .left: "左边"]
-            let list = BuildingRotation.allCases.filter(edges.contains).compactMap { names[$0] }.joined(separator: "或")
-            return "要贴着地图\(list)放，口朝里"
-        case .busDock:   return "要贴着仓库存取线源桩或基段放"
+            let names: [BuildingRotation: String] = [.up: String(localized: "上边"), .right: String(localized: "右边"), .down: String(localized: "下边"), .left: String(localized: "左边")]
+            let list = BuildingRotation.allCases.filter(edges.contains).compactMap { names[$0] }.joined(separator: String(localized: "或"))
+            return String(localized: "要贴着地图\(list)放，口朝里")
+        case .busDock:   return String(localized: "要贴着仓库存取线源桩或基段放")
         }
     }
 }

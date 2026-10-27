@@ -13,7 +13,7 @@ struct AppInspectorContainer<Content: View, Actions: View>: View {
     var maxContentHeight: CGFloat? = nil
     var maxPanelHeight: CGFloat? = nil
     var summaryText: String? = nil
-    var disclosureTitle: String = "详细配置"
+    var disclosureTitle: String = String(localized: "详细配置")
     var onClose: (() -> Void)? = nil
     @ViewBuilder var content: () -> Content
     @ViewBuilder var actions: () -> Actions
@@ -79,7 +79,7 @@ struct AppInspectorContainer<Content: View, Actions: View>: View {
                     }
                     .buttonStyle(.plain)
                     .foregroundStyle(AppColors.secondaryText)
-                    .accessibilityLabel("关闭详情")
+                    .accessibilityLabel(String(localized: "关闭详情"))
                 }
             }
             .padding(.leading, AppSpacing.md)
@@ -102,7 +102,7 @@ struct AppInspectorContainer<Content: View, Actions: View>: View {
                     HStack(spacing: AppSpacing.xs) {
                         Text(disclosureTitle).font(AppTypography.supporting)
                         Spacer(minLength: AppSpacing.xs)
-                        Text(isExpanded ? "收起" : "展开").font(AppTypography.caption)
+                        Text(isExpanded ? String(localized: "收起") : String(localized: "展开")).font(AppTypography.caption)
                         Image(systemName: isExpanded ? "chevron.down" : "chevron.up")
                             .font(AppTypography.caption)
                     }
@@ -113,7 +113,7 @@ struct AppInspectorContainer<Content: View, Actions: View>: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(disclosureTitle)
-                .accessibilityValue(isExpanded ? "已展开" : "已折叠")
+                .accessibilityValue(isExpanded ? String(localized: "已展开") : String(localized: "已折叠"))
                 .overlay(alignment: .top) { Divider().overlay(AppColors.border) }
             }
         }
