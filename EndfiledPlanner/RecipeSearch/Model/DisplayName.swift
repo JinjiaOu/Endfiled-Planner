@@ -9,7 +9,9 @@ enum DisplayName {
         let modes: [String: String]
     }
     private static let names = DataPackStore.decode(Names.self, resource: "names_en")
-    static var isEnglish: Bool { Locale.preferredLanguages.first?.hasPrefix("en") == true }
+    /// 跟界面文字用同一个判断：App 实际选中的本地化（系统按 App 支持的语言挑出来的），
+    /// 不能看系统语言列表第一项——比如日语用户第二语言是英语时，界面是英文但第一项是日语
+    static var isEnglish: Bool { Bundle.main.preferredLocalizations.first?.hasPrefix("en") == true }
 
     static func item(_ chineseName: String) -> String {
         guard isEnglish, let id = ItemCatalog.itemId(for: chineseName) else { return chineseName }

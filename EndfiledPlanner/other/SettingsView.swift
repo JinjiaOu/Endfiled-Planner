@@ -59,6 +59,26 @@ struct SettingsView: View {
                                     .foregroundColor(AppColors.primaryText)
                             }
                         }
+
+                        // 语言跟随系统；这里跳到系统设置里本 App 的页面，可以单独给 App 选语言
+                        Button {
+                            if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
+                        } label: {
+                            HStack {
+                                Image(systemName: "globe")
+                                    .foregroundColor(Color(red: 1.0, green: 0.8, blue: 0.0))
+                                Text(String(localized: "语言"))
+                                    .foregroundColor(AppColors.primaryText)
+                                Spacer()
+                                Text(verbatim: currentLanguageName)
+                                    .font(.system(size: 13))
+                                    .foregroundColor(AppColors.primaryText.opacity(0.5))
+                                Image(systemName: "arrow.up.forward.app")
+                                    .font(.system(size: 12))
+                                    .foregroundColor(AppColors.primaryText.opacity(0.4))
+                            }
+                        }
+                        .accessibilityHint(String(localized: "在系统设置里切换 App 语言"))
                     } header: {
                         Text("ABOUT")
                             .font(.system(size: 11, weight: .bold, design: .monospaced))
@@ -132,6 +152,12 @@ struct SettingsView: View {
                 Text(String(localized: "下载的数据会被删除，重启 App 后生效。"))
             }
         }
+    }
+
+    /// 当前界面语言的名字（用该语言自己的写法，如"简体中文""English"）
+    private var currentLanguageName: String {
+        let code = Bundle.main.preferredLocalizations.first ?? "zh-Hans"
+        return Locale(identifier: code).localizedString(forIdentifier: code) ?? code
     }
 
     private var currentDataText: String {
