@@ -8,6 +8,9 @@ struct FactoryWorkspaceHeader: View {
     var buildingPaletteVisible: Bool
 
     private var modeTitle: String {
+        if case .place(let def) = vm.editMode, vm.pendingPlacement == nil {
+            return String(localized: "点画布放置：\(def.displayName)")
+        }
         if buildingPaletteVisible { return String(localized: "选择要建造的设施") }
         if vm.pendingPlacement != nil { return String(localized: "放置我的布局") }
         switch vm.editMode {

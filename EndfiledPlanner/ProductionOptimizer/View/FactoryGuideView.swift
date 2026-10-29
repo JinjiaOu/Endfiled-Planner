@@ -16,7 +16,7 @@ struct FactoryGuideView: View {
     private let sections: [Section] = [
         Section(title: String(localized: "基本操作"), symbol: "hand.tap", items: [
             String(localized: "底部工具栏切换模式：选择、建造、传送带、管道（仅武陵）、框选、我的布局、删除。"),
-            String(localized: "建造：打开建造面板，长按设施拖进画布；放置前可以先旋转。"),
+            String(localized: "建造：打开建造面板，点一下设施选中，再点画布空地放置（这时可以随意拖动、缩放画布，连续点能放多台）；也可以长按设施直接拖进画布。放置前可以先旋转。"),
             String(localized: "画线：在传送带/管道模式下，按住从起点拖到终点，线走 L 形；也可以先点起点、再点终点。"),
             String(localized: "删除：删除模式下点一下删一个，按住划过去连着删。"),
             String(localized: "框选：拉框选中一片，按住选中的建筑可以整组拖走；选中后可以存成“我的布局”。"),

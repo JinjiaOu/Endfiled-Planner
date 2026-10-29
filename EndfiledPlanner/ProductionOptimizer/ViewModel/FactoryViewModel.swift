@@ -362,7 +362,11 @@ class FactoryViewModel: ObservableObject {
 
     // MARK: - 网格点击处理
     /// 点击：slop 是格子缩得很小时额外放宽的命中范围（格数），保证手指至少有 ~44pt 的可点区域
+    /// 双指缩放中、以及松手后一小会儿内，画布上的点按一律忽略（FactoryLayoutView 的捏合手势设置）
+    var suppressTapsUntil: Date = .distantPast
+
     func handleTap(at cell: GridPoint, slop: Int = 0) {
+        guard Date() >= suppressTapsUntil else { return }
         // 正在摆布局：点哪里虚影就挪到哪里（以点的格子为中心）
         if let placement = pendingPlacement {
             movePlacement(to: GridPoint(col: cell.col - placement.size.width / 2, row: cell.row - placement.size.height / 2))
@@ -382,8 +386,11 @@ class FactoryViewModel: ObservableObject {
         case .erase:
             eraseAt(cell: cell)
         case .place(let def):
-            // 点到已有的建筑/线就选中它，点空地才放建筑
-            if !select(at: cell, slop: 0) { placeBuilding(def, at: cell) }
+            // 点到已有的建筑/线就选中它，点空地才放建筑；仓库口、水泵这类按落点自动转好朝向（跟拖放一样）
+            if !select(at: cell, slop: 0) {
+                if let rotation = autoOrientedRotation(for: def, at: cell) { pendingRotation = rotation }
+                placeBuilding(def, at: cell)
+            }
         case .select, .belt, .pipe:
             // 画线模式下轻点（不拖）也算选中
             if !select(at: cell, slop: slop) { clearSelection() }

@@ -3081,7 +3081,7 @@
       }
     },
     "建造：打开建造面板，长按设施拖进画布；放置前可以先旋转。" : {
-      "extractionState" : "manual",
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -6537,7 +6537,7 @@
       }
     },
     "长按并拖到画布放置" : {
-      "extractionState" : "manual",
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -6684,6 +6684,39 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Change the app language in iOS Settings"
+          }
+        }
+      }
+    },
+    "点画布放置：%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap the canvas to place: %@"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "点按选中后在画布上点一下放置，或长按拖到画布" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap to select, then tap the canvas to place, or press and drag onto the canvas"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "建造：打开建造面板，点一下设施选中，再点画布空地放置（这时可以随意拖动、缩放画布，连续点能放多台）；也可以长按设施直接拖进画布。放置前可以先旋转。" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Build: open the build panel, tap a facility to select it, then tap an empty spot on the canvas to place it (you can pan and zoom freely meanwhile, and keep tapping to place more). You can also long-press a facility and drag it onto the canvas. You can rotate it before placement."
           }
         }
       }

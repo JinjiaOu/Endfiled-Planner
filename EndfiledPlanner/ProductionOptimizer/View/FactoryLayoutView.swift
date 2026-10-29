@@ -324,6 +324,8 @@ struct FactoryLayoutView: View {
                 .simultaneousGesture(
                     MagnifyGesture()
                         .onChanged { v in
+                            // 捏合过程中不认画布点按（防止一根手指先抬起被当成点了一下，误放建筑）
+                            vm.suppressTapsUntil = .distantFuture
                             if pinchAnchor == nil {
                                 let offset = scrollGeometry.metrics.offset
                                 pinchAnchor = PinchAnchor(
@@ -523,9 +525,17 @@ struct FactoryLayoutView: View {
         .accessibilityAddTraits(selected ? .isSelected : [])
     }
 
-    /// 建筑卡片：按住再拖时激活拖拽状态，松手时在网格对应位置放置
+    /// 当前点选放置的是不是这个建筑
+    private func isPlacing(_ def: BuildingDefinition) -> Bool {
+        if case .place(let placing) = vm.editMode, placing.id == def.id { return true }
+        return false
+    }
+
+    /// 建筑卡片：点一下选中、再点画布放置（手空出来可以随意拖动、缩放画布）；
+    /// 也可以按住再拖，松手时在网格对应位置放置
     private func draggableBuildingChip(_ def: BuildingDefinition) -> some View {
-        VStack(spacing: AppSpacing.xxs) {
+        let placing = isPlacing(def)
+        return VStack(spacing: AppSpacing.xxs) {
             Image(systemName: def.category.icon)
                 .font(.title3.weight(.medium))
                 .foregroundStyle(def.category.color)
@@ -539,6 +549,20 @@ struct FactoryLayoutView: View {
         .multilineTextAlignment(.center)
         .padding(.vertical, AppSpacing.xxs)
         .frame(width: dynamicTypeSize.isAccessibilitySize ? 144 : 88)
+        .background(placing ? AppColors.accent.opacity(0.14) : .clear,
+                    in: RoundedRectangle(cornerRadius: AppRadius.control))
+        .overlay {
+            if placing {
+                RoundedRectangle(cornerRadius: AppRadius.control)
+                    .strokeBorder(AppColors.accent, lineWidth: 1.5)
+                    .allowsHitTesting(false)
+            }
+        }
+        .contentShape(Rectangle())
+        // 点按：选中 / 再点一次取消（回到选择模式）
+        .onTapGesture {
+            vm.editMode = placing ? .select : .place(def)
+        }
         .scaleEffect(!reduceMotion && draggingDef?.id == def.id ? 1.04 : 1.0)
         .animation(AppMotion.feedback(reduceMotion: reduceMotion), value: draggingDef?.id)
         // 先按住 0.2 秒再拖才算"拿建筑去放置"，手指一按下就滑动则交给外面的 ScrollView 滚动。
@@ -547,7 +571,9 @@ struct FactoryLayoutView: View {
         // 手势系统，按下就滑时长按自动失败，滚动不受影响；长按成功后手指移动会持续回调位置。
         // 原来长按弹出的"旋转"菜单会跟这个冲突，去掉了，放置前旋转用工具栏的旋转按钮
         .accessibilityElement(children: .combine)
-        .accessibilityHint(String(localized: "长按并拖到画布放置"))
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAddTraits(placing ? .isSelected : [])
+        .accessibilityHint(String(localized: "点按选中后在画布上点一下放置，或长按拖到画布"))
         .gesture(PaletteHoldDragGesture(
             onChanged: { location in
                 if draggingDef == nil {
@@ -652,6 +678,8 @@ struct FactoryLayoutView: View {
 
     /// 松手：按最终倍数一次性改 cellSize 重画，再把滚动位置调到让捏合起点那一格还在手指下
     private func commitPinch(magnification: CGFloat) {
+        // 松手后再忽略一小会儿点按：两根手指不会同时抬起
+        vm.suppressTapsUntil = Date().addingTimeInterval(0.3)
         let old = lastCellSize
         let new = clampedCellSize(old * magnification)
         var offset: CGPoint? = nil
